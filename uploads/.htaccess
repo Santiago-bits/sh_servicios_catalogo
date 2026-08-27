@@ -1,0 +1,25 @@
+# =====================================================================
+#  Carpeta de archivos subidos: se sirven, pero NUNCA se ejecutan.
+#  Aunque alguien lograra subir un .php disfrazado, acá no corre.
+# =====================================================================
+
+Options -Indexes -ExecCGI
+
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+
+RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .phar
+RemoveType .php .phtml .php3 .php4 .php5 .php7 .phar
+
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|phar|cgi|pl|py|sh|htaccess)$">
+    Require all denied
+</FilesMatch>
+
+AddType text/plain .html .htm .shtml .svg

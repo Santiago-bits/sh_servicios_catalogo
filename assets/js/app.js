@@ -1,0 +1,806 @@
+/* =====================================================================
+   SH SERVICIOS · JavaScript del sitio público
+   Sin dependencias más allá de Bootstrap (bundle) para modales/dropdowns.
+   Recordá: acá se valida por comodidad del usuario, la seguridad real
+   está en el servidor.
+   ===================================================================== */
+
+(function () {
+    'use strict';
+
+    const SHS = window.SHS || {};
+    const $   = (sel, ctx = document) => ctx.querySelector(sel);
+    const $$  = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
+
+    /* -----------------------------------------------------------------
+       Utilidades
+       ----------------------------------------------------------------- */
+
+    const money = (value, currency = 'ARS') => {
+        const symbol = currency === 'USD' ? 'USD ' : '$';
+        return symbol + Number(value || 0).toLocaleString('es-AR', {
+            minimumFractionDigits: 2, maximumFractionDigits: 2
+        });
+    };
+
+    const debounce = (fn, wait = 260) => {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(null, args), wait);
+        };
+    };
+
+    async function request(url, options = {}) {
+        const config = Object.assign({
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-Token': SHS.csrf || ''
+            }
+        }, options);
+
+        const response = await fetch(url, config);
+        const text     = await response.text();
+
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            throw new Error('Respuesta inesperada del servidor.');
+        }
+    }
+
+    function postForm(url, data) {
+        const body = new FormData();
+        Object.entries(data).forEach(([key, value]) => body.append(key, value));
+        body.append('_token', SHS.csrf || '');
+        return request(url, { method: 'POST', body });
+    }
+
+    /* -----------------------------------------------------------------
+       Notificaciones (toasts)
+       ----------------------------------------------------------------- */
+    const icons = {
+        success: 'bi-check-circle-fill',
+        danger:  'bi-exclamation-octagon-fill',
+        warning: 'bi-exclamation-triangle-fill',
+        info:    'bi-info-circle-fill'
+    };
+
+    function toast(message, type = 'info', timeout = 4600) {
+        const stack = $('#toastStack');
+        if (!stack) { return; }
+
+        const el = document.createElement('div');
+        el.className = 'toast-msg toast-msg--' + type;
+        el.setAttribute('role', 'status');
+        el.innerHTML =
+            '<i class="bi ' + (icons[type] || icons.info) + ' toast-msg__icon"></i>' +
+            '<div class="toast-msg__text"></div>' +
+            '<button type="button" class="toast-msg__close" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>';
+
+        el.querySelector('.toast-msg__text').textContent = message;
+        stack.appendChild(el);
+
+        const dismiss = () => {
+            el.classList.add('is-leaving');
+            setTimeout(() => el.remove(), 240);
+        };
+
+        el.querySelector('.toast-msg__close').addEventListener('click', dismiss);
+        if (timeout) { setTimeout(dismiss, timeout); }
+    }
+
+    window.shsToast = toast;
+
+    (SHS.flash || []).forEach(f => toast(f.message, f.type === 'danger' ? 'danger' : f.type));
+
+    /* -----------------------------------------------------------------
+       Navegación móvil
+       ----------------------------------------------------------------- */
+    (function navigation() {
+        const toggle = $('#navToggle');
+        const menu   = $('#mainMenu');
+        if (!toggle || !menu) { return; }
+
+        const backdrop = document.createElement('div');
+        backdrop.className = 'overlay-backdrop overlay-backdrop--nav';
+        document.body.appendChild(backdrop);
+
+        const close = () => {
+            menu.classList.remove('is-open');
+            backdrop.classList.remove('is-visible');
+            toggle.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
+        };
+
+        toggle.addEventListener('click', () => {
+            const open = menu.classList.toggle('is-open');
+            backdrop.classList.toggle('is-visible', open);
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            document.body.style.overflow = open ? 'hidden' : '';
+        });
+
+        backdrop.addEventListener('click', close);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { close(); } });
+    })();
+
+    /* -----------------------------------------------------------------
+       Buscador con sugerencias
+       ----------------------------------------------------------------- */
+    (function search() {
+        const input = $('#globalSearch');
+        const box   = $('#searchResults');
+        if (!input || !box) { return; }
+
+        let items = [];
+        let index = -1;
+
+        const hide = () => { box.hidden = true; index = -1; };
+
+        const render = (data) => {
+            if (!data.suggestions || data.suggestions.length === 0) {
+                box.innerHTML = '<div class="suggest-empty">' +
+                    '<i class="bi bi-search"></i><br>Sin resultados para <strong>' +
+                    escapeHtml(data.term) + '</strong><br>' +
+                    '<small>Probá con el código interno, el código OEM o el modelo de la máquina.</small></div>';
+                box.hidden = false;
+                items = [];
+                return;
+            }
+
+            box.innerHTML = data.suggestions.map(s =>
+                '<a class="suggest-item" href="' + s.url + '">' +
+                (s.image
+                    ? '<img class="suggest-item__thumb" src="' + s.image + '" alt="" loading="lazy">'
+                    : '<span class="suggest-item__thumb"><i class="bi ' + s.icon + '"></i></span>') +
+                '<span class="suggest-item__body">' +
+                '<span class="suggest-item__label">' + escapeHtml(s.label) + '</span>' +
+                '<span class="suggest-item__sub">' + escapeHtml(s.sub) + '</span>' +
+                '</span>' +
+                '<span class="suggest-item__tag">' + escapeHtml(s.type) + '</span>' +
+                '</a>'
+            ).join('') +
+            '<a class="suggest-item" href="' + data.search_url + '">' +
+            '<span class="suggest-item__thumb"><i class="bi bi-arrow-right"></i></span>' +
+            '<span class="suggest-item__body"><span class="suggest-item__label">Ver todos los resultados</span></span></a>';
+
+            items = $$('.suggest-item', box);
+            box.hidden = false;
+        };
+
+        const lookup = debounce(async () => {
+            const term = input.value.trim();
+            if (term.length < 2) { hide(); return; }
+
+            try {
+                const data = await request(SHS.baseUrl + '/api/buscar?q=' + encodeURIComponent(term));
+                render(data);
+            } catch (e) { hide(); }
+        }, 240);
+
+        input.addEventListener('input', lookup);
+        input.addEventListener('focus', () => { if (input.value.trim().length >= 2) { lookup(); } });
+
+        input.addEventListener('keydown', e => {
+            if (box.hidden || items.length === 0) { return; }
+
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                items.forEach(i => i.classList.remove('is-active'));
+                index = e.key === 'ArrowDown'
+                    ? (index + 1) % items.length
+                    : (index - 1 + items.length) % items.length;
+                items[index].classList.add('is-active');
+                items[index].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'Enter' && index >= 0) {
+                e.preventDefault();
+                window.location.href = items[index].href;
+            } else if (e.key === 'Escape') {
+                hide();
+            }
+        });
+
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.searchbox')) { hide(); }
+        });
+    })();
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text == null ? '' : String(text);
+        return div.innerHTML;
+    }
+
+    /* -----------------------------------------------------------------
+       Favoritos (localStorage)
+       ----------------------------------------------------------------- */
+    const Favorites = {
+        key: 'shs_favorites',
+
+        all() {
+            try {
+                return JSON.parse(localStorage.getItem(this.key) || '[]').map(Number);
+            } catch (e) { return []; }
+        },
+
+        has(id) { return this.all().includes(Number(id)); },
+
+        toggle(id) {
+            id = Number(id);
+            let list = this.all();
+            const exists = list.includes(id);
+
+            list = exists ? list.filter(i => i !== id) : list.concat(id).slice(-80);
+
+            try { localStorage.setItem(this.key, JSON.stringify(list)); } catch (e) {}
+
+            this.paint();
+            this.sync();
+
+            return !exists;
+        },
+
+        paint() {
+            const list = this.all();
+            $$('[data-favorites-count]').forEach(el => { el.textContent = list.length; });
+            $$('[data-fav-toggle]').forEach(btn => {
+                const active = list.includes(Number(btn.dataset.favToggle));
+                btn.classList.toggle('is-active', active);
+                btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+                const icon = btn.querySelector('i');
+                if (icon) { icon.className = active ? 'bi bi-heart-fill' : 'bi bi-heart'; }
+                btn.title = active ? 'Quitar de favoritos' : 'Guardar en favoritos';
+            });
+            $$('[data-favorites-link]').forEach(link => {
+                link.href = SHS.baseUrl + '/favoritos?ids=' + list.join(',');
+            });
+        },
+
+        sync: debounce(function () {
+            fetch(SHS.baseUrl + '/api/favoritos/sincronizar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': SHS.csrf || ''
+                },
+                body: JSON.stringify({ ids: Favorites.all() })
+            }).catch(() => {});
+        }, 900)
+    };
+
+    window.shsFavorites = Favorites;
+
+    document.addEventListener('click', e => {
+        const btn = e.target.closest('[data-fav-toggle]');
+        if (!btn) { return; }
+
+        e.preventDefault();
+        const added = Favorites.toggle(btn.dataset.favToggle);
+        toast(added ? 'Agregado a favoritos.' : 'Quitado de favoritos.', added ? 'success' : 'info', 2600);
+    });
+
+    Favorites.paint();
+
+    // Enlace de la página de favoritos: se completa con los IDs guardados
+    if (document.body.classList.contains('page-favorites') && !location.search) {
+        const ids = Favorites.all();
+        if (ids.length) { location.replace(SHS.baseUrl + '/favoritos?ids=' + ids.join(',')); }
+    }
+
+    /* -----------------------------------------------------------------
+       Comparador
+       ----------------------------------------------------------------- */
+    const Compare = {
+        key: 'shs_compare',
+
+        all() {
+            try {
+                return JSON.parse(localStorage.getItem(this.key) || '[]').map(Number);
+            } catch (e) { return []; }
+        },
+
+        toggle(id) {
+            id = Number(id);
+            let list = this.all();
+            const exists = list.includes(id);
+
+            if (!exists && list.length >= (SHS.compareMax || 3)) {
+                toast('Podés comparar hasta ' + (SHS.compareMax || 3) + ' máquinas. Quitá una para agregar otra.', 'warning');
+                return false;
+            }
+
+            list = exists ? list.filter(i => i !== id) : list.concat(id);
+            try { localStorage.setItem(this.key, JSON.stringify(list)); } catch (e) {}
+
+            this.paint();
+            return !exists;
+        },
+
+        clear() {
+            try { localStorage.removeItem(this.key); } catch (e) {}
+            this.paint();
+        },
+
+        async paint() {
+            const list = this.all();
+            const bar  = $('#compareBar');
+
+            $$('[data-compare-toggle]').forEach(btn => {
+                const active = list.includes(Number(btn.dataset.compareToggle));
+                btn.classList.toggle('is-active', active);
+                btn.title = active ? 'Quitar del comparador' : 'Agregar al comparador';
+            });
+
+            const count = $('#compareCount');
+            if (count) { count.textContent = list.length; }
+
+            const go = $('#compareGo');
+            if (go) { go.href = SHS.baseUrl + '/comparar?ids=' + list.join(','); }
+
+            if (!bar) { return; }
+
+            if (list.length === 0) {
+                bar.hidden = true;
+                document.body.classList.remove('has-compare-bar');
+                return;
+            }
+
+            bar.hidden = false;
+            document.body.classList.add('has-compare-bar');
+
+            try {
+                const data = await request(SHS.baseUrl + '/api/comparar?ids=' + list.join(','));
+                const box  = $('#compareItems');
+                if (!box) { return; }
+
+                box.innerHTML = data.products.map(p =>
+                    '<div class="compare-chip">' +
+                    '<img src="' + p.image + '" alt="" loading="lazy">' +
+                    '<span>' + escapeHtml(p.name) + '</span>' +
+                    '<button type="button" data-compare-remove="' + p.id + '" aria-label="Quitar">' +
+                    '<i class="bi bi-x-lg"></i></button></div>'
+                ).join('');
+            } catch (e) { /* la barra sigue funcionando igual */ }
+        }
+    };
+
+    window.shsCompare = Compare;
+
+    document.addEventListener('click', e => {
+        const toggle = e.target.closest('[data-compare-toggle]');
+        if (toggle) {
+            e.preventDefault();
+            const added = Compare.toggle(toggle.dataset.compareToggle);
+            if (added === true)  { toast('Agregado al comparador.', 'success', 2400); }
+            if (added === false) { toast('Quitado del comparador.', 'info', 2200); }
+            return;
+        }
+
+        const remove = e.target.closest('[data-compare-remove]');
+        if (remove) {
+            Compare.toggle(remove.dataset.compareRemove);
+            return;
+        }
+
+        if (e.target.closest('#compareClear')) {
+            Compare.clear();
+            toast('Comparador vacío.', 'info', 2200);
+        }
+    });
+
+    Compare.paint();
+
+    /* -----------------------------------------------------------------
+       Cotizador: agregar/quitar ítems
+       ----------------------------------------------------------------- */
+    document.addEventListener('click', async e => {
+        const btn = e.target.closest('[data-quote-add]');
+        if (!btn) { return; }
+
+        e.preventDefault();
+        btn.disabled = true;
+
+        try {
+            const data = await postForm(SHS.baseUrl + '/api/cotizador/agregar', {
+                product_id: btn.dataset.quoteAdd,
+                quantity: btn.dataset.quoteQty || 1
+            });
+
+            toast(data.message, data.ok ? 'success' : 'warning');
+            $$('[data-quote-count]').forEach(el => { el.textContent = data.count; });
+        } catch (err) {
+            toast('No se pudo agregar el producto.', 'danger');
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    document.addEventListener('click', async e => {
+        const btn = e.target.closest('[data-quote-remove]');
+        if (!btn) { return; }
+
+        e.preventDefault();
+
+        try {
+            const data = await postForm(SHS.baseUrl + '/api/cotizador/quitar', { product_id: btn.dataset.quoteRemove });
+            $$('[data-quote-count]').forEach(el => { el.textContent = data.count; });
+
+            const row = btn.closest('.quote-item');
+            if (row) {
+                row.style.transition = 'opacity .2s, transform .2s';
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(-14px)';
+                setTimeout(() => location.reload(), 220);
+            } else {
+                location.reload();
+            }
+        } catch (err) {
+            toast('No se pudo quitar el ítem.', 'danger');
+        }
+    });
+
+    /* -----------------------------------------------------------------
+       Galería de producto
+       ----------------------------------------------------------------- */
+    (function gallery() {
+        const main = $('#galleryMain');
+        if (!main) { return; }
+
+        const image  = main.querySelector('img');
+        const thumbs = $$('.gallery__thumb');
+        const sources = thumbs.map(t => t.dataset.full || t.querySelector('img').src);
+        let current = 0;
+
+        const show = (i) => {
+            current = (i + sources.length) % sources.length;
+            image.src = sources[current];
+            thumbs.forEach((t, idx) => t.classList.toggle('is-active', idx === current));
+        };
+
+        thumbs.forEach((thumb, i) => {
+            thumb.addEventListener('click', () => show(i));
+            thumb.addEventListener('mouseenter', () => show(i));
+        });
+
+        // Lightbox
+        const lightbox = document.createElement('div');
+        lightbox.className = 'lightbox';
+        lightbox.innerHTML =
+            '<button class="lightbox__close" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>' +
+            '<button class="lightbox__nav lightbox__nav--prev" aria-label="Anterior"><i class="bi bi-chevron-left"></i></button>' +
+            '<img src="" alt="">' +
+            '<button class="lightbox__nav lightbox__nav--next" aria-label="Siguiente"><i class="bi bi-chevron-right"></i></button>';
+        document.body.appendChild(lightbox);
+
+        const lightboxImg = lightbox.querySelector('img');
+
+        const openLightbox = () => {
+            lightboxImg.src = sources[current];
+            lightbox.classList.add('is-open');
+            document.body.style.overflow = 'hidden';
+        };
+        const closeLightbox = () => {
+            lightbox.classList.remove('is-open');
+            document.body.style.overflow = '';
+        };
+
+        main.addEventListener('click', openLightbox);
+        lightbox.querySelector('.lightbox__close').addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', e => { if (e.target === lightbox) { closeLightbox(); } });
+
+        lightbox.querySelector('.lightbox__nav--prev').addEventListener('click', e => {
+            e.stopPropagation(); show(current - 1); lightboxImg.src = sources[current];
+        });
+        lightbox.querySelector('.lightbox__nav--next').addEventListener('click', e => {
+            e.stopPropagation(); show(current + 1); lightboxImg.src = sources[current];
+        });
+
+        document.addEventListener('keydown', e => {
+            if (!lightbox.classList.contains('is-open')) { return; }
+            if (e.key === 'Escape')     { closeLightbox(); }
+            if (e.key === 'ArrowLeft')  { show(current - 1); lightboxImg.src = sources[current]; }
+            if (e.key === 'ArrowRight') { show(current + 1); lightboxImg.src = sources[current]; }
+        });
+
+        // Zoom con el mouse sobre la imagen principal
+        main.addEventListener('mousemove', e => {
+            const rect = main.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            image.style.transformOrigin = x + '% ' + y + '%';
+            image.style.transform = 'scale(1.55)';
+        });
+        main.addEventListener('mouseleave', () => { image.style.transform = ''; });
+    })();
+
+    /* -----------------------------------------------------------------
+       Calculadora de financiación (tiempo real)
+       ----------------------------------------------------------------- */
+    (function financing() {
+        const form = $('#financeCalc');
+        if (!form) { return; }
+
+        const price        = $('#calcPrice', form);
+        const downRange    = $('#calcDownRange', form);
+        const downInput    = $('#calcDown', form);
+        const installments = $('#calcInstallments', form);
+        const interest     = $('#calcInterest', form);
+        const currency     = form.dataset.currency || 'ARS';
+
+        const out = {
+            down:    $('#outDown'),
+            balance: $('#outBalance'),
+            interest:$('#outInterest'),
+            fee:     $('#outFee'),
+            total:   $('#outTotal'),
+            count:   $('#outCount')
+        };
+
+        function calc() {
+            const p  = Number(price.value) || 0;
+            const d  = Math.min(Number(downInput.value) || 0, p);
+            const n  = Math.max(1, Number(installments.value) || 1);
+            const i  = Math.max(0, Number(interest.value) || 0);
+
+            const balance   = p - d;
+            const interestA = balance * (i / 100);
+            const financed  = balance + interestA;
+            const fee       = financed / n;
+            const total     = d + financed;
+
+            if (out.down)     { out.down.textContent     = money(d, currency); }
+            if (out.balance)  { out.balance.textContent  = money(balance, currency); }
+            if (out.interest) { out.interest.textContent = money(interestA, currency); }
+            if (out.fee)      { out.fee.textContent      = money(fee, currency); }
+            if (out.total)    { out.total.textContent    = money(total, currency); }
+            if (out.count)    { out.count.textContent    = n; }
+        }
+
+        if (downRange && downInput && price) {
+            downRange.addEventListener('input', () => {
+                downInput.value = Math.round((Number(price.value) || 0) * (Number(downRange.value) / 100));
+                calc();
+            });
+            downInput.addEventListener('input', () => {
+                const p = Number(price.value) || 1;
+                downRange.value = Math.min(100, Math.round((Number(downInput.value) / p) * 100));
+                calc();
+            });
+        }
+
+        [price, installments, interest].forEach(el => {
+            if (el) { el.addEventListener('input', calc); }
+        });
+
+        // Planes preconfigurados: al elegir uno, se cargan sus valores
+        $$('[data-plan]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const plan = JSON.parse(btn.dataset.plan);
+                if (downInput)    { downInput.value = plan.down_payment; }
+                if (installments) { installments.value = plan.installments; }
+                if (interest)     { interest.value = plan.interest_percent; }
+                if (downRange && price) {
+                    downRange.value = Math.round((plan.down_payment / (Number(price.value) || 1)) * 100);
+                }
+                $$('[data-plan]').forEach(b => b.classList.remove('is-featured'));
+                btn.classList.add('is-featured');
+                calc();
+            });
+        });
+
+        calc();
+    })();
+
+    /* -----------------------------------------------------------------
+       Filtros del catálogo
+       ----------------------------------------------------------------- */
+    (function filters() {
+        const form = $('#catalogFilters');
+        if (!form) { return; }
+
+        // Autoenvío al cambiar cualquier control (salvo campos de texto)
+        form.addEventListener('change', e => {
+            if (e.target.type !== 'text' && e.target.type !== 'number') {
+                form.submit();
+            }
+        });
+
+        // Filtros en móvil
+        const openBtn  = $('#filtersOpen');
+        const closeBtn = $('#filtersClose');
+        const panel    = $('#filtersPanel');
+
+        if (openBtn && panel) {
+            const backdrop = document.createElement('div');
+            backdrop.className = 'overlay-backdrop';
+            document.body.appendChild(backdrop);
+
+            const close = () => {
+                panel.classList.remove('is-open');
+                backdrop.classList.remove('is-visible');
+                document.body.style.overflow = '';
+            };
+
+            openBtn.addEventListener('click', () => {
+                panel.classList.add('is-open');
+                backdrop.classList.add('is-visible');
+                document.body.style.overflow = 'hidden';
+            });
+
+            backdrop.addEventListener('click', close);
+            if (closeBtn) { closeBtn.addEventListener('click', close); }
+        }
+
+        // Acordeones
+        $$('.filter-group__head').forEach(head => {
+            head.addEventListener('click', () => {
+                const expanded = head.getAttribute('aria-expanded') === 'true';
+                head.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+                const body = head.nextElementSibling;
+                if (body) { body.style.display = expanded ? 'none' : ''; }
+            });
+        });
+    })();
+
+    /* -----------------------------------------------------------------
+       Copiar códigos al portapapeles
+       ----------------------------------------------------------------- */
+    document.addEventListener('click', async e => {
+        const btn = e.target.closest('[data-copy]');
+        if (!btn) { return; }
+
+        const text = btn.dataset.copy;
+
+        try {
+            await navigator.clipboard.writeText(text);
+            toast('Código copiado: ' + text, 'success', 2400);
+        } catch (err) {
+            const input = document.createElement('input');
+            input.value = text;
+            document.body.appendChild(input);
+            input.select();
+            try { document.execCommand('copy'); toast('Código copiado.', 'success', 2200); } catch (e2) {}
+            input.remove();
+        }
+    });
+
+    /* -----------------------------------------------------------------
+       Animación de aparición al hacer scroll
+       ----------------------------------------------------------------- */
+    (function reveal() {
+        const items = $$('.reveal');
+        if (items.length === 0) { return; }
+
+        const show = (el) => {
+            if (!el.classList.contains('is-visible')) { el.classList.add('is-visible'); }
+        };
+
+        // Sin soporte: se muestra todo de una.
+        if (!('IntersectionObserver' in window)) {
+            items.forEach(show);
+            return;
+        }
+
+        items.forEach((item, i) => {
+            item.style.transitionDelay = Math.min(i % 6, 5) * 60 + 'ms';
+        });
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    show(entry.target);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0, rootMargin: '0px 0px -30px 0px' });
+
+        items.forEach(item => observer.observe(item));
+
+        /* Red de seguridad: si el usuario hace un scroll muy rápido, el
+           observer puede no llegar a procesar algún elemento. Acá se revela
+           todo lo que ya pasó por la pantalla, así nunca queda contenido
+           invisible. */
+        let ticking = false;
+
+        const sweep = () => {
+            ticking = false;
+            const limit = window.innerHeight * 0.98;
+
+            items.forEach(item => {
+                if (item.classList.contains('is-visible')) { return; }
+                if (item.getBoundingClientRect().top < limit) {
+                    show(item);
+                    observer.unobserve(item);
+                }
+            });
+        };
+
+        const schedule = () => {
+            if (!ticking) {
+                ticking = true;
+                requestAnimationFrame(sweep);
+            }
+        };
+
+        window.addEventListener('scroll', schedule, { passive: true });
+        window.addEventListener('resize', schedule, { passive: true });
+        window.addEventListener('load', schedule);
+        schedule();
+    })();
+
+    /* -----------------------------------------------------------------
+       Confirmaciones de formularios peligrosos
+       ----------------------------------------------------------------- */
+    document.addEventListener('submit', e => {
+        const form = e.target.closest('[data-confirm]');
+        if (form && !window.confirm(form.dataset.confirm)) {
+            e.preventDefault();
+        }
+    });
+
+    /* -----------------------------------------------------------------
+       Modal de consulta rápida por producto
+       ----------------------------------------------------------------- */
+    (function quickInquiry() {
+        const form = $('#quickInquiryForm');
+        if (!form) { return; }
+
+        form.addEventListener('submit', async e => {
+            e.preventDefault();
+
+            const button = form.querySelector('[type="submit"]');
+            button.disabled = true;
+            button.classList.add('is-loading');
+
+            try {
+                const data = await request(SHS.baseUrl + '/api/consulta', {
+                    method: 'POST',
+                    body: new FormData(form)
+                });
+
+                toast(data.message, data.ok ? 'success' : 'danger');
+
+                if (data.ok) {
+                    form.reset();
+                    const modalEl = form.closest('.modal');
+                    if (modalEl && window.bootstrap) {
+                        bootstrap.Modal.getInstance(modalEl)?.hide();
+                    }
+                } else if (data.errors) {
+                    Object.entries(data.errors).forEach(([field, message]) => {
+                        const input = form.querySelector('[name="' + field + '"]');
+                        if (input) {
+                            input.classList.add('is-invalid');
+                            const hint = input.parentElement.querySelector('.form-error');
+                            if (hint) { hint.textContent = message; }
+                        }
+                    });
+                }
+            } catch (err) {
+                toast('No pudimos enviar la consulta. Probá por WhatsApp.', 'danger');
+            } finally {
+                button.disabled = false;
+                button.classList.remove('is-loading');
+            }
+        });
+
+        form.addEventListener('input', e => e.target.classList.remove('is-invalid'));
+    })();
+
+    /* -----------------------------------------------------------------
+       Cabecera compacta al hacer scroll
+       ----------------------------------------------------------------- */
+    (function stickyHeader() {
+        const header = $('#siteHeader');
+        if (!header) { return; }
+
+        let last = 0;
+        window.addEventListener('scroll', () => {
+            const y = window.scrollY;
+            header.classList.toggle('is-scrolled', y > 60);
+            last = y;
+        }, { passive: true });
+    })();
+
+})();

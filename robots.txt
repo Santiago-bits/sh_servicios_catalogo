@@ -1,0 +1,23 @@
+# =====================================================================
+#  SH SERVICIOS · robots.txt
+#  Al publicar el sitio, actualizá la URL del sitemap con el dominio real
+#  (o cargalo en Panel → Configuración → SEO → URL pública del sitio).
+# =====================================================================
+
+User-agent: *
+Allow: /
+
+# Secciones internas o sin valor para buscadores
+Disallow: /admin
+Disallow: /api/
+Disallow: /cotizador
+Disallow: /favoritos
+Disallow: /comparar
+Disallow: /buscar
+Disallow: /uploads/documents/
+
+# Archivos que no deben indexarse
+Disallow: /*?vista=
+Disallow: /*?pagina=
+
+Sitemap: http://localhost/sh-servicios/public/sitemap.xml

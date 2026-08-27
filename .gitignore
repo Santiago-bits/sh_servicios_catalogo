@@ -1,0 +1,25 @@
+# Configuración local (nunca se versiona)
+.env
+
+# Archivos generados
+/storage/logs/*
+/storage/cache/*
+/storage/pdf/*
+!/storage/logs/.gitkeep
+!/storage/cache/.gitkeep
+!/storage/pdf/.gitkeep
+
+# Archivos subidos por el usuario
+/uploads/*
+!/uploads/.htaccess
+!/uploads/*/.gitkeep
+
+# Conexión con credenciales reales (subir sólo coneccion.example.php)
+coneccion.php
+
+# Sistema operativo / editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
