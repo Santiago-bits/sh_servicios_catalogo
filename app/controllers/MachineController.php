@@ -14,7 +14,6 @@ use App\Models\Category;
 use App\Models\Feature;
 use App\Models\Machine;
 use App\Models\Product;
-use App\Services\FinancingService;
 use App\Services\PriceService;
 use App\Services\SearchService;
 use App\Services\SettingService;
@@ -112,8 +111,6 @@ class MachineController extends Controller
 
         StatsService::trackView((int) $product['id']);
 
-        $price = PriceService::effectivePrice($product);
-
         $this->view('machines/show', [
             'pageTitle'       => ($product['meta_title'] ?: $product['name']) . ' · ' . SettingService::companyName(),
             'metaDescription' => $product['meta_description'] ?: str_limit((string) $product['short_description'], 155),
@@ -129,9 +126,6 @@ class MachineController extends Controller
             'videos'          => $productModel->videos((int) $product['id']),
             'compatibleParts' => $productModel->compatibleParts((int) $product['id'], 8),
             'similar'         => $productModel->similar($product, 4),
-            'financingPlans'  => PriceService::isPublicPriceVisible($product)
-                                 ? FinancingService::plansFor($price, 'machine', (string) $product['currency'])
-                                 : [],
             'whatsappLink'    => WhatsAppService::machineLink($product),
             'type'            => 'machine',
         ]);

@@ -11,32 +11,20 @@
                 <i class="bi bi-check-lg"></i>
             </div>
 
+            <?php
+            $canales = [];
+            if (!empty($quote['customer_email'])) {
+                $canales[] = 'por correo a <strong>' . e($quote['customer_email']) . '</strong>';
+            }
+            if (!empty($quote['customer_phone'])) {
+                $canales[] = 'por WhatsApp al <strong>' . e($quote['customer_phone']) . '</strong>';
+            }
+            ?>
             <h1 class="mb-2">¡Recibimos tu solicitud!</h1>
             <p class="text-muted-2 mb-4">
-                Guardamos tu pedido con el número
-                <strong class="product-code"><?= e($quote['number']) ?></strong>.
-                Un asesor lo va a revisar y te va a enviar la cotización formal
-                <?php if (!empty($quote['customer_email'])): ?>
-                    a <strong><?= e($quote['customer_email']) ?></strong>.
-                <?php else: ?>
-                    a la brevedad.
-                <?php endif; ?>
+                Un asesor la va a revisar y te va a contactar
+                <?= $canales !== [] ? implode(' o ', $canales) . ' ' : '' ?>a la brevedad.
             </p>
-
-            <div class="quick-specs mb-4">
-                <div class="quick-spec">
-                    <span>Número</span>
-                    <strong><?= e($quote['number']) ?></strong>
-                </div>
-                <div class="quick-spec">
-                    <span>Fecha</span>
-                    <strong><?= e(date_es((string) $quote['created_at'])) ?></strong>
-                </div>
-                <div class="quick-spec">
-                    <span>Validez estimada</span>
-                    <strong><?= e(date_es((string) $quote['valid_until'])) ?></strong>
-                </div>
-            </div>
 
             <div class="d-flex flex-wrap gap-2 justify-content-center">
                 <a href="<?= e($whatsappLink) ?>" target="_blank" rel="noopener" class="btn btn-wa btn-lg">
@@ -46,10 +34,6 @@
                     Seguir viendo el catálogo
                 </a>
             </div>
-
-            <p class="form-hint mt-4 mb-0">
-                Anotá el número <strong><?= e($quote['number']) ?></strong> para mencionarlo si nos escribís.
-            </p>
         </div>
     </div>
 </section>

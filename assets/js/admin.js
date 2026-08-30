@@ -43,6 +43,79 @@
     })();
 
     /* -----------------------------------------------------------------
+       Formulario de producto con pestañas (maquinaria / repuestos)
+       ----------------------------------------------------------------- */
+    (function productFormTabs() {
+        const wrap = $('.pform');
+        if (!wrap) { return; }
+
+        const tabs   = $$('.form-tab', wrap);
+        const panels = $$('.form-tabpanel', wrap);
+        if (!tabs.length) { return; }
+
+        const storeKey = 'pform-tab:' + location.pathname;
+
+        function show(name, save) {
+            tabs.forEach(t => {
+                const on = t.dataset.tab === name;
+                t.classList.toggle('is-active', on);
+                t.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            panels.forEach(p => { p.hidden = p.dataset.panel !== name; });
+            if (save) {
+                try { sessionStorage.setItem(storeKey, name); } catch (e) { /* private mode */ }
+                if (history.replaceState) { history.replaceState(null, '', '#' + name); }
+            }
+        }
+
+        tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.tab, true)));
+
+        // Si al guardar hay un campo obligatorio vacío en una pestaña oculta,
+        // se abre esa pestaña para que el navegador pueda señalarlo.
+        const form = wrap.closest('form') || $('#' + (wrap.dataset.form || ''));
+        form?.addEventListener('invalid', e => {
+            const panel = e.target.closest('.form-tabpanel');
+            if (panel && panel.hidden) { show(panel.dataset.panel, true); }
+        }, true);
+
+        // Pestaña inicial: #hash  >  última usada  >  primera
+        const fromHash = location.hash.replace('#', '');
+        let initial = tabs[0].dataset.tab;
+        if (tabs.some(t => t.dataset.tab === fromHash)) {
+            initial = fromHash;
+        } else {
+            try {
+                const saved = sessionStorage.getItem(storeKey);
+                if (saved && tabs.some(t => t.dataset.tab === saved)) { initial = saved; }
+            } catch (e) { /* private mode */ }
+        }
+        show(initial, false);
+    })();
+
+    /* -----------------------------------------------------------------
+       Textarea que crece hacia abajo (como un documento)
+       ----------------------------------------------------------------- */
+    (function autoGrow() {
+        const fields = $$('textarea[data-autogrow]');
+        if (!fields.length) { return; }
+
+        const fit = (el) => {
+            el.style.height = 'auto';
+            el.style.height = (el.scrollHeight + 2) + 'px';
+        };
+
+        fields.forEach(el => {
+            fit(el);
+            el.addEventListener('input', () => fit(el));
+        });
+        // Al abrir una pestaña que estaba oculta, recalcular (scrollHeight = 0 si estaba display:none)
+        window.addEventListener('resize', () => fields.forEach(fit));
+        document.querySelectorAll('.form-tab').forEach(t =>
+            t.addEventListener('click', () => setTimeout(() => fields.forEach(fit), 0))
+        );
+    })();
+
+    /* -----------------------------------------------------------------
        Cálculo de precio en vivo (costo → ganancia → precio final)
        ----------------------------------------------------------------- */
     (function priceCalculator() {
@@ -59,8 +132,15 @@
 
         let lastEdited = 'profit';
 
-        function recalc() {
+        function recalc(initial) {
             const c = toNumber(cost?.value);
+
+            // Al abrir el formulario: si el producto ya tiene un precio final
+            // cargado, se respeta (se deduce la ganancia hacia atrás) y NUNCA
+            // se pisa con 0 aunque el costo sea 0.
+            if (initial && toNumber(final?.value) > 0) {
+                lastEdited = 'final';
+            }
 
             if (lastEdited === 'final') {
                 const f = toNumber(final?.value);
@@ -74,7 +154,7 @@
             const amount = c * (p / 100);
             const f      = c + amount;
 
-            if (final) { final.value = f.toFixed(2); }
+            if (final && !initial) { final.value = f.toFixed(2); }
             paint(c, amount, f);
         }
 
@@ -92,7 +172,7 @@
         profit?.addEventListener('input', () => { lastEdited = 'profit'; recalc(); });
         final?.addEventListener('input', () => { lastEdited = 'final'; recalc(); });
 
-        recalc();
+        recalc(true);
     })();
 
     /* -----------------------------------------------------------------

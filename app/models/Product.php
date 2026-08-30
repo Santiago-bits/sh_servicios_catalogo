@@ -286,7 +286,8 @@ class Product extends Model
     public function findFull(int $id): ?array
     {
         return Database::selectOne(
-            'SELECT p.*, ' . self::EXTRA_COLUMNS . self::JOIN_BASE . ' WHERE p.id = :id LIMIT 1',
+            'SELECT p.*, ' . self::EXTRA_COLUMNS . ', uu.name AS updated_by_name'
+            . self::JOIN_BASE . ' LEFT JOIN users uu ON uu.id = p.updated_by WHERE p.id = :id LIMIT 1',
             ['id' => $id]
         );
     }

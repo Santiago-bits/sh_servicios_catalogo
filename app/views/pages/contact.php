@@ -37,69 +37,80 @@ use App\Services\WhatsAppService;
             </div>
 
             <div class="col-lg-5">
+                <?php
+                $iconDark = 'width:44px;height:44px;flex-shrink:0;display:grid;place-items:center;border-radius:10px;background:#1b1b1b;color:#F5C400';
+                $iconWa   = 'width:44px;height:44px;flex-shrink:0;display:grid;place-items:center;border-radius:10px;background:#25D366;color:#fff';
+                $grpLabel = 'font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a9a9a;margin:18px 0 2px';
+                ?>
                 <div class="contact-card mb-4">
-                    <h2 class="h5 mb-3">Datos de contacto</h2>
+                    <h2 class="h5 mb-1">Datos de contacto</h2>
 
+                    <!-- VENTAS -->
+                    <p style="<?= $grpLabel ?>;margin-top:8px">Ventas</p>
                     <?php if (setting('contact_whatsapp')): ?>
                         <div class="contact-info-item">
-                            <span class="contact-info-item__icon" style="background:#25D366;color:#fff"><i class="bi bi-whatsapp"></i></span>
+                            <span style="<?= $iconWa ?>"><?= bs_icon('whatsapp') ?></span>
                             <div>
-                                <strong>WhatsApp</strong>
-                                <a href="<?= e(WhatsAppService::generalLink()) ?>" target="_blank" rel="noopener">
-                                    +<?= e(setting('contact_whatsapp')) ?>
-                                </a>
+                                <strong>Teléfono de ventas</strong>
+                                <a href="<?= e(WhatsAppService::generalLink()) ?>" target="_blank" rel="noopener">+<?= e(setting('contact_whatsapp')) ?></a>
                             </div>
                         </div>
                     <?php endif; ?>
-
-                    <?php if (setting('contact_phone')): ?>
-                        <div class="contact-info-item">
-                            <span class="contact-info-item__icon"><i class="bi bi-telephone-fill"></i></span>
-                            <div>
-                                <strong>Teléfono</strong>
-                                <a href="tel:<?= e(preg_replace('/\s+/', '', (string) setting('contact_phone'))) ?>"><?= e(setting('contact_phone')) ?></a>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-
                     <?php if (setting('contact_email')): ?>
                         <div class="contact-info-item">
-                            <span class="contact-info-item__icon"><i class="bi bi-envelope-fill"></i></span>
+                            <span style="<?= $iconDark ?>"><?= bs_icon('envelope-fill') ?></span>
                             <div>
-                                <strong>Email ventas</strong>
+                                <strong>Email de ventas</strong>
                                 <a href="mailto:<?= e(setting('contact_email')) ?>"><?= e(setting('contact_email')) ?></a>
                             </div>
                         </div>
                     <?php endif; ?>
 
-                    <?php if (setting('contact_email_parts')): ?>
-                        <div class="contact-info-item">
-                            <span class="contact-info-item__icon"><i class="bi bi-nut-fill"></i></span>
-                            <div>
-                                <strong>Email repuestos</strong>
-                                <a href="mailto:<?= e(setting('contact_email_parts')) ?>"><?= e(setting('contact_email_parts')) ?></a>
+                    <!-- REPUESTOS -->
+                    <?php if (setting('contact_whatsapp_parts') || setting('contact_email_parts')): ?>
+                        <p style="<?= $grpLabel ?>">Repuestos</p>
+                        <?php if (setting('contact_whatsapp_parts')): ?>
+                            <div class="contact-info-item">
+                                <span style="<?= $iconWa ?>"><?= bs_icon('whatsapp') ?></span>
+                                <div>
+                                    <strong>Teléfono de repuestos</strong>
+                                    <a href="<?= e(WhatsAppService::link('Hola, tengo una consulta por repuestos.', WhatsAppService::partsNumber())) ?>"
+                                       target="_blank" rel="noopener">+<?= e(setting('contact_whatsapp_parts')) ?></a>
+                                </div>
                             </div>
-                        </div>
+                        <?php endif; ?>
+                        <?php if (setting('contact_email_parts')): ?>
+                            <div class="contact-info-item">
+                                <span style="<?= $iconDark ?>"><?= bs_icon('envelope-fill') ?></span>
+                                <div>
+                                    <strong>Email de repuestos</strong>
+                                    <a href="mailto:<?= e(setting('contact_email_parts')) ?>"><?= e(setting('contact_email_parts')) ?></a>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     <?php endif; ?>
 
-                    <?php if (setting('contact_address')): ?>
-                        <div class="contact-info-item">
-                            <span class="contact-info-item__icon"><i class="bi bi-geo-alt-fill"></i></span>
-                            <div>
-                                <strong>Dirección</strong>
-                                <span><?= e(setting('contact_address')) ?><?= setting('contact_city') ? ', ' . e(setting('contact_city')) : '' ?></span>
+                    <!-- GENERAL -->
+                    <?php if (setting('contact_address') || setting('contact_hours')): ?>
+                        <p style="<?= $grpLabel ?>">Dónde y cuándo</p>
+                        <?php if (setting('contact_address')): ?>
+                            <div class="contact-info-item">
+                                <span style="<?= $iconDark ?>"><?= bs_icon('geo-alt-fill') ?></span>
+                                <div>
+                                    <strong>Dirección</strong>
+                                    <span><?= e(setting('contact_address')) ?><?= setting('contact_city') ? ', ' . e(setting('contact_city')) : '' ?></span>
+                                </div>
                             </div>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if (setting('contact_hours')): ?>
-                        <div class="contact-info-item">
-                            <span class="contact-info-item__icon"><i class="bi bi-clock-fill"></i></span>
-                            <div>
-                                <strong>Horarios</strong>
-                                <span><?= nl2br(e(setting('contact_hours'))) ?></span>
+                        <?php endif; ?>
+                        <?php if (setting('contact_hours')): ?>
+                            <div class="contact-info-item">
+                                <span style="<?= $iconDark ?>"><?= bs_icon('clock-fill') ?></span>
+                                <div>
+                                    <strong>Horarios</strong>
+                                    <span><?= nl2br(e(setting('contact_hours'))) ?></span>
+                                </div>
                             </div>
-                        </div>
+                        <?php endif; ?>
                     <?php endif; ?>
 
                     <?php
@@ -128,7 +139,7 @@ use App\Services\WhatsAppService;
 
                 <?php if (WhatsAppService::isConfigured()): ?>
                     <a href="<?= e($whatsappLink) ?>" target="_blank" rel="noopener" class="btn btn-wa btn-lg w-100">
-                        <i class="bi bi-whatsapp"></i> Escribir por WhatsApp
+                        <?= bs_icon('whatsapp') ?> Escribir por WhatsApp
                     </a>
                 <?php endif; ?>
             </div>

@@ -99,7 +99,6 @@ use App\Services\StockService;
                         <th>Códigos</th>
                         <th>Categoría</th>
                         <th class="num">Stock</th>
-                        <?php if ($canSeeCost): ?><th class="num">Costo</th><?php endif; ?>
                         <th class="num">Precio</th>
                         <th>Ubicación</th>
                         <th class="actions">Acciones</th>
@@ -150,10 +149,6 @@ use App\Services\StockService;
                             <?php endif; ?>
                         </td>
 
-                        <?php if ($canSeeCost): ?>
-                            <td class="num text-muted-2"><?= e(money((float) ($product['cost_price'] ?? 0), (string) $product['currency'])) ?></td>
-                        <?php endif; ?>
-
                         <td class="num">
                             <strong><?= e(money((float) $product['final_price'], (string) $product['currency'])) ?></strong>
                             <?php if ($canSeeCost && (float) ($product['profit_percent'] ?? 0) > 0): ?>
@@ -198,7 +193,7 @@ use App\Services\StockService;
 
                 <?php if (empty($products)): ?>
                     <tr>
-                        <td colspan="<?= $canSeeCost ? 8 : 7 ?>" class="text-center py-5 text-muted-2">
+                        <td colspan="7" class="text-center py-5 text-muted-2">
                             <i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:8px"></i>
                             No hay repuestos que coincidan con los filtros.
                         </td>

@@ -32,15 +32,36 @@ class SettingController extends AdminController
         'sistema'      => ['Sistema', 'bi-gear'],
     ];
 
+    /**
+     * Grupos que NO se muestran en el panel simplificado. Sus valores
+     * quedan fijos en la base (defaults sensatos) y no se tocan al
+     * guardar. Para volver a mostrar uno, sacalo de esta lista.
+     */
+    private const HIDDEN_GROUPS = ['catalogo', 'cotizaciones', 'sistema', 'seo'];
+
+    /** Ajustes sueltos que se ocultan aunque su grupo se muestre. */
+    private const HIDDEN_KEYS = [
+        'company_legal', 'company_taxid', 'company_founded',
+        'contact_phone', 'contact_city', 'contact_map_embed',
+    ];
+
     public function index(): void
     {
-        $model = new Setting();
+        $model  = new Setting();
+        $groups = array_diff_key($model->grouped(), array_flip(self::HIDDEN_GROUPS));
+
+        foreach ($groups as $group => $items) {
+            $groups[$group] = array_values(array_filter(
+                $items,
+                static fn (array $s): bool => !in_array($s['key_name'], self::HIDDEN_KEYS, true)
+            ));
+        }
 
         $this->view('admin/settings/index', [
             'pageTitle'   => 'Configuración · Panel',
             'adminTitle'  => 'Configuración',
             'robots'      => 'noindex, nofollow',
-            'groups'      => $model->grouped(),
+            'groups'      => $groups,
             'groupLabels' => self::GROUP_LABELS,
             'currencies'  => $model->currencies(),
         ]);
@@ -49,7 +70,13 @@ class SettingController extends AdminController
     public function update(): void
     {
         $model    = new Setting();
-        $settings = $model->all();
+        // Sólo se procesan los grupos visibles: así los ajustes ocultos
+        // (que no vienen en el formulario) no se pisan al guardar.
+        $settings = array_filter(
+            $model->all(),
+            static fn (array $s): bool => !in_array($s['group_name'], self::HIDDEN_GROUPS, true)
+                && !in_array($s['key_name'], self::HIDDEN_KEYS, true)
+        );
         $changes  = [];
 
         foreach ($settings as $setting) {

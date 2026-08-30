@@ -71,6 +71,15 @@ class Category extends Model
         );
     }
 
+    /** Siguiente número de orden libre dentro del tipo, para que una categoría nueva quede al final. */
+    public function nextSortOrder(string $type): int
+    {
+        return (int) Database::scalar(
+            'SELECT COALESCE(MAX(sort_order), 0) + 1 FROM categories WHERE type = :type',
+            ['type' => $type]
+        );
+    }
+
     public function hasProducts(int $id): bool
     {
         return (int) Database::scalar(

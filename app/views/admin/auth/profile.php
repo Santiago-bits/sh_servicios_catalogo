@@ -93,19 +93,5 @@
                 </table>
             </div>
         </div>
-
-        <div class="card-admin">
-            <div class="card-admin__head"><h2><i class="bi bi-key-fill"></i> Mis permisos</h2></div>
-            <div class="card-admin__body">
-                <?php if (can('users.manage') && ($user['role_slug'] ?? '') === 'admin'): ?>
-                    <p class="chip chip--accent">Acceso total al sistema</p>
-                <?php endif; ?>
-                <div class="d-flex flex-wrap gap-1">
-                    <?php foreach ($permissions as $permission): ?>
-                        <span class="chip chip--neutral text-mono" style="font-size:.68rem"><?= e($permission) ?></span>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </div>
     </div>
 </div>

@@ -33,18 +33,14 @@ class CategoryController extends AdminController
         $model = new Category();
 
         $id = $model->create([
-            'type'             => $data['type'],
-            'parent_id'        => $data['parent_id'],
-            'name'             => $data['name'],
-            'slug'             => $model->uniqueSlug($data['name']),
-            'description'      => $data['description'],
-            'icon'             => $data['icon'],
-            'image'            => $this->uploadImage(),
-            'meta_title'       => $data['meta_title'],
-            'meta_description' => $data['meta_description'],
-            'sort_order'       => $data['sort_order'],
-            'featured'         => $data['featured'],
-            'active'           => $data['active'],
+            'type'       => $data['type'],
+            'name'       => $data['name'],
+            'slug'       => $model->uniqueSlug($data['name']),
+            'icon'       => $data['icon'],
+            'image'      => $this->uploadImage(),
+            'sort_order' => $model->nextSortOrder($data['type']),
+            'featured'   => 1,
+            'active'     => 1,
         ]);
 
         AuditService::log('create', 'catalog', 'category', $id, 'Categoría creada: ' . $data['name']);
@@ -64,22 +60,10 @@ class CategoryController extends AdminController
 
         $data = $this->validateInput();
 
-        // Una categoría no puede ser su propio padre
-        if ($data['parent_id'] === (int) $id) {
-            $data['parent_id'] = null;
-        }
-
         $payload = [
-            'type'             => $data['type'],
-            'parent_id'        => $data['parent_id'],
-            'name'             => $data['name'],
-            'description'      => $data['description'],
-            'icon'             => $data['icon'],
-            'meta_title'       => $data['meta_title'],
-            'meta_description' => $data['meta_description'],
-            'sort_order'       => $data['sort_order'],
-            'featured'         => $data['featured'],
-            'active'           => $data['active'],
+            'type' => $data['type'],
+            'name' => $data['name'],
+            'icon' => $data['icon'],
         ];
 
         if ($category['name'] !== $data['name']) {
@@ -123,33 +107,27 @@ class CategoryController extends AdminController
         $this->back();
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * Versión simplificada: una categoría es nombre, tipo, ícono e imagen.
+     * El orden se asigna solo y la categoría queda activa y visible.
+     *
+     * @return array<string,mixed>
+     */
     private function validateInput(): array
     {
         $data = $this->validate(Request::all(), [
-            'name'             => 'required|string|min:2|max:120',
-            'type'             => 'required|in:machine,spare_part,service',
-            'description'      => 'max:2000',
-            'icon'             => 'max:60',
-            'meta_title'       => 'max:180',
-            'meta_description' => 'max:300',
-            'sort_order'       => 'integer',
+            'name' => 'required|string|min:2|max:120',
+            'type' => 'required|in:machine,spare_part,service',
+            'icon' => 'max:60',
         ], [
             'name' => 'nombre',
             'type' => 'tipo',
         ]);
 
         return [
-            'name'             => $data['name'],
-            'type'             => $data['type'],
-            'parent_id'        => Request::int('parent_id') ?: null,
-            'description'      => $data['description'] ?? null,
-            'icon'             => $data['icon'] ?? null,
-            'meta_title'       => $data['meta_title'] ?? null,
-            'meta_description' => $data['meta_description'] ?? null,
-            'sort_order'       => (int) ($data['sort_order'] ?? 0),
-            'featured'         => Request::bool('featured') ? 1 : 0,
-            'active'           => Request::bool('active', true) ? 1 : 0,
+            'name' => $data['name'],
+            'type' => $data['type'],
+            'icon' => ($data['icon'] ?? '') !== '' ? $data['icon'] : null,
         ];
     }
 

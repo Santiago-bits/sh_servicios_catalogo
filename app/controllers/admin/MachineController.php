@@ -134,9 +134,9 @@ class MachineController extends ProductAdminController
             $provider = 'youtube';
             $ref      = $line;
 
-            if (preg_match('#(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/)([A-Za-z0-9_-]{6,20})#', $line, $m)) {
+            if (preg_match('~(?:youtube\.com/watch\?(?:[^\s]*&)?v=|youtu\.be/|youtube\.com/(?:embed|shorts|live|v)/)([A-Za-z0-9_-]{6,20})~i', $line, $m)) {
                 $ref = $m[1];
-            } elseif (preg_match('#vimeo\.com/(\d+)#', $line, $m)) {
+            } elseif (preg_match('~vimeo\.com/(?:video/)?(\d+)~i', $line, $m)) {
                 $provider = 'vimeo';
                 $ref      = $m[1];
             } elseif (!preg_match('/^[A-Za-z0-9_-]{6,20}$/', $line)) {

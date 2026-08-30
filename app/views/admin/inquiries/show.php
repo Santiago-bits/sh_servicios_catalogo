@@ -85,11 +85,6 @@ $badge = inquiry_status_badge((string) $inquiry['status']);
                     </a>
                 <?php endif; ?>
 
-                <?php if (can('quotes.create')): ?>
-                    <a href="<?= admin_url('cotizaciones/crear') ?>" class="btn btn-ghost btn-sm">
-                        <i class="bi bi-file-earmark-plus"></i> Crear cotización
-                    </a>
-                <?php endif; ?>
 
                 <a href="<?= admin_url('consultas') ?>" class="btn btn-ghost btn-sm ms-auto">
                     <i class="bi bi-arrow-left"></i> Volver

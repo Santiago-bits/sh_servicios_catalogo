@@ -132,28 +132,6 @@ use App\Services\PriceService;
                             <span class="form-error"><?= e($errors['telefono'] ?? '') ?></span>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label" for="q-cuit">CUIT</label>
-                            <input type="text" class="form-control" id="q-cuit" name="cuit" maxlength="40" value="<?= e(old('cuit')) ?>">
-                        </div>
-
-                        <?php if (!empty($options)): ?>
-                            <div class="col-md-6">
-                                <label class="form-label" for="q-financiacion">Forma de pago que te interesa</label>
-                                <select class="form-select" id="q-financiacion" name="financiacion">
-                                    <option value="">A definir</option>
-                                    <?php foreach ($options as $option): ?>
-                                        <option value="<?= (int) $option['id'] ?>">
-                                            <?= e($option['name']) ?>
-                                            <?php if ((int) $option['installments'] > 1): ?>
-                                                (<?= (int) $option['installments'] ?> cuotas)
-                                            <?php endif; ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                        <?php endif; ?>
-
                         <div class="col-12">
                             <label class="form-label d-block">¿Necesitás algún servicio adicional?</label>
                             <div class="d-flex flex-wrap gap-3">
@@ -212,32 +190,8 @@ use App\Services\PriceService;
                     </div>
 
                     <p class="form-hint mt-3">
-                        El total es orientativo: la cotización formal incluye descuentos, transporte y financiación.
+                        El total es orientativo: la cotización formal incluye descuentos y transporte.
                     </p>
-
-                    <?php if (!empty($financing)): ?>
-                        <hr class="my-3">
-                        <h3 class="h6 text-uppercase mb-2">Financiación posible</h3>
-                        <?php foreach (array_slice($financing, 0, 3) as $plan): ?>
-                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                                <div>
-                                    <strong class="d-block small"><?= e($plan['option_name']) ?></strong>
-                                    <?php if ($plan['installments'] > 1): ?>
-                                        <small class="text-muted-2">
-                                            Anticipo <?= e(money($plan['down_payment'])) ?>
-                                        </small>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="text-end">
-                                    <?php if ($plan['installments'] > 1): ?>
-                                        <strong><?= (int) $plan['installments'] ?> × <?= e(money($plan['installment_amount'])) ?></strong>
-                                    <?php else: ?>
-                                        <strong><?= e(money($plan['total'])) ?></strong>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>

@@ -7,8 +7,14 @@ use App\Services\SettingService;
 ?>
 <div class="auth-card">
     <div class="auth-card__head">
-        <span class="brand__mark"><i class="bi bi-truck-front-fill"></i></span>
-        <h1><?= e(SettingService::companyName()) ?></h1>
+        <?php $authLogo = (string) SettingService::get('company_logo', ''); ?>
+        <?php if ($authLogo !== ''): ?>
+            <img src="<?= e(upload_url($authLogo)) ?>" alt="<?= e(SettingService::companyName()) ?>"
+                 style="max-height:60px;max-width:200px;width:auto;object-fit:contain;margin:0 auto 6px;display:block">
+        <?php else: ?>
+            <span class="brand__mark"><i class="bi bi-truck-front-fill"></i></span>
+            <h1><?= e(SettingService::companyName()) ?></h1>
+        <?php endif; ?>
         <p>Panel de gestión interna</p>
     </div>
 

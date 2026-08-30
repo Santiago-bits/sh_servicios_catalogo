@@ -95,23 +95,14 @@ class ServiceController extends AdminController
             'icon'              => 'max:60',
             'short_description' => 'max:300',
             'description'       => 'max:20000',
-            'bullets'           => 'max:2000',
             'sort_order'        => 'integer',
         ], ['title' => 'título']);
-
-        // Características: una por línea → JSON
-        $bullets = null;
-        if (!empty($data['bullets'])) {
-            $lines   = array_values(array_filter(array_map('trim', explode("\n", (string) $data['bullets']))));
-            $bullets = $lines === [] ? null : json_encode($lines, JSON_UNESCAPED_UNICODE);
-        }
 
         return [
             'title'             => $data['title'],
             'icon'              => $data['icon'] ?? null,
             'short_description' => $data['short_description'] ?? null,
             'description'       => clean_html((string) ($data['description'] ?? '')) ?: null,
-            'bullets'           => $bullets,
             'featured'          => Request::bool('featured') ? 1 : 0,
             'sort_order'        => (int) ($data['sort_order'] ?? 0),
             'active'            => Request::bool('active', true) ? 1 : 0,

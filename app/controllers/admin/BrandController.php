@@ -30,14 +30,11 @@ class BrandController extends AdminController
         $data  = $this->validateInput();
         $model = new Brand();
 
-        // Si no se indicó un orden, la marca nueva va al final de la grilla.
-        if ((int) $data['sort_order'] <= 0) {
-            $data['sort_order'] = $model->nextSortOrder();
-        }
-
+        // La marca nueva va al final de la grilla.
         $id = $model->create(array_merge($data, [
-            'slug' => $model->uniqueSlug((string) $data['name']),
-            'logo' => $this->uploadLogo(),
+            'slug'       => $model->uniqueSlug((string) $data['name']),
+            'logo'       => $this->uploadLogo(),
+            'sort_order' => $model->nextSortOrder(),
         ]));
 
         AuditService::log('create', 'catalog', 'brand', $id, 'Marca creada: ' . $data['name']);
@@ -100,30 +97,21 @@ class BrandController extends AdminController
         $this->back();
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * Versión simplificada: una marca es sólo nombre y logo.
+     * El orden se asigna solo (al final) y toda marca queda activa.
+     *
+     * @return array<string,mixed>
+     */
     private function validateInput(): array
     {
         $data = $this->validate(Request::all(), [
-            'name'        => 'required|string|min:2|max:120',
-            'description' => 'max:2000',
-            'website'     => 'max:255',
-            'country'     => 'max:80',
-            'sort_order'  => 'integer',
+            'name' => 'required|string|min:2|max:120',
         ], ['name' => 'nombre']);
 
-        $website = trim((string) ($data['website'] ?? ''));
-        if ($website !== '' && !preg_match('#^https?://#i', $website)) {
-            $website = 'https://' . $website;
-        }
-
         return [
-            'name'        => $data['name'],
-            'description' => $data['description'] ?? null,
-            'website'     => $website !== '' ? $website : null,
-            'country'     => $data['country'] ?? null,
-            'sort_order'  => (int) ($data['sort_order'] ?? 0),
-            'featured'    => Request::bool('featured') ? 1 : 0,
-            'active'      => Request::bool('active', true) ? 1 : 0,
+            'name'   => $data['name'],
+            'active' => 1,
         ];
     }
 

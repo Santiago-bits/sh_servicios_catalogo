@@ -35,10 +35,8 @@ $router->get('/repuestos/{category}/{slug}', 'PartController@show');
 // --- Servicios / institucional --------------------------------------
 $router->get('/servicios', 'ServiceController@index');
 $router->get('/servicios/{slug}', 'ServiceController@show');
-$router->get('/nosotros', 'PageController@about');
 $router->get('/contacto', 'PageController@contact');
 $router->post('/contacto', 'InquiryController@store');
-$router->get('/financiacion', 'PageController@financing');
 
 // --- Buscador y herramientas ----------------------------------------
 $router->get('/buscar', 'SearchController@index');
@@ -64,7 +62,6 @@ $router->group('/api', static function (Router $router): void {
     $router->get('/repuestos', 'PartController@ajaxIndex');
     $router->get('/producto/{id:\d+}', 'ProductApiController@show');
     $router->get('/comparar', 'CompareController@data');
-    $router->post('/financiacion/calcular', 'FinancingController@calculate');
     $router->post('/consulta', 'InquiryController@quickStore');
     $router->post('/cotizador/agregar', 'QuoteController@addItem');
     $router->post('/cotizador/quitar', 'QuoteController@removeItem');
@@ -89,7 +86,8 @@ $router->group('/admin', static function (Router $router): void {
 
     // --- Dashboard ---------------------------------------------------
     $router->get('/', 'Admin\DashboardController@index', ['permission:dashboard.view']);
-    $router->get('/alertas', 'Admin\DashboardController@alerts', ['permission:dashboard.view']);
+    // Panel simplificado: alertas del sistema desactivadas.
+    // $router->get('/alertas', 'Admin\DashboardController@alerts', ['permission:dashboard.view']);
 
     // --- Maquinaria --------------------------------------------------
     $router->get('/maquinaria', 'Admin\MachineController@index', ['permission:machines.view']);
@@ -129,10 +127,16 @@ $router->group('/admin', static function (Router $router): void {
     $router->post('/marcas/{id:\d+}', 'Admin\BrandController@update', ['permission:brands.manage']);
     $router->post('/marcas/{id:\d+}/eliminar', 'Admin\BrandController@destroy', ['permission:brands.manage']);
 
+    // Sección "Características" oculta: la ficha técnica de la máquina usa
+    // solo los campos fijos del formulario, así que la lista de características
+    // personalizadas ya no se usa. El controlador sigue existiendo; para
+    // reactivarla, descomentar esto y volver a agregar su ítem en el menú.
+    /*
     $router->get('/caracteristicas', 'Admin\FeatureController@index', ['permission:features.manage']);
     $router->post('/caracteristicas', 'Admin\FeatureController@store', ['permission:features.manage']);
     $router->post('/caracteristicas/{id:\d+}', 'Admin\FeatureController@update', ['permission:features.manage']);
     $router->post('/caracteristicas/{id:\d+}/eliminar', 'Admin\FeatureController@destroy', ['permission:features.manage']);
+    */
 
     $router->get('/etiquetas', 'Admin\TagController@index', ['permission:tags.manage']);
     $router->post('/etiquetas', 'Admin\TagController@store', ['permission:tags.manage']);
@@ -144,6 +148,13 @@ $router->group('/admin', static function (Router $router): void {
     $router->post('/servicios/{id:\d+}', 'Admin\ServiceController@update', ['permission:services.manage']);
     $router->post('/servicios/{id:\d+}/eliminar', 'Admin\ServiceController@destroy', ['permission:services.manage']);
 
+    // =============================================================
+    //  SECCIONES OCULTAS EN EL PANEL SIMPLIFICADO
+    //  Los controladores siguen existiendo. Para reactivar una
+    //  sección: descomentá su bloque acá y volvé a agregar su
+    //  entrada en el menú (app/views/layouts/admin.php).
+    // =============================================================
+    /*
     // --- Precios -----------------------------------------------------
     $router->get('/precios', 'Admin\PriceController@index', ['permission:prices.view']);
     $router->post('/precios/{id:\d+}', 'Admin\PriceController@update', ['permission:prices.edit']);
@@ -169,6 +180,7 @@ $router->group('/admin', static function (Router $router): void {
     $router->post('/cotizaciones/{id:\d+}/eliminar', 'Admin\QuoteController@destroy', ['permission:quotes.delete']);
     $router->get('/cotizaciones/{id:\d+}/pdf', 'Admin\QuoteController@pdf', ['permission:quotes.view']);
     $router->post('/cotizaciones/{id:\d+}/email', 'Admin\QuoteController@sendEmail', ['permission:quotes.edit']);
+    */
 
     // --- Consultas ---------------------------------------------------
     $router->get('/consultas', 'Admin\InquiryController@index', ['permission:inquiries.view']);
@@ -176,6 +188,7 @@ $router->group('/admin', static function (Router $router): void {
     $router->post('/consultas/{id:\d+}', 'Admin\InquiryController@update', ['permission:inquiries.manage']);
     $router->post('/consultas/{id:\d+}/eliminar', 'Admin\InquiryController@destroy', ['permission:inquiries.manage']);
 
+    /*
     // --- Stock -------------------------------------------------------
     $router->get('/stock', 'Admin\StockController@index', ['permission:stock.view']);
     $router->post('/stock/movimiento', 'Admin\StockController@store', ['permission:stock.move']);
@@ -197,6 +210,7 @@ $router->group('/admin', static function (Router $router): void {
     $router->get('/estadisticas', 'Admin\StatsController@index', ['permission:stats.view']);
     $router->get('/estadisticas/datos', 'Admin\StatsController@data', ['permission:stats.view']);
     $router->get('/auditoria', 'Admin\AuditController@index', ['permission:audit.view']);
+    */
 
     // --- Configuración -----------------------------------------------
     $router->get('/configuracion', 'Admin\SettingController@index', ['permission:settings.manage']);

@@ -96,10 +96,6 @@ use App\Models\Service as ServiceModel;
                         <textarea class="form-control" id="s-desc" name="description" rows="4" maxlength="20000"></textarea>
                     </div>
                     <div class="col-12">
-                        <label class="form-label" for="s-bullets">Características (una por línea)</label>
-                        <textarea class="form-control" id="s-bullets" name="bullets" rows="3" maxlength="2000"></textarea>
-                    </div>
-                    <div class="col-12">
                         <label class="form-label" for="s-image">Imagen</label>
                         <input type="file" class="form-control" id="s-image" name="image" accept="image/*">
                     </div>
@@ -147,10 +143,6 @@ use App\Models\Service as ServiceModel;
                             <div class="col-12">
                                 <label class="form-label">Descripción completa</label>
                                 <textarea class="form-control" name="description" rows="5" maxlength="20000"><?= e($service['description'] ?? '') ?></textarea>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Características (una por línea)</label>
-                                <textarea class="form-control" name="bullets" rows="4" maxlength="2000"><?= e(implode("\n", ServiceModel::bullets($service['bullets']))) ?></textarea>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Reemplazar imagen</label>

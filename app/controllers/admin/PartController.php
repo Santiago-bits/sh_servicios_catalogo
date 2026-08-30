@@ -36,41 +36,66 @@ class PartController extends ProductAdminController
         ];
     }
 
-    /** @param array<string,mixed> $input */
+    /**
+     * Guarda los datos propios del repuesto. Sólo toca lo que venga en
+     * el formulario: el ABM simplificado no manda códigos, stock ni
+     * ubicación, así que esos valores se conservan.
+     *
+     * @param array<string,mixed> $input
+     */
     protected function saveTypeData(int $productId, array $input): void
     {
         $origins = ['original', 'alternativo', 'remanufacturado'];
+        $map = [
+            'oem_code'          => fn () => $this->text($input, 'oem_code', 80),
+            'manufacturer_code' => fn () => $this->text($input, 'manufacturer_code', 80),
+            'manufacturer'      => fn () => $this->text($input, 'manufacturer', 120),
+            'origin'            => fn () => in_array($input['origin'] ?? '', $origins, true) ? $input['origin'] : 'alternativo',
+            'unit'             => fn () => $this->text($input, 'unit', 20) ?? 'unidad',
+            'weight_kg'        => fn () => $this->decimal($input, 'weight_kg'),
+            'warehouse_id'     => fn () => !empty($input['warehouse_id']) ? (int) $input['warehouse_id'] : null,
+            'sector'           => fn () => $this->text($input, 'sector', 60),
+            'shelf'            => fn () => $this->text($input, 'shelf', 60),
+            'position'         => fn () => $this->text($input, 'position', 60),
+            'lead_time_days'   => fn () => $this->int($input, 'lead_time_days'),
+        ];
 
-        (new SparePart())->save($productId, [
-            'oem_code'          => $this->text($input, 'oem_code', 80),
-            'manufacturer_code' => $this->text($input, 'manufacturer_code', 80),
-            'manufacturer'      => $this->text($input, 'manufacturer', 120),
-            'origin'            => in_array($input['origin'] ?? '', $origins, true) ? $input['origin'] : 'alternativo',
-            'unit'              => $this->text($input, 'unit', 20) ?? 'unidad',
-            'weight_kg'         => $this->decimal($input, 'weight_kg'),
-            'warehouse_id'      => !empty($input['warehouse_id']) ? (int) $input['warehouse_id'] : null,
-            'sector'            => $this->text($input, 'sector', 60),
-            'shelf'             => $this->text($input, 'shelf', 60),
-            'position'          => $this->text($input, 'position', 60),
-            'lead_time_days'    => $this->int($input, 'lead_time_days'),
-        ]);
+        $data = [];
+        foreach ($map as $key => $resolver) {
+            if (array_key_exists($key, $input)) {
+                $data[$key] = $resolver();
+            }
+        }
 
-        // Stock: si cambió, se registra como ajuste con historial
-        $current  = (new Product())->find($productId);
-        $newStock = (int) normalize_decimal((string) ($input['stock'] ?? '0'));
-
-        Database::update('products', [
-            'stock_min'   => (int) normalize_decimal((string) ($input['stock_min'] ?? '0')),
-            'track_stock' => Request::bool('track_stock', true) ? 1 : 0,
-        ], 'id = :id', ['id' => $productId]);
-
-        if ($current !== null && (int) $current['stock'] !== $newStock) {
-            StockService::move(
-                $productId,
-                'ajuste',
-                $newStock,
-                (string) (Request::post('stock_reason') ?: 'Ajuste desde la ficha del repuesto')
+        if ($data !== []) {
+            (new SparePart())->save($productId, $data);
+        } else {
+            // Sin campos técnicos en el form: sólo asegurar que exista la fila.
+            Database::query(
+                'INSERT IGNORE INTO spare_parts (product_id, origin, unit) VALUES (:id, \'alternativo\', \'unidad\')',
+                ['id' => $productId]
             );
+        }
+
+        // Stock: sólo si el formulario lo maneja.
+        if (array_key_exists('stock_min', $input) || array_key_exists('track_stock', $input)) {
+            Database::update('products', [
+                'stock_min'   => (int) normalize_decimal((string) ($input['stock_min'] ?? '0')),
+                'track_stock' => Request::bool('track_stock', true) ? 1 : 0,
+            ], 'id = :id', ['id' => $productId]);
+        }
+
+        if (array_key_exists('stock', $input)) {
+            $current  = (new Product())->find($productId);
+            $newStock = (int) normalize_decimal((string) $input['stock']);
+            if ($current !== null && (int) $current['stock'] !== $newStock) {
+                StockService::move(
+                    $productId,
+                    'ajuste',
+                    $newStock,
+                    (string) (Request::post('stock_reason') ?: 'Ajuste desde la ficha del repuesto')
+                );
+            }
         }
     }
 
@@ -105,7 +130,10 @@ class PartController extends ProductAdminController
     {
         parent::saveRelations($productId, $input);
 
-        (new SparePart())->syncMachines($productId, array_map('intval', (array) ($input['machines'] ?? [])));
+        // Sólo sincroniza compatibilidad si el formulario la maneja.
+        if (array_key_exists('machines', $input)) {
+            (new SparePart())->syncMachines($productId, array_map('intval', (array) $input['machines']));
+        }
     }
 
     // ----------------------------------------------------------------

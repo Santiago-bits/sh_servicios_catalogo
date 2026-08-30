@@ -10,32 +10,30 @@ use App\Services\SettingService;
 use Core\Auth;
 
 $user = Auth::user();
+
+// ---------------------------------------------------------------------
+//  PANEL SIMPLIFICADO
+//  Se dejó solo lo necesario para un catálogo: productos, su
+//  organización, importar/exportar y configuración básica.
+//  Las secciones ocultas (Precios, Financiación, Cotizaciones, Stock,
+//  Estadísticas, Auditoría, Usuarios, Roles, Alertas) siguen en el
+//  código; para reactivar una, volvé a agregar su línea acá y
+//  descomentá su ruta en config/routes.php.
+// ---------------------------------------------------------------------
 $nav  = [
     ['section' => 'General'],
-    ['label' => 'Dashboard',      'icon' => 'bi-speedometer2',      'path' => '',                'perm' => 'dashboard.view'],
-    ['label' => 'Alertas',        'icon' => 'bi-bell-fill',         'path' => 'alertas',         'perm' => 'dashboard.view', 'badge' => $alertCount ?? 0],
+    ['label' => 'Inicio',         'icon' => 'bi-speedometer2',      'path' => '',                'perm' => 'dashboard.view'],
 
     ['section' => 'Catálogo'],
     ['label' => 'Maquinaria',     'icon' => 'bi-truck-front-fill',  'path' => 'maquinaria',      'perm' => 'machines.view'],
     ['label' => 'Repuestos',      'icon' => 'bi-nut-fill',          'path' => 'repuestos',       'perm' => 'parts.view'],
     ['label' => 'Categorías',     'icon' => 'bi-diagram-3-fill',    'path' => 'categorias',      'perm' => 'categories.manage'],
     ['label' => 'Marcas',         'icon' => 'bi-award-fill',        'path' => 'marcas',          'perm' => 'brands.manage'],
-    ['label' => 'Características','icon' => 'bi-sliders',           'path' => 'caracteristicas', 'perm' => 'features.manage'],
     ['label' => 'Etiquetas',      'icon' => 'bi-tags-fill',         'path' => 'etiquetas',       'perm' => 'tags.manage'],
     ['label' => 'Servicios',      'icon' => 'bi-tools',             'path' => 'servicios',       'perm' => 'services.manage'],
 
-    ['section' => 'Comercial'],
-    ['label' => 'Precios',        'icon' => 'bi-cash-stack',        'path' => 'precios',         'perm' => 'prices.view'],
-    ['label' => 'Financiación',   'icon' => 'bi-calendar-check',    'path' => 'financiacion',    'perm' => 'financing.manage'],
-    ['label' => 'Cotizaciones',   'icon' => 'bi-file-earmark-text', 'path' => 'cotizaciones',    'perm' => 'quotes.view'],
+    ['section' => 'Gestión'],
     ['label' => 'Consultas',      'icon' => 'bi-chat-dots-fill',    'path' => 'consultas',       'perm' => 'inquiries.view', 'badge' => $pendingInquiries ?? 0],
-    ['label' => 'Stock',          'icon' => 'bi-box-seam-fill',     'path' => 'stock',           'perm' => 'stock.view'],
-
-    ['section' => 'Sistema'],
-    ['label' => 'Estadísticas',   'icon' => 'bi-graph-up-arrow',    'path' => 'estadisticas',    'perm' => 'stats.view'],
-    ['label' => 'Auditoría',      'icon' => 'bi-shield-check',      'path' => 'auditoria',       'perm' => 'audit.view'],
-    ['label' => 'Usuarios',       'icon' => 'bi-people-fill',       'path' => 'usuarios',        'perm' => 'users.view'],
-    ['label' => 'Roles',          'icon' => 'bi-key-fill',          'path' => 'roles',           'perm' => 'roles.manage'],
     ['label' => 'Importar',       'icon' => 'bi-upload',            'path' => 'importar',        'perm' => 'data.import'],
     ['label' => 'Exportar',       'icon' => 'bi-download',          'path' => 'exportar',        'perm' => 'data.export'],
     ['label' => 'Configuración',  'icon' => 'bi-gear-fill',         'path' => 'configuracion',   'perm' => 'settings.manage'],
@@ -64,12 +62,18 @@ $nav  = [
     <!-- Barra lateral -->
     <aside class="admin-sidebar" id="adminSidebar">
         <div class="admin-sidebar__head">
+            <?php $adminLogo = (string) SettingService::get('company_logo', ''); ?>
             <a href="<?= admin_url() ?>" class="admin-logo">
-                <span class="brand__mark"><i class="bi bi-truck-front-fill"></i></span>
-                <span class="admin-logo__text">
-                    <strong><?= e(SettingService::companyName()) ?></strong>
-                    <small>Panel de gestión</small>
-                </span>
+                <?php if ($adminLogo !== ''): ?>
+                    <img src="<?= e(upload_url($adminLogo)) ?>" alt="<?= e(SettingService::companyName()) ?>" class="admin-logo__img"
+                         style="height:34px;width:auto;max-width:170px;object-fit:contain;background:#fff;padding:3px 6px;border-radius:6px;display:block">
+                <?php else: ?>
+                    <span class="brand__mark"><i class="bi bi-truck-front-fill"></i></span>
+                    <span class="admin-logo__text">
+                        <strong><?= e(SettingService::companyName()) ?></strong>
+                        <small>Panel de gestión</small>
+                    </span>
+                <?php endif; ?>
             </a>
             <button type="button" class="admin-sidebar__close" id="sidebarClose" aria-label="Cerrar menú">
                 <i class="bi bi-x-lg"></i>
@@ -117,11 +121,6 @@ $nav  = [
             <h1 class="admin-topbar__title"><?= e($adminTitle ?? 'Panel') ?></h1>
 
             <div class="admin-topbar__actions">
-                <a href="<?= admin_url('alertas') ?>" class="admin-icon-btn" title="Alertas">
-                    <i class="bi bi-bell"></i>
-                    <?php if (!empty($alertCount)): ?><span class="admin-icon-btn__dot"></span><?php endif; ?>
-                </a>
-
                 <div class="dropdown">
                     <button class="admin-user" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <span class="admin-user__avatar"><?= e(mb_strtoupper(mb_substr((string) ($user['name'] ?? '?'), 0, 1))) ?></span>
@@ -151,16 +150,6 @@ $nav  = [
         <div class="admin-content">
             <?= $view->section('content') ?>
         </div>
-
-        <footer class="admin-footer">
-            <span><?= e(SettingService::companyName()) ?> · Panel de gestión</span>
-            <?php if (APP_DEBUG): ?>
-                <span class="admin-footer__debug">
-                    <?= \Core\Database::queryCount() ?> consultas ·
-                    <?= number_format((microtime(true) - APP_START) * 1000, 1) ?> ms
-                </span>
-            <?php endif; ?>
-        </footer>
     </div>
 </div>
 
@@ -175,7 +164,8 @@ $nav  = [
     };
 </script>
 <script src="<?= asset('vendor/bootstrap/js/bootstrap.bundle.min.js') ?>" defer></script>
-<script src="<?= asset('vendor/chartjs/chart.umd.min.js') ?>" defer></script>
+<?php /* Chart.js sólo lo usaba la sección Estadísticas (oculta). Si se
+       reactiva, volver a agregar: vendor/chartjs/chart.umd.min.js */ ?>
 <script src="<?= asset('js/app.js') ?>" defer></script>
 <script src="<?= asset('js/admin.js') ?>" defer></script>
 <?= $view->section('scripts') ?>

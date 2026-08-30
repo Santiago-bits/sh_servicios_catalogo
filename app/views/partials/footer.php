@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Services\SettingService;
 
 $companyName = SettingService::companyName();
+$logo        = (string) setting('company_logo', '');
 
 // Categorías destacadas para los accesos rápidos del pie
 $footerMachines = (new Category())->featuredWithProducts('machine', 6);
@@ -20,14 +21,19 @@ $footerParts    = (new Category())->featuredWithProducts('spare_part', 6);
 
             <div class="col-lg-4">
                 <div class="footer-brand">
-                    <span class="brand__mark" aria-hidden="true"><i class="bi bi-truck-front-fill"></i></span>
-                    <div>
-                        <strong><?= e($companyName) ?></strong>
-                        <span><?= e(setting('company_slogan', '')) ?></span>
-                    </div>
+                    <?php if ($logo !== ''): ?>
+                        <img src="<?= e(upload_url($logo)) ?>" alt="<?= e($companyName) ?>" class="footer-brand__logo">
+                    <?php else: ?>
+                        <span class="brand__mark" aria-hidden="true"><i class="bi bi-truck-front-fill"></i></span>
+                        <div>
+                            <strong><?= e($companyName) ?></strong>
+                            <span><?= e(setting('company_slogan', '')) ?></span>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
-                <p class="footer-about"><?= e(str_limit((string) setting('company_description', ''), 220)) ?></p>
+                <?php $footerAbout = trim((string) setting('footer_about', '')) ?: (string) setting('company_description', ''); ?>
+                <p class="footer-about"><?= e(str_limit($footerAbout, 260)) ?></p>
 
                 <div class="footer-social">
                     <?php foreach ([
@@ -107,7 +113,6 @@ $footerParts    = (new Category())->featuredWithProducts('spare_part', 6);
             <p>&copy; <?= date('Y') ?> <?= e($companyName) ?>. Todos los derechos reservados.</p>
             <nav class="site-footer__links" aria-label="Enlaces secundarios">
                 <a href="<?= url('servicios') ?>">Servicios</a>
-                <a href="<?= url('financiacion') ?>">Financiación</a>
                 <a href="<?= url('recomendador') ?>">Asistente</a>
                 <a href="<?= url('comparar') ?>">Comparador</a>
                 <a href="<?= admin_url('login') ?>" rel="nofollow">Acceso interno</a>

@@ -19,13 +19,13 @@ class ImportController extends AdminController
 {
     public function index(): void
     {
-        $this->view('admin/imports/index', [
-            'pageTitle'  => 'Importar datos · Panel',
-            'adminTitle' => 'Importación masiva',
+        // Sección en desarrollo: se muestra un cartel en vez del importador.
+        $this->view('admin/wip', [
+            'pageTitle'  => 'Importar · Panel',
+            'adminTitle' => 'Importar',
             'robots'     => 'noindex, nofollow',
-            'preview'    => Session::get('_import_preview'),
-            'machineColumns' => ImportService::MACHINE_COLUMNS,
-            'partColumns'    => ImportService::PART_COLUMNS,
+            'wipTitle'   => 'Importar productos',
+            'wipText'    => 'Estamos trabajando en la importacion masiva desde Excel/CSV. Va a estar disponible proximamente.',
         ]);
     }
 

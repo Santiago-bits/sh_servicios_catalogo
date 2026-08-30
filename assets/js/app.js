@@ -125,6 +125,36 @@
     })();
 
     /* -----------------------------------------------------------------
+       Buscador colapsable de la cabecera
+       ----------------------------------------------------------------- */
+    (function searchToggle() {
+        const box    = $('#searchBox');
+        const toggle = $('#searchToggle');
+        if (!box || !toggle) { return; }
+
+        const input = $('#globalSearch', box);
+
+        const open = () => {
+            box.classList.add('is-open');
+            toggle.setAttribute('aria-expanded', 'true');
+            if (input) { setTimeout(() => input.focus(), 30); }
+        };
+        const close = () => {
+            box.classList.remove('is-open');
+            toggle.setAttribute('aria-expanded', 'false');
+        };
+
+        toggle.addEventListener('click', () => {
+            box.classList.contains('is-open') ? close() : open();
+        });
+
+        document.addEventListener('click', e => {
+            if (box.classList.contains('is-open') && !box.contains(e.target)) { close(); }
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { close(); } });
+    })();
+
+    /* -----------------------------------------------------------------
        Buscador con sugerencias
        ----------------------------------------------------------------- */
     (function search() {
@@ -512,84 +542,6 @@
             image.style.transform = 'scale(1.55)';
         });
         main.addEventListener('mouseleave', () => { image.style.transform = ''; });
-    })();
-
-    /* -----------------------------------------------------------------
-       Calculadora de financiación (tiempo real)
-       ----------------------------------------------------------------- */
-    (function financing() {
-        const form = $('#financeCalc');
-        if (!form) { return; }
-
-        const price        = $('#calcPrice', form);
-        const downRange    = $('#calcDownRange', form);
-        const downInput    = $('#calcDown', form);
-        const installments = $('#calcInstallments', form);
-        const interest     = $('#calcInterest', form);
-        const currency     = form.dataset.currency || 'ARS';
-
-        const out = {
-            down:    $('#outDown'),
-            balance: $('#outBalance'),
-            interest:$('#outInterest'),
-            fee:     $('#outFee'),
-            total:   $('#outTotal'),
-            count:   $('#outCount')
-        };
-
-        function calc() {
-            const p  = Number(price.value) || 0;
-            const d  = Math.min(Number(downInput.value) || 0, p);
-            const n  = Math.max(1, Number(installments.value) || 1);
-            const i  = Math.max(0, Number(interest.value) || 0);
-
-            const balance   = p - d;
-            const interestA = balance * (i / 100);
-            const financed  = balance + interestA;
-            const fee       = financed / n;
-            const total     = d + financed;
-
-            if (out.down)     { out.down.textContent     = money(d, currency); }
-            if (out.balance)  { out.balance.textContent  = money(balance, currency); }
-            if (out.interest) { out.interest.textContent = money(interestA, currency); }
-            if (out.fee)      { out.fee.textContent      = money(fee, currency); }
-            if (out.total)    { out.total.textContent    = money(total, currency); }
-            if (out.count)    { out.count.textContent    = n; }
-        }
-
-        if (downRange && downInput && price) {
-            downRange.addEventListener('input', () => {
-                downInput.value = Math.round((Number(price.value) || 0) * (Number(downRange.value) / 100));
-                calc();
-            });
-            downInput.addEventListener('input', () => {
-                const p = Number(price.value) || 1;
-                downRange.value = Math.min(100, Math.round((Number(downInput.value) / p) * 100));
-                calc();
-            });
-        }
-
-        [price, installments, interest].forEach(el => {
-            if (el) { el.addEventListener('input', calc); }
-        });
-
-        // Planes preconfigurados: al elegir uno, se cargan sus valores
-        $$('[data-plan]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const plan = JSON.parse(btn.dataset.plan);
-                if (downInput)    { downInput.value = plan.down_payment; }
-                if (installments) { installments.value = plan.installments; }
-                if (interest)     { interest.value = plan.interest_percent; }
-                if (downRange && price) {
-                    downRange.value = Math.round((plan.down_payment / (Number(price.value) || 1)) * 100);
-                }
-                $$('[data-plan]').forEach(b => b.classList.remove('is-featured'));
-                btn.classList.add('is-featured');
-                calc();
-            });
-        });
-
-        calc();
     })();
 
     /* -----------------------------------------------------------------

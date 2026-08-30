@@ -98,7 +98,6 @@ use App\Services\PriceService;
                         <th>Marca / Modelo</th>
                         <th>Año</th>
                         <th>Capacidad</th>
-                        <?php if ($canSeeCost): ?><th class="num">Costo</th><?php endif; ?>
                         <th class="num">Precio</th>
                         <th>Estado</th>
                         <th>Publicada</th>
@@ -131,10 +130,6 @@ use App\Services\PriceService;
                         <td><?= $product['year'] ? (int) $product['year'] : '—' ?></td>
                         <td><?= !empty($product['capacity_kg']) ? e(kg_to_human((float) $product['capacity_kg'])) : '—' ?></td>
 
-                        <?php if ($canSeeCost): ?>
-                            <td class="num text-muted-2"><?= e(money((float) ($product['cost_price'] ?? 0), (string) $product['currency'])) ?></td>
-                        <?php endif; ?>
-
                         <td class="num">
                             <strong><?= e(money((float) $product['final_price'], (string) $product['currency'])) ?></strong>
                             <?php if ($canSeeCost && (float) ($product['profit_percent'] ?? 0) > 0): ?>
@@ -163,11 +158,13 @@ use App\Services\PriceService;
                                     <i class="bi bi-pencil"></i>
                                 </a>
                             <?php endif; ?>
+                            <?php /* Panel simplificado: historial de precios desactivado.
                             <?php if (can('prices.history')): ?>
                                 <a href="<?= admin_url('precios/' . (int) $product['id'] . '/historial') ?>" class="btn-icon" title="Historial de precios">
                                     <i class="bi bi-clock-history"></i>
                                 </a>
                             <?php endif; ?>
+                            */ ?>
                             <?php if (can('machines.delete')): ?>
                                 <form method="post" action="<?= admin_url('maquinaria/' . (int) $product['id'] . '/eliminar') ?>"
                                       class="d-inline" data-confirm="¿Eliminar «<?= e($product['name']) ?>»? Esta acción no se puede deshacer.">
@@ -183,7 +180,7 @@ use App\Services\PriceService;
 
                 <?php if (empty($products)): ?>
                     <tr>
-                        <td colspan="<?= $canSeeCost ? 9 : 8 ?>" class="text-center py-5 text-muted-2">
+                        <td colspan="8" class="text-center py-5 text-muted-2">
                             <i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:8px"></i>
                             No hay máquinas que coincidan con los filtros.
                         </td>

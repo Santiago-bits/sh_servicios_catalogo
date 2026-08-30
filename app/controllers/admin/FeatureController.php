@@ -21,23 +21,15 @@ class FeatureController extends AdminController
     {
         $features = Database::select(
             'SELECT f.*, (SELECT COUNT(*) FROM feature_values fv WHERE fv.feature_id = f.id) AS uses
-               FROM features f ORDER BY f.applies_to ASC, f.sort_order ASC, f.name ASC'
+               FROM features f ORDER BY f.name ASC'
         );
 
-        $grouped = [];
-        foreach ($features as $feature) {
-            $grouped[$feature['group_name'] ?: 'General'][] = $feature;
-        }
-
         $this->view('admin/features/index', [
-            'pageTitle'  => 'Características técnicas · Panel',
-            'adminTitle' => 'Características técnicas',
+            'pageTitle'  => 'Características · Panel',
+            'adminTitle' => 'Características',
             'robots'     => 'noindex, nofollow',
             'features'   => $features,
-            'grouped'    => $grouped,
-            'groups'     => array_values(array_unique(array_column($features, 'group_name'))),
             'types'      => ['machine' => 'Maquinaria', 'spare_part' => 'Repuestos', 'both' => 'Ambos'],
-            'inputTypes' => ['text' => 'Texto', 'number' => 'Número', 'select' => 'Lista de opciones', 'boolean' => 'Sí / No'],
         ]);
     }
 
@@ -103,42 +95,36 @@ class FeatureController extends AdminController
         $this->back();
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * Versión simplificada: una característica es sólo un nombre, una
+     * unidad opcional y a qué productos se aplica. Todo lo demás queda
+     * fijo (campo de texto, visible en el sitio, activa).
+     *
+     * @return array<string,mixed>
+     */
     private function validateInput(): array
     {
         $data = $this->validate(Request::all(), [
             'name'       => 'required|string|min:2|max:120',
-            'group_name' => 'max:80',
             'unit'       => 'max:20',
-            'input_type' => 'required|in:text,number,select,boolean',
             'applies_to' => 'required|in:machine,spare_part,both',
-            'sort_order' => 'integer',
-            'options'    => 'max:2000',
         ], [
             'name'       => 'nombre',
-            'input_type' => 'tipo de dato',
             'applies_to' => 'se aplica a',
         ]);
 
-        // Las opciones se cargan una por línea y se guardan como JSON
-        $options = null;
-        if (($data['input_type'] ?? '') === 'select' && !empty($data['options'])) {
-            $lines   = array_values(array_filter(array_map('trim', explode("\n", (string) $data['options']))));
-            $options = $lines === [] ? null : json_encode($lines, JSON_UNESCAPED_UNICODE);
-        }
-
         return [
             'name'       => $data['name'],
-            'group_name' => $data['group_name'] ?? 'General',
-            'unit'       => $data['unit'] ?? null,
-            'input_type' => $data['input_type'],
+            'group_name' => 'General',
+            'unit'       => ($data['unit'] ?? '') !== '' ? $data['unit'] : null,
+            'input_type' => 'text',
             'applies_to' => $data['applies_to'],
-            'options'    => $options,
-            'sort_order' => (int) ($data['sort_order'] ?? 0),
-            'filterable' => Request::bool('filterable') ? 1 : 0,
-            'comparable' => Request::bool('comparable', true) ? 1 : 0,
-            'public'     => Request::bool('public', true) ? 1 : 0,
-            'active'     => Request::bool('active', true) ? 1 : 0,
+            'options'    => null,
+            'sort_order' => 0,
+            'filterable' => 0,
+            'comparable' => 1,
+            'public'     => 1,
+            'active'     => 1,
         ];
     }
 }

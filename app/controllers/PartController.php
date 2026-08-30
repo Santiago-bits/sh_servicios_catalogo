@@ -13,7 +13,6 @@ namespace App\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
-use App\Services\FinancingService;
 use App\Services\PriceService;
 use App\Services\SearchService;
 use App\Services\SettingService;
@@ -123,8 +122,6 @@ class PartController extends Controller
 
         StatsService::trackView((int) $product['id']);
 
-        $price = PriceService::effectivePrice($product);
-
         $this->view('parts/show', [
             'pageTitle'       => ($product['meta_title'] ?: $product['name']) . ' · Repuestos · ' . SettingService::companyName(),
             'metaDescription' => $product['meta_description'] ?: str_limit((string) $product['short_description'], 155),
@@ -141,9 +138,6 @@ class PartController extends Controller
             'compatibility'     => $productModel->compatibilityList((int) $product['id']),
             'compatibleMachines'=> $productModel->compatibleMachines((int) $product['id'], 8),
             'similar'           => $productModel->similar($product, 4),
-            'financingPlans'    => PriceService::isPublicPriceVisible($product) && $price > 100000
-                                   ? FinancingService::plansFor($price, 'spare_part', (string) $product['currency'])
-                                   : [],
             'whatsappLink'      => WhatsAppService::partLink($product),
             'type'              => 'spare_part',
         ]);

@@ -1,6 +1,9 @@
 <?php
 /**
  * ARCHIVO: app/views/admin/brands/index.php
+ * Marcas (versión simplificada: nombre + sitio web + logo).
+ *
+ * @var array<int,array<string,mixed>> $brands
  */
 ?>
 <div class="row g-3">
@@ -16,10 +19,8 @@
                         <thead>
                             <tr>
                                 <th>Marca</th>
-                                <th>País</th>
                                 <th class="num">Máquinas</th>
                                 <th class="num">Repuestos</th>
-                                <th>Estado</th>
                                 <th class="actions">Acciones</th>
                             </tr>
                         </thead>
@@ -33,29 +34,11 @@
                                         <?php else: ?>
                                             <span class="table-thumb d-grid" style="place-items:center;color:#B4B4B4"><i class="bi bi-award"></i></span>
                                         <?php endif; ?>
-                                        <span>
-                                            <span class="table-product__name"><?= e($brand['name']) ?></span>
-                                            <span class="table-product__meta">
-                                                <?php if (!empty($brand['website'])): ?>
-                                                    <a href="<?= e($brand['website']) ?>" target="_blank" rel="noopener">Sitio web</a>
-                                                <?php else: ?>
-                                                    <?= e($brand['slug']) ?>
-                                                <?php endif; ?>
-                                            </span>
-                                        </span>
+                                        <span class="table-product__name"><?= e($brand['name']) ?></span>
                                     </div>
                                 </td>
-                                <td class="text-muted-2"><?= e($brand['country'] ?? '—') ?></td>
                                 <td class="num"><?= (int) $brand['machines_count'] ?></td>
                                 <td class="num"><?= (int) $brand['parts_count'] ?></td>
-                                <td>
-                                    <span class="chip chip--<?= (int) $brand['active'] === 1 ? 'ok' : 'neutral' ?>">
-                                        <?= (int) $brand['active'] === 1 ? 'Activa' : 'Inactiva' ?>
-                                    </span>
-                                    <?php if ((int) $brand['featured'] === 1): ?>
-                                        <span class="chip chip--accent">Destacada</span>
-                                    <?php endif; ?>
-                                </td>
                                 <td class="actions">
                                     <button type="button" class="btn-icon" data-bs-toggle="modal" data-bs-target="#brandModal<?= (int) $brand['id'] ?>" title="Editar">
                                         <i class="bi bi-pencil"></i>
@@ -87,30 +70,9 @@
                         <input type="text" class="form-control" id="b-name" name="name" required maxlength="120">
                     </div>
                     <div class="col-12">
-                        <label class="form-label" for="b-web">Sitio web</label>
-                        <input type="text" class="form-control" id="b-web" name="website" maxlength="255" placeholder="toyota-forklifts.com">
-                    </div>
-                    <div class="col-8">
-                        <label class="form-label" for="b-country">País</label>
-                        <input type="text" class="form-control" id="b-country" name="country" maxlength="80">
-                    </div>
-                    <div class="col-4">
-                        <label class="form-label" for="b-order">Orden</label>
-                        <input type="number" class="form-control" id="b-order" name="sort_order" value="0">
-                        <p class="form-hint">0 = al final</p>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label" for="b-desc">Descripción</label>
-                        <textarea class="form-control" id="b-desc" name="description" rows="2" maxlength="2000"></textarea>
-                    </div>
-                    <div class="col-12">
                         <label class="form-label" for="b-logo">Logo</label>
-                        <input type="file" class="form-control" id="b-logo" name="logo" accept="image/*">
-                        <p class="form-hint">Se muestra en el carrusel de marcas de la home.</p>
-                    </div>
-                    <div class="col-12">
-                        <label class="filter-check"><input type="checkbox" name="featured" value="1"> Destacada</label>
-                        <label class="filter-check"><input type="checkbox" name="active" value="1" checked> Activa</label>
+                        <input type="file" class="form-control" id="b-logo" name="logo" accept="image/png,image/jpeg,image/webp">
+                        <p class="form-hint">Se muestra en la grilla de marcas de la home.</p>
                     </div>
                     <div class="col-12">
                         <button type="submit" class="btn btn-accent w-100"><i class="bi bi-plus-lg"></i> Crear marca</button>
@@ -138,32 +100,14 @@
                                 <input type="text" class="form-control" name="name" required maxlength="120" value="<?= e($brand['name']) ?>">
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Sitio web</label>
-                                <input type="text" class="form-control" name="website" maxlength="255" value="<?= e($brand['website'] ?? '') ?>">
-                            </div>
-                            <div class="col-8">
-                                <label class="form-label">País</label>
-                                <input type="text" class="form-control" name="country" maxlength="80" value="<?= e($brand['country'] ?? '') ?>">
-                            </div>
-                            <div class="col-4">
-                                <label class="form-label">Orden</label>
-                                <input type="number" class="form-control" name="sort_order" value="<?= (int) $brand['sort_order'] ?>">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Descripción</label>
-                                <textarea class="form-control" name="description" rows="2" maxlength="2000"><?= e($brand['description'] ?? '') ?></textarea>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Reemplazar logo</label>
-                                <input type="file" class="form-control" name="logo" accept="image/*">
-                            </div>
-                            <div class="col-12">
-                                <label class="filter-check">
-                                    <input type="checkbox" name="featured" value="1" <?= (int) $brand['featured'] === 1 ? 'checked' : '' ?>> Destacada
-                                </label>
-                                <label class="filter-check">
-                                    <input type="checkbox" name="active" value="1" <?= (int) $brand['active'] === 1 ? 'checked' : '' ?>> Activa
-                                </label>
+                                <label class="form-label">Logo</label>
+                                <?php if (!empty($brand['logo'])): ?>
+                                    <div class="mb-2">
+                                        <img src="<?= e(upload_url($brand['logo'])) ?>" alt="" style="max-height:44px;background:#fff;border-radius:6px;padding:4px;border:1px solid #E2E4E8">
+                                    </div>
+                                <?php endif; ?>
+                                <input type="file" class="form-control" name="logo" accept="image/png,image/jpeg,image/webp">
+                                <p class="form-hint">Dejalo vacío para conservar el actual.</p>
                             </div>
                         </div>
                     </div>

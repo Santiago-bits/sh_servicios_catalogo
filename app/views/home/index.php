@@ -17,6 +17,10 @@ use App\Services\WhatsAppService;
 
 $totalMachines = array_sum(array_column($machineCategories, 'products_count'));
 $totalParts    = array_sum(array_column($partCategories, 'products_count'));
+
+// El texto del hero se edita desde Configuración -> Empresa.
+$heroTitle = trim((string) setting('company_slogan', ''));
+$heroLead  = trim((string) setting('company_description', ''));
 ?>
 
 <!-- =================================================================
@@ -29,55 +33,42 @@ $totalParts    = array_sum(array_column($partCategories, 'products_count'));
                 <span class="hero__badge"><i class="bi bi-shield-check"></i> Venta · Alquiler · Service · Repuestos</span>
 
                 <h1 class="hero__title">
-                    Soluciones para la <em>industria</em> y el movimiento de cargas
+                    <?php if ($heroTitle !== ''): ?>
+                        <?= e($heroTitle) ?>
+                    <?php else: ?>
+                        Soluciones para la <em>industria</em> y el movimiento de cargas
+                    <?php endif; ?>
                 </h1>
 
                 <p class="hero__lead">
-                    Autoelevadores, maquinaria, repuestos y soluciones para tu empresa.
-                    Equipos revisados, stock permanente de repuestos y taller propio.
+                    <?php if ($heroLead !== ''): ?>
+                        <?= nl2br(e($heroLead)) ?>
+                    <?php else: ?>
+                        Autoelevadores, maquinaria, repuestos y soluciones para tu empresa.
+                        Equipos revisados, stock permanente de repuestos y taller propio.
+                    <?php endif; ?>
                 </p>
 
                 <div class="hero__actions">
-                    <a href="<?= url('maquinaria') ?>" class="btn btn-accent btn-lg">
-                        <i class="bi bi-truck-front-fill"></i> Ver maquinaria
+                    <a href="<?= url('maquinaria') ?>" class="btn btn-accent btn-lg" title="Ver maquinaria">
+                        <i class="bi bi-truck-front-fill"></i><span class="btn__label">Ver maquinaria</span>
                     </a>
-                    <a href="<?= url('repuestos') ?>" class="btn btn-outline-light-2 btn-lg">
-                        <i class="bi bi-search"></i> Buscar repuestos
+                    <a href="<?= url('repuestos') ?>" class="btn btn-outline-light-2 btn-lg" title="Buscar repuestos">
+                        <i class="bi bi-search"></i><span class="btn__label">Buscar repuestos</span>
                     </a>
-                    <a href="<?= url('cotizador') ?>" class="btn btn-outline-light-2 btn-lg">
-                        <i class="bi bi-file-earmark-text"></i> Solicitar cotización
+                    <a href="<?= url('cotizador') ?>" class="btn btn-outline-light-2 btn-lg" title="Solicitar cotización">
+                        <i class="bi bi-file-earmark-text"></i><span class="btn__label">Solicitar cotización</span>
                     </a>
-                    <?php if (WhatsAppService::isConfigured()): ?>
-                        <a href="<?= e(WhatsAppService::generalLink()) ?>" target="_blank" rel="noopener" class="btn btn-wa btn-lg">
-                            <i class="bi bi-whatsapp"></i> WhatsApp
-                        </a>
-                    <?php endif; ?>
                 </div>
 
-                <div class="hero__stats">
-                    <div class="hero-stat">
-                        <strong><?= number_es($totalMachines) ?></strong>
-                        <span>Máquinas en catálogo</span>
-                    </div>
-                    <div class="hero-stat">
-                        <strong><?= number_es($totalParts) ?></strong>
-                        <span>Repuestos disponibles</span>
-                    </div>
-                    <div class="hero-stat">
-                        <strong><?= count($brands) ?></strong>
-                        <span>Marcas que atendemos</span>
-                    </div>
-                    <div class="hero-stat">
-                        <strong><?= count($services) ?></strong>
-                        <span>Servicios</span>
-                    </div>
-                </div>
             </div>
 
             <div class="col-lg-6">
                 <div class="hero__visual">
                     <div class="hero__visual-frame">
-                        <img src="<?= asset('img/hero-forklift.svg') ?>" alt="Autoelevador en operación" width="800" height="600">
+                        <?php $heroImage = trim((string) setting('hero_image', '')); ?>
+                        <img src="<?= $heroImage !== '' ? e(upload_url($heroImage)) : asset('img/hero-forklift.svg') ?>"
+                             alt="<?= e(setting('company_name', 'Autoelevador en operación')) ?>" width="800" height="600">
                     </div>
                     <div class="hero__visual-tag">
                         <i class="bi bi-headset"></i>
@@ -108,10 +99,6 @@ $totalParts    = array_sum(array_column($partCategories, 'products_count'));
                 <i class="bi bi-truck"></i>
                 <div><strong>Logística propia</strong><span>Entregas en todo el país</span></div>
             </div>
-            <div class="trustbar__item">
-                <i class="bi bi-calendar-check-fill"></i>
-                <div><strong>Financiación</strong><span>Planes a medida</span></div>
-            </div>
         </div>
     </div>
 </section>
@@ -137,7 +124,13 @@ $totalParts    = array_sum(array_column($partCategories, 'products_count'));
         <div class="cat-grid">
             <?php foreach ($machineCategories as $category): ?>
                 <a class="cat-card reveal" href="<?= e(url('maquinaria/' . $category['slug'])) ?>">
-                    <span class="cat-card__icon"><i class="bi <?= e($category['icon'] ?: 'bi-gear-fill') ?>"></i></span>
+                    <span class="cat-card__icon<?= !empty($category['image']) ? ' cat-card__icon--img' : '' ?>">
+                        <?php if (!empty($category['image'])): ?>
+                            <img src="<?= e(upload_url($category['image'])) ?>" alt="" loading="lazy">
+                        <?php else: ?>
+                            <i class="bi <?= e($category['icon'] ?: 'bi-gear-fill') ?>"></i>
+                        <?php endif; ?>
+                    </span>
                     <h3 class="cat-card__title"><?= e($category['name']) ?></h3>
                     <span class="cat-card__count"><?= (int) $category['products_count'] ?> equipo(s)</span>
                     <span class="cat-card__arrow">Ver equipos <i class="bi bi-arrow-right"></i></span>
@@ -338,7 +331,6 @@ $totalParts    = array_sum(array_column($partCategories, 'products_count'));
                 ['bi-clock-history', 'Menos tiempo parado', 'Repuestos en stock y unidades móviles para atender en tu planta.'],
                 ['bi-clipboard-check', 'Equipos verificados', 'Cada máquina pasa por revisión de motor, hidráulica, frenos y mástil.'],
                 ['bi-diagram-3-fill', 'Compatibilidad garantizada', 'Cargamos la compatibilidad de cada repuesto por marca y modelo.'],
-                ['bi-graph-up-arrow', 'Financiación real', 'Planes en cuotas con anticipo, leasing y opciones a medida.'],
                 ['bi-people-fill', 'Asesoramiento previo', 'Analizamos cargas, alturas y pasillos antes de recomendarte un equipo.'],
                 ['bi-shield-lock-fill', 'Respaldo posventa', 'Garantía escrita, service programado y capacitación de operadores.'],
             ] as [$icon, $title, $text]): ?>
@@ -374,59 +366,80 @@ $totalParts    = array_sum(array_column($partCategories, 'products_count'));
             </div>
 
             <div class="col-lg-5">
+                <?php
+                $iconDark = 'width:44px;height:44px;flex-shrink:0;display:grid;place-items:center;border-radius:10px;background:#1b1b1b;color:#F5C400';
+                $iconWa   = 'width:44px;height:44px;flex-shrink:0;display:grid;place-items:center;border-radius:10px;background:#25D366;color:#fff';
+                $grpLabel = 'font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a9a9a;margin:16px 0 2px';
+                ?>
                 <div class="contact-card h-100">
-                    <h3 class="h5 mb-3">Datos de contacto</h3>
+                    <h3 class="h5 mb-1">Datos de contacto</h3>
 
-                    <?php if (setting('contact_phone')): ?>
-                        <div class="contact-info-item">
-                            <span class="contact-info-item__icon"><i class="bi bi-telephone-fill"></i></span>
-                            <div>
-                                <strong>Teléfono</strong>
-                                <a href="tel:<?= e(preg_replace('/\s+/', '', (string) setting('contact_phone'))) ?>"><?= e(setting('contact_phone')) ?></a>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-
+                    <!-- VENTAS -->
+                    <p style="<?= $grpLabel ?>;margin-top:8px">Ventas</p>
                     <?php if (setting('contact_whatsapp')): ?>
                         <div class="contact-info-item">
-                            <span class="contact-info-item__icon"><i class="bi bi-whatsapp"></i></span>
+                            <span style="<?= $iconWa ?>"><?= bs_icon('whatsapp') ?></span>
                             <div>
-                                <strong>WhatsApp</strong>
-                                <a href="<?= e(WhatsAppService::generalLink()) ?>" target="_blank" rel="noopener">
-                                    +<?= e(setting('contact_whatsapp')) ?>
-                                </a>
+                                <strong>Teléfono de ventas</strong>
+                                <a href="<?= e(WhatsAppService::generalLink()) ?>" target="_blank" rel="noopener">+<?= e(setting('contact_whatsapp')) ?></a>
                             </div>
                         </div>
                     <?php endif; ?>
-
                     <?php if (setting('contact_email')): ?>
                         <div class="contact-info-item">
-                            <span class="contact-info-item__icon"><i class="bi bi-envelope-fill"></i></span>
+                            <span style="<?= $iconDark ?>"><?= bs_icon('envelope-fill') ?></span>
                             <div>
-                                <strong>Email</strong>
+                                <strong>Email de ventas</strong>
                                 <a href="mailto:<?= e(setting('contact_email')) ?>"><?= e(setting('contact_email')) ?></a>
                             </div>
                         </div>
                     <?php endif; ?>
 
-                    <?php if (setting('contact_address')): ?>
-                        <div class="contact-info-item">
-                            <span class="contact-info-item__icon"><i class="bi bi-geo-alt-fill"></i></span>
-                            <div>
-                                <strong>Dirección</strong>
-                                <span><?= e(setting('contact_address')) ?><?= setting('contact_city') ? ', ' . e(setting('contact_city')) : '' ?></span>
+                    <!-- REPUESTOS -->
+                    <?php if (setting('contact_whatsapp_parts') || setting('contact_email_parts')): ?>
+                        <p style="<?= $grpLabel ?>">Repuestos</p>
+                        <?php if (setting('contact_whatsapp_parts')): ?>
+                            <div class="contact-info-item">
+                                <span style="<?= $iconWa ?>"><?= bs_icon('whatsapp') ?></span>
+                                <div>
+                                    <strong>Teléfono de repuestos</strong>
+                                    <a href="<?= e(WhatsAppService::link('Hola, tengo una consulta por repuestos.', WhatsAppService::partsNumber())) ?>"
+                                       target="_blank" rel="noopener">+<?= e(setting('contact_whatsapp_parts')) ?></a>
+                                </div>
                             </div>
-                        </div>
+                        <?php endif; ?>
+                        <?php if (setting('contact_email_parts')): ?>
+                            <div class="contact-info-item">
+                                <span style="<?= $iconDark ?>"><?= bs_icon('envelope-fill') ?></span>
+                                <div>
+                                    <strong>Email de repuestos</strong>
+                                    <a href="mailto:<?= e(setting('contact_email_parts')) ?>"><?= e(setting('contact_email_parts')) ?></a>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     <?php endif; ?>
 
-                    <?php if (setting('contact_hours')): ?>
-                        <div class="contact-info-item">
-                            <span class="contact-info-item__icon"><i class="bi bi-clock-fill"></i></span>
-                            <div>
-                                <strong>Horarios</strong>
-                                <span><?= nl2br(e(setting('contact_hours'))) ?></span>
+                    <!-- GENERAL -->
+                    <?php if (setting('contact_address') || setting('contact_hours')): ?>
+                        <p style="<?= $grpLabel ?>">Dónde y cuándo</p>
+                        <?php if (setting('contact_address')): ?>
+                            <div class="contact-info-item">
+                                <span style="<?= $iconDark ?>"><?= bs_icon('geo-alt-fill') ?></span>
+                                <div>
+                                    <strong>Dirección</strong>
+                                    <span><?= e(setting('contact_address')) ?><?= setting('contact_city') ? ', ' . e(setting('contact_city')) : '' ?></span>
+                                </div>
                             </div>
-                        </div>
+                        <?php endif; ?>
+                        <?php if (setting('contact_hours')): ?>
+                            <div class="contact-info-item">
+                                <span style="<?= $iconDark ?>"><?= bs_icon('clock-fill') ?></span>
+                                <div>
+                                    <strong>Horarios</strong>
+                                    <span><?= nl2br(e(setting('contact_hours'))) ?></span>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     <?php endif; ?>
 
                     <a href="<?= url('recomendador') ?>" class="btn btn-dark-2 w-100 mt-3">

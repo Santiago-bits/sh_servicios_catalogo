@@ -22,12 +22,13 @@ class ExportController extends AdminController
 {
     public function index(): void
     {
-        $this->view('admin/exports/index', [
-            'pageTitle'  => 'Exportar datos · Panel',
-            'adminTitle' => 'Exportación',
+        // Sección en desarrollo: se muestra un cartel en vez del exportador.
+        $this->view('admin/wip', [
+            'pageTitle'  => 'Exportar · Panel',
+            'adminTitle' => 'Exportar',
             'robots'     => 'noindex, nofollow',
-            'datasets'   => ExportService::DATASETS,
-            'canSeeCost' => Auth::canSeeCost(),
+            'wipTitle'   => 'Exportar productos',
+            'wipText'    => 'Estamos trabajando en la exportacion a Excel/CSV y el catalogo en PDF. Va a estar disponible proximamente.',
         ]);
     }
 

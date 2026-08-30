@@ -11,9 +11,8 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Models\FinancingOption;
+use App\Models\Inquiry;
 use App\Models\Service;
-use App\Services\FinancingService;
 use App\Services\EmailService;
 use App\Services\QuoteService;
 use App\Services\SettingService;
@@ -35,8 +34,6 @@ class QuoteController extends Controller
             'robots'          => 'noindex, follow',
             'items'           => $items,
             'totals'          => $totals,
-            'financing'       => FinancingService::plansFor($totals['total'], 'both'),
-            'options'         => (new FinancingOption())->activeFor('both', $totals['total']),
             'services'        => (new Service())->activeList(),
         ]);
     }
@@ -155,7 +152,7 @@ class QuoteController extends Controller
                 'status'              => 'borrador',
                 'source'              => 'web',
                 'notes'               => $data['mensaje'] ?? null,
-                'financing_option_id' => Request::int('financiacion') ?: null,
+                'financing_option_id' => null,
             ]
         );
 
@@ -166,14 +163,38 @@ class QuoteController extends Controller
 
         QuoteService::clearCart();
 
+        // Detalle de lo pedido, para el mensaje de la consulta
+        $lines = [];
+        foreach ($items as $it) {
+            $desc = trim((string) ($it['description'] ?? $it['code'] ?? 'Ítem'));
+            $lines[] = '· ' . $desc . ' (x' . (int) ($it['quantity'] ?? 1) . ')';
+        }
+        $detalle = "Productos / servicios solicitados:\n" . implode("\n", $lines);
+        $mensaje = trim(($data['mensaje'] ?? '') . "\n\n" . $detalle);
+
+        // Se registra como consulta para que aparezca en el panel (Consultas)
+        (new Inquiry())->create([
+            'name'       => $data['nombre'],
+            'email'      => $data['email'],
+            'phone'      => $data['telefono'] ?? null,
+            'company'    => $data['empresa'] ?? null,
+            'product_id' => null,
+            'subject'    => 'Solicitud de cotización (' . count($items) . ' ítem/s)',
+            'message'    => $mensaje,
+            'channel'    => 'web',
+            'status'     => 'nueva',
+            'ip'         => Request::ip(),
+            'user_agent' => Request::userAgent(),
+        ]);
+
         // Aviso interno por email (según la configuración de .env)
         EmailService::newInquiry([
             'name'         => $data['nombre'],
             'email'        => $data['email'],
             'phone'        => $data['telefono'],
             'company'      => $data['empresa'] ?? null,
-            'product_name' => 'Solicitud de cotización ' . $result['number'],
-            'message'      => ($data['mensaje'] ?? '') . "\n\n" . count($items) . ' ítem(s) solicitados.',
+            'product_name' => 'Solicitud de cotización',
+            'message'      => $mensaje,
         ]);
 
         $this->redirect('cotizador/enviada/' . $result['number']);
@@ -193,7 +214,7 @@ class QuoteController extends Controller
             'robots'       => 'noindex, nofollow',
             'quote'        => $quote,
             'whatsappLink' => WhatsAppService::link(
-                'Hola, acabo de enviar la solicitud de cotización ' . $quote['number'] . '. Quedo a la espera.'
+                'Hola, acabo de enviar una solicitud de cotización desde la web. Quedo a la espera.'
             ),
         ]);
     }

@@ -70,17 +70,20 @@
 
                                 <?php elseif ($setting['type'] === 'image'): ?>
                                     <label class="form-label" for="set-file-<?= e($key) ?>"><?= e($setting['label']) ?></label>
-                                    <?php if ($value !== ''): ?>
-                                        <div class="d-flex align-items-center gap-3 mb-2">
-                                            <img src="<?= e(upload_url($value)) ?>" alt="" style="max-height:56px;background:#fff;border-radius:6px;padding:4px;border:1px solid #E2E4E8">
-                                            <span class="text-muted-2 small text-mono"><?= e($value) ?></span>
-                                        </div>
-                                    <?php endif; ?>
+                                    <div class="d-flex align-items-center gap-3 mb-2">
+                                        <img id="prev-<?= e($key) ?>"
+                                             src="<?= $value !== '' ? e(upload_url($value)) : '' ?>"
+                                             alt="" <?= $value === '' ? 'hidden' : '' ?>
+                                             style="max-height:56px;max-width:220px;background:#fff;border-radius:6px;padding:4px;border:1px solid #E2E4E8;object-fit:contain">
+                                        <span class="text-muted-2 small text-mono"><?= $value !== '' ? e($value) : 'Sin imagen cargada' ?></span>
+                                    </div>
                                     <input type="file" class="form-control" id="set-file-<?= e($key) ?>"
-                                           name="file_<?= e($key) ?>" accept="image/*">
-                                    <?php if (!empty($setting['help'])): ?>
-                                        <p class="form-hint"><?= e($setting['help']) ?></p>
-                                    <?php endif; ?>
+                                           name="file_<?= e($key) ?>" accept="image/png,image/jpeg,image/webp,image/gif"
+                                           onchange="var p=document.getElementById('prev-<?= e($key) ?>');if(this.files[0]){p.src=URL.createObjectURL(this.files[0]);p.hidden=false;}">
+                                    <p class="form-hint">
+                                        <?= !empty($setting['help']) ? e($setting['help']) . ' ' : '' ?>
+                                        Elegí un archivo PNG, JPG o WEBP y tocá <strong>Guardar configuración</strong>.
+                                    </p>
 
                                 <?php else: ?>
                                     <label class="form-label" for="set-<?= e($key) ?>"><?= e($setting['label']) ?></label>
@@ -139,23 +142,12 @@
                             Con “Actualizar ahora” lo traés en el momento. Si el hosting bloquea la salida a internet,
                             seguí cargando el valor a mano en el campo de arriba.
                         </p>
-                        <button type="submit" class="btn btn-outline-accent btn-sm"
-                                formaction="<?= admin_url('configuracion/dolar') ?>" formmethod="post" formnovalidate>
+                        <button type="button" class="btn btn-outline-accent btn-sm"
+                                onclick="this.form.action='<?= admin_url('configuracion/dolar') ?>'; this.form.submit();">
                             <i class="bi bi-arrow-repeat"></i> Actualizar ahora desde lanacion.com.ar
                         </button>
                     <?php endif; ?>
 
-                    <?php if ($groupKey === 'sistema'): ?>
-                        <hr class="my-4">
-                        <div class="alert alert-light border">
-                            <strong><i class="bi bi-shop"></i> Venta online</strong>
-                            <p class="mb-0 small text-muted-2">
-                                Las tablas <code>customers</code>, <code>orders</code> y <code>order_items</code> ya existen
-                                en la base de datos. Cuando se habilite la venta online, se activa desde acá y se agregan
-                                los controladores del carrito y la pasarela de pago sin migrar nada.
-                            </p>
-                        </div>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>

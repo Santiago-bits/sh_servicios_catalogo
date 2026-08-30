@@ -17,14 +17,21 @@ final class WhatsAppService
         return SettingService::whatsapp();
     }
 
+    /** Número específico para repuestos; si no se cargó, usa el general. */
+    public static function partsNumber(): string
+    {
+        $parts = preg_replace('/\D+/', '', (string) SettingService::get('contact_whatsapp_parts', '')) ?? '';
+        return $parts !== '' ? $parts : self::number();
+    }
+
     public static function isConfigured(): bool
     {
         return self::number() !== '';
     }
 
-    public static function link(string $message = ''): string
+    public static function link(string $message = '', ?string $number = null): string
     {
-        $number = self::number();
+        $number ??= self::number();
         if ($number === '') {
             return '#';
         }
@@ -78,7 +85,7 @@ final class WhatsAppService
         $lines[] = '';
         $lines[] = '¿Tienen disponibilidad?';
 
-        return self::link(implode("\n", $lines));
+        return self::link(implode("\n", $lines), self::partsNumber());
     }
 
     public static function productLink(array $product): string

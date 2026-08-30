@@ -153,35 +153,46 @@ $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
                 </div>
 
                 <!-- Ficha rápida -->
-                <div class="quick-specs">
-                    <?php
-                    $quick = [
-                        ['Modelo',      $product['model'] ?? null],
-                        ['Año',         $product['year'] ?? null],
-                        ['Capacidad',   !empty($product['capacity_kg']) ? kg_to_human((float) $product['capacity_kg']) : null],
-                        ['Altura máx.', !empty($product['lift_height_mm']) ? mm_to_human((int) $product['lift_height_mm']) : null],
-                        ['Combustible', !empty($product['fuel']) ? fuel_label((string) $product['fuel']) : null],
-                        ['Horas',       !empty($product['hours']) ? number_es((float) $product['hours']) . ' hs' : null],
-                        ['Condición',   !empty($product['condition_type']) ? ucfirst((string) $product['condition_type']) : null],
-                        ['Ubicación',   $product['location'] ?? null],
-                    ];
-                    ?>
-                    <?php foreach ($quick as [$label, $value]): ?>
-                        <?php if ($value !== null && $value !== ''): ?>
+                <?php
+                $quick = array_values(array_filter([
+                    ['Modelo',       $product['model'] ?? null],
+                    ['Año',          $product['year'] ?? null],
+                    ['Capacidad',    !empty($product['capacity_kg']) ? kg_to_human((float) $product['capacity_kg']) : null],
+                    ['Altura máx.',  !empty($product['lift_height_mm']) ? mm_to_human((int) $product['lift_height_mm']) : null],
+                    ['Combustible',  !empty($product['fuel']) ? fuel_label((string) $product['fuel']) : null],
+                    ['Motor',        $product['engine'] ?? null],
+                    ['Potencia',     !empty($product['power_hp']) ? number_es((float) $product['power_hp']) . ' HP' : null],
+                    ['Transmisión',  $product['transmission'] ?? null],
+                    ['Horas',        !empty($product['hours']) ? number_es((float) $product['hours']) . ' hs' : null],
+                    ['Peso',         !empty($product['weight_kg']) ? kg_to_human((float) $product['weight_kg']) : null],
+                    ['Ruedas',       $product['tire_type'] ?? null],
+                    ['Condición',    !empty($product['condition_type']) ? ucfirst((string) $product['condition_type']) : null],
+                    ['Garantía',     $product['warranty'] ?? null],
+                    ['Ubicación',    $product['location'] ?? null],
+                ], static fn ($row) => $row[1] !== null && $row[1] !== ''));
+                ?>
+                <?php if ($quick !== []): ?>
+                    <div class="quick-specs">
+                        <?php foreach ($quick as [$label, $value]): ?>
                             <div class="quick-spec">
                                 <span><?= e($label) ?></span>
                                 <strong><?= e((string) $value) ?></strong>
                             </div>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-                </div>
-
-                <?php if (!empty($product['warranty'])): ?>
-                    <p class="d-flex align-items-center gap-2 text-muted-2">
-                        <i class="bi bi-shield-check text-accent fs-5"></i>
-                        Garantía: <strong class="text-dark"><?= e($product['warranty']) ?></strong>
-                    </p>
+                        <?php endforeach; ?>
+                        <?php /* Rellena la última fila para que no quede el hueco gris */ ?>
+                        <?php for ($f = (4 - count($quick) % 4) % 4; $f > 0; $f--): ?>
+                            <div class="quick-spec quick-spec--filler" aria-hidden="true"></div>
+                        <?php endfor; ?>
+                    </div>
                 <?php endif; ?>
+
+                <?php if (!empty($product['description'])): ?>
+                    <div class="product-description">
+                        <h2 class="product-description__title"><i class="bi bi-card-text"></i> Descripción</h2>
+                        <?= clean_html((string) $product['description']) ?>
+                    </div>
+                <?php endif; ?>
+
 
                 <!-- Documentación -->
                 <?php if (!empty($documents)): ?>
@@ -211,143 +222,40 @@ $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
     </div>
 </section>
 
-<!-- ============ DESCRIPCIÓN Y FICHA TÉCNICA ============ -->
+<!-- ============ FICHA TÉCNICA ============ -->
+<?php if (!empty($featureGroups)): ?>
 <section class="section section--gray" style="padding-top:0">
     <div class="container">
         <div class="row g-4">
-            <div class="col-lg-7">
-                <?php if (!empty($product['description'])): ?>
-                    <div class="panel">
-                        <div class="panel__head"><h2><i class="bi bi-card-text"></i> Descripción</h2></div>
-                        <div class="panel__body">
-                            <?= clean_html((string) $product['description']) ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
-
-                <?php if (!empty($featureGroups)): ?>
-                    <div class="panel">
-                        <div class="panel__head"><h2><i class="bi bi-sliders"></i> Características técnicas</h2></div>
-                        <div class="panel__body panel__body--flush">
-                            <?php foreach ($featureGroups as $groupName => $features): ?>
-                                <h3 class="spec-group__title"><?= e($groupName) ?></h3>
-                                <table class="spec-table">
-                                    <tbody>
-                                    <?php foreach ($features as $feature): ?>
-                                        <tr>
-                                            <th scope="row"><?= e($feature['name']) ?></th>
-                                            <td>
-                                                <?= e($feature['value_text']) ?>
-                                                <?php if (!empty($feature['unit'])): ?>
-                                                    <span class="text-muted-2"><?= e($feature['unit']) ?></span>
-                                                <?php endif; ?>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            </div>
-
-            <div class="col-lg-5">
-                <!-- Financiación -->
-                <?php if (!empty($financingPlans)): ?>
-                    <div class="panel">
-                        <div class="panel__head">
-                            <h2><i class="bi bi-calendar-check"></i> Financiación</h2>
-                            <a href="<?= url('financiacion') ?>" class="small">Ver todos los planes</a>
-                        </div>
-                        <div class="panel__body">
-                            <div class="finance-grid">
-                                <?php foreach (array_slice($financingPlans, 0, 4) as $plan): ?>
-                                    <button type="button"
-                                            class="finance-card text-start <?= $plan['featured'] ? 'is-featured' : '' ?>"
-                                            data-plan='<?= ejs([
-                                                'down_payment'     => $plan['down_payment'],
-                                                'installments'     => $plan['installments'],
-                                                'interest_percent' => $plan['interest_percent'],
-                                            ]) ?>'>
-                                        <div class="finance-card__name"><?= e($plan['option_name']) ?></div>
-                                        <?php if ($plan['installments'] > 1): ?>
-                                            <div class="finance-card__value">
-                                                <?= (int) $plan['installments'] ?> × <?= e(money($plan['installment_amount'], $plan['currency'])) ?>
-                                            </div>
-                                            <div class="finance-card__detail">
-                                                <span>Anticipo: <?= e(money($plan['down_payment'], $plan['currency'])) ?></span>
-                                                <span>Total: <?= e(money($plan['total'], $plan['currency'])) ?></span>
-                                            </div>
-                                        <?php else: ?>
-                                            <div class="finance-card__value"><?= e(money($plan['total'], $plan['currency'])) ?></div>
-                                            <div class="finance-card__detail">
-                                                <span><?= e($plan['description'] ?: 'Pago total') ?></span>
-                                            </div>
-                                        <?php endif; ?>
-                                    </button>
+            <div class="col-12">
+                <div class="panel">
+                    <div class="panel__head"><h2><i class="bi bi-sliders"></i> Características técnicas</h2></div>
+                    <div class="panel__body panel__body--flush">
+                        <?php foreach ($featureGroups as $groupName => $features): ?>
+                            <h3 class="spec-group__title"><?= e($groupName) ?></h3>
+                            <table class="spec-table">
+                                <tbody>
+                                <?php foreach ($features as $feature): ?>
+                                    <tr>
+                                        <th scope="row"><?= e($feature['name']) ?></th>
+                                        <td>
+                                            <?= e($feature['value_text']) ?>
+                                            <?php if (!empty($feature['unit'])): ?>
+                                                <span class="text-muted-2"><?= e($feature['unit']) ?></span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
                                 <?php endforeach; ?>
-                            </div>
-                        </div>
+                                </tbody>
+                            </table>
+                        <?php endforeach; ?>
                     </div>
-                <?php endif; ?>
-
-                <!-- Calculadora -->
-                <?php if ($showPrice): ?>
-                    <div class="calc" id="financeCalc" data-currency="<?= e($product['currency']) ?>">
-                        <h3><i class="bi bi-calculator"></i> Calculá tu cuota</h3>
-                        <p class="small text-muted-2 mb-3">Movés los valores y ves el resultado al instante.</p>
-
-                        <input type="hidden" id="calcPrice" value="<?= (float) $price ?>">
-
-                        <div class="mb-3">
-                            <label for="calcDown">Anticipo</label>
-                            <input type="number" class="form-control" id="calcDown" value="<?= (int) round($price * 0.3) ?>" min="0" step="10000">
-                            <input type="range" id="calcDownRange" min="0" max="100" value="30" class="mt-2">
-                        </div>
-
-                        <div class="row g-2 mb-2">
-                            <div class="col-6">
-                                <label for="calcInstallments">Cuotas</label>
-                                <select class="form-select" id="calcInstallments">
-                                    <?php foreach ([1, 3, 6, 12, 18, 24, 36] as $n): ?>
-                                        <option value="<?= $n ?>" <?= $n === 12 ? 'selected' : '' ?>><?= $n ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-6">
-                                <label for="calcInterest">Interés total (%)</label>
-                                <input type="number" class="form-control" id="calcInterest" value="24" min="0" max="200" step="1">
-                            </div>
-                        </div>
-
-                        <div class="calc-result">
-                            <div class="calc-result__item">
-                                <span>Anticipo</span><strong id="outDown">—</strong>
-                            </div>
-                            <div class="calc-result__item">
-                                <span>Saldo</span><strong id="outBalance">—</strong>
-                            </div>
-                            <div class="calc-result__item">
-                                <span>Interés</span><strong id="outInterest">—</strong>
-                            </div>
-                            <div class="calc-result__item calc-result__item--main">
-                                <span><span id="outCount">12</span> cuotas de</span><strong id="outFee">—</strong>
-                            </div>
-                            <div class="calc-result__item">
-                                <span>Total final</span><strong id="outTotal">—</strong>
-                            </div>
-                        </div>
-
-                        <p class="small text-muted-2 mt-3 mb-0">
-                            Los valores son orientativos. La cuota final se confirma en la cotización.
-                        </p>
-                    </div>
-                <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
 </section>
+<?php endif; ?>
 
 <!-- ============ REPUESTOS COMPATIBLES ============ -->
 <?php if (!empty($compatibleParts)): ?>

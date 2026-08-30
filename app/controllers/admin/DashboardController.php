@@ -1,62 +1,87 @@
 <?php
 /**
  * ARCHIVO: app/controllers/admin/DashboardController.php
+ * ---------------------------------------------------------------------
+ * Panel de inicio: resumen general del catálogo, cosas para revisar
+ * (sin foto, sin precio, stock bajo…) y últimas consultas.
  */
 
 declare(strict_types=1);
 
 namespace App\Controllers\Admin;
 
-use App\Models\ActivityLog;
 use App\Models\Inquiry;
-use App\Models\PriceHistory;
-use App\Models\Quote;
-use App\Models\SearchLog;
-use App\Models\StockMovement;
-use App\Services\AlertService;
-use App\Services\StatsService;
-use Core\Auth;
+use Core\Database;
 
 class DashboardController extends AdminController
 {
     public function index(): void
     {
-        $quoteModel = new Quote();
-        $quoteModel->expireOverdue();   // marca vencidas las que corresponda
+        $n = static fn (string $sql): int => (int) Database::scalar($sql);
+
+        $activeProduct = "active = 1 AND deleted_at IS NULL";
+        $anyProduct    = "deleted_at IS NULL";
+
+        $stats = [
+            'machines'        => $n("SELECT COUNT(*) FROM products WHERE type='machine' AND $anyProduct"),
+            'machines_active' => $n("SELECT COUNT(*) FROM products WHERE type='machine' AND $activeProduct"),
+            'parts'           => $n("SELECT COUNT(*) FROM products WHERE type='spare_part' AND $anyProduct"),
+            'parts_active'    => $n("SELECT COUNT(*) FROM products WHERE type='spare_part' AND $activeProduct"),
+            'categories'      => $n('SELECT COUNT(*) FROM categories'),
+            'brands'          => $n('SELECT COUNT(*) FROM brands'),
+            'services'        => $n('SELECT COUNT(*) FROM services'),
+            'featured'        => $n("SELECT COUNT(*) FROM products WHERE featured = 1 AND $activeProduct"),
+            'offers'          => $n("SELECT COUNT(*) FROM products WHERE is_offer = 1 AND $activeProduct"),
+            'inactive'        => $n("SELECT COUNT(*) FROM products WHERE active = 0 AND $anyProduct"),
+            'inquiries_new'   => $n("SELECT COUNT(*) FROM inquiries WHERE status = 'nueva'"),
+            'inquiries_total' => $n('SELECT COUNT(*) FROM inquiries'),
+        ];
+
+        // Cosas para revisar (cada una enlaza al listado filtrado)
+        $review = [
+            'low_stock' => [
+                'label' => 'Repuestos con stock bajo',
+                'count' => $n("SELECT COUNT(*) FROM products
+                                WHERE type='spare_part' AND $activeProduct AND track_stock = 1
+                                  AND (stock - stock_reserved) <= GREATEST(stock_min, 0)"),
+                'url'   => admin_url('repuestos?stock_bajo=1'),
+                'icon'  => 'bi-battery-low',
+            ],
+            'out_stock' => [
+                'label' => 'Repuestos sin stock',
+                'count' => $n("SELECT COUNT(*) FROM products
+                                WHERE type='spare_part' AND $activeProduct AND track_stock = 1 AND stock <= 0"),
+                'url'   => admin_url('repuestos'),
+                'icon'  => 'bi-x-octagon',
+            ],
+            'no_price' => [
+                'label' => 'Productos sin precio',
+                'count' => $n("SELECT COUNT(*) FROM products WHERE final_price <= 0 AND $activeProduct"),
+                'url'   => admin_url('repuestos?sin_precio=1'),
+                'icon'  => 'bi-tag',
+            ],
+            'no_image' => [
+                'label' => 'Productos sin foto',
+                'count' => $n("SELECT COUNT(*) FROM products p WHERE $activeProduct
+                                AND NOT EXISTS (SELECT 1 FROM product_images pi WHERE pi.product_id = p.id)"),
+                'url'   => admin_url('maquinaria?sin_imagen=1'),
+                'icon'  => 'bi-image',
+            ],
+            'no_category' => [
+                'label' => 'Productos sin categoría',
+                'count' => $n("SELECT COUNT(*) FROM products WHERE category_id IS NULL AND $activeProduct"),
+                'url'   => admin_url('maquinaria'),
+                'icon'  => 'bi-folder-x',
+            ],
+        ];
 
         $this->view('admin/dashboard/index', [
-            'pageTitle'   => 'Dashboard · Panel',
-            'adminTitle'  => 'Dashboard',
-            'robots'      => 'noindex, nofollow',
-
-            'stats'       => StatsService::dashboard(),
-            'viewsChart'  => StatsService::viewsByDay(30),
-            'quotesChart' => StatsService::quotesByMonth(12),
-            'categoryChart'=> StatsService::productsByCategory('machine'),
-
-            'topMachines' => StatsService::topProducts('machine', 5),
-            'topParts'    => StatsService::topProducts('spare_part', 5),
-            'topSearches' => (new SearchLog())->top(30, 8),
-
-            'lowStock'    => (new StockMovement())->lowStock(6),
-            'inquiries'   => (new Inquiry())->latest(6),
-            'quotes'      => $quoteModel->search([], 1, 6)['data'],
-            'quoteStats'  => $quoteModel->stats(),
-            'expiring'    => $quoteModel->expiringSoon(7),
-
-            'priceChanges'=> Auth::canSeeCost() ? (new PriceHistory())->latest(6) : [],
-            'activity'    => Auth::can('audit.view') ? (new ActivityLog())->latest(8) : [],
-            'alerts'      => AlertService::all(4),
-        ]);
-    }
-
-    public function alerts(): void
-    {
-        $this->view('admin/dashboard/alerts', [
-            'pageTitle'  => 'Alertas · Panel',
-            'adminTitle' => 'Alertas del sistema',
+            'pageTitle'  => 'Inicio · Panel',
+            'adminTitle' => 'Inicio',
             'robots'     => 'noindex, nofollow',
-            'alerts'     => AlertService::all(10),
+            'stats'      => $stats,
+            'review'     => $review,
+            'inquiries'  => (new Inquiry())->latest(6),
         ]);
     }
 }

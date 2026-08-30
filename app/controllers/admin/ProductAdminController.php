@@ -414,22 +414,23 @@ abstract class ProductAdminController extends AdminController
      */
     protected function resolvePrices(array $input, ?array $current): array
     {
-        if (Auth::canSeeCost()) {
-            $cost   = normalize_decimal((string) ($input['cost_price'] ?? '0'));
-            $profit = normalize_decimal((string) ($input['profit_percent'] ?? '0'));
-            $final  = normalize_decimal((string) ($input['final_price'] ?? '0'));
-
-            return PriceService::calculate($cost, $profit, $final > 0 ? $final : null);
-        }
-
-        // Sin permiso sobre costos: se conserva el costo actual y sólo
-        // se admite tocar el precio final si tiene prices.edit.
+        // Costo y ganancia sólo se tocan si el formulario los envía
+        // (modo avanzado). Si no, se conserva lo que ya tenía el producto.
         $cost   = (float) ($current['cost_price'] ?? 0);
         $profit = (float) ($current['profit_percent'] ?? 0);
-        $final  = Auth::can('prices.edit')
-            ? normalize_decimal((string) ($input['final_price'] ?? '0'))
+
+        if (Auth::canSeeCost() && array_key_exists('cost_price', $input)) {
+            $cost = normalize_decimal((string) $input['cost_price']);
+        }
+        if (Auth::canSeeCost() && array_key_exists('profit_percent', $input)) {
+            $profit = normalize_decimal((string) $input['profit_percent']);
+        }
+
+        $final = array_key_exists('final_price', $input) && (Auth::canSeeCost() || Auth::can('prices.edit'))
+            ? normalize_decimal((string) $input['final_price'])
             : (float) ($current['final_price'] ?? 0);
 
+        // Si se cargó un precio final, la ganancia se recalcula a partir de él.
         return PriceService::calculate($cost, $final > 0 ? 0.0 : $profit, $final > 0 ? $final : null);
     }
 
@@ -441,9 +442,7 @@ abstract class ProductAdminController extends AdminController
      */
     protected function basePayload(array $data, array $input, array $prices): array
     {
-        $offer = normalize_decimal((string) ($input['offer_price'] ?? '0'));
-
-        return [
+        $payload = [
             'code'              => mb_strtoupper(trim((string) $data['code'])),
             'name'              => $data['name'],
             'category_id'       => !empty($data['category_id']) ? (int) $data['category_id'] : null,
@@ -454,26 +453,41 @@ abstract class ProductAdminController extends AdminController
             'profit_percent'    => $prices['profit_percent'],
             'profit_amount'     => $prices['profit_amount'],
             'final_price'       => $prices['final_price'],
-            'offer_price'       => $offer > 0 ? $offer : null,
             'currency'          => in_array($input['currency'] ?? 'ARS', ['ARS', 'USD'], true) ? $input['currency'] : 'ARS',
             'price_visible'     => Request::bool('price_visible', true) ? 1 : 0,
             'price_updated_at'  => date('Y-m-d H:i:s'),
             'availability'      => $data['availability'] ?? 'disponible',
             'featured'          => Request::bool('featured') ? 1 : 0,
             'is_new'            => Request::bool('is_new') ? 1 : 0,
-            'is_offer'          => $offer > 0 && Request::bool('is_offer') ? 1 : 0,
-            'meta_title'        => $data['meta_title'] ?? null,
-            'meta_description'  => $data['meta_description'] ?? null,
             'active'            => Request::bool('active', true) ? 1 : 0,
         ];
+
+        // Oferta: sólo si el formulario la trae.
+        if (array_key_exists('offer_price', $input)) {
+            $offer = normalize_decimal((string) $input['offer_price']);
+            $payload['offer_price'] = $offer > 0 ? $offer : null;
+            $payload['is_offer']    = $offer > 0 && Request::bool('is_offer') ? 1 : 0;
+        }
+
+        // SEO: sólo se toca si el formulario lo trae (el de máquinas ya no lo tiene).
+        if (array_key_exists('meta_title', $input)) {
+            $payload['meta_title'] = trim((string) $input['meta_title']) !== '' ? $data['meta_title'] : null;
+        }
+        if (array_key_exists('meta_description', $input)) {
+            $payload['meta_description'] = trim((string) $input['meta_description']) !== '' ? $data['meta_description'] : null;
+        }
+
+        return $payload;
     }
 
     /** Etiquetas y características técnicas. @param array<string,mixed> $input */
     protected function saveRelations(int $productId, array $input): void
     {
-        (new Tag())->syncProduct($productId, array_map('intval', (array) ($input['tags'] ?? [])));
+        if (array_key_exists('tags', $input)) {
+            (new Tag())->syncProduct($productId, array_map('intval', (array) $input['tags']));
+        }
 
-        $features = $input['features'] ?? [];
+        $features = $input['features'] ?? null;
         if (is_array($features)) {
             (new Feature())->saveValues($productId, $features);
         }

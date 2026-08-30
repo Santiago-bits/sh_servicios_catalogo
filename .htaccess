@@ -65,13 +65,15 @@
 
 <IfModule mod_expires.c>
     ExpiresActive On
-    ExpiresByType text/css                "access plus 1 month"
-    ExpiresByType application/javascript  "access plus 1 month"
-    ExpiresByType image/jpeg              "access plus 6 months"
-    ExpiresByType image/png               "access plus 6 months"
-    ExpiresByType image/webp              "access plus 6 months"
-    ExpiresByType image/svg+xml           "access plus 6 months"
-    ExpiresByType font/woff2              "access plus 1 year"
+    # Tiempos cortos mientras el sitio está en desarrollo. Antes de
+    # publicar, se pueden subir de nuevo (CSS/JS a 1 mes, fuentes a 1 año).
+    ExpiresByType text/css                "access plus 1 hour"
+    ExpiresByType application/javascript  "access plus 1 hour"
+    ExpiresByType image/jpeg              "access plus 7 days"
+    ExpiresByType image/png               "access plus 7 days"
+    ExpiresByType image/webp             "access plus 7 days"
+    ExpiresByType image/svg+xml           "access plus 7 days"
+    ExpiresByType font/woff2              "access plus 7 days"
 </IfModule>
 
 Options -Indexes -MultiViews

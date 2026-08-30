@@ -1,6 +1,10 @@
 <?php
 /**
  * ARCHIVO: app/views/admin/categories/index.php
+ * Categorías (versión simplificada: nombre + tipo + ícono + imagen).
+ *
+ * @var array<int,array<string,mixed>> $categories
+ * @var array<string,string> $types
  */
 ?>
 <div class="row g-3">
@@ -17,10 +21,7 @@
                             <tr>
                                 <th>Categoría</th>
                                 <th>Tipo</th>
-                                <th>Padre</th>
                                 <th class="num">Productos</th>
-                                <th>Orden</th>
-                                <th>Estado</th>
                                 <th class="actions">Acciones</th>
                             </tr>
                         </thead>
@@ -29,13 +30,14 @@
                             <tr>
                                 <td>
                                     <div class="table-product">
-                                        <span class="table-thumb d-grid" style="place-items:center;background:#111;color:#F5C400">
-                                            <i class="bi <?= e($category['icon'] ?: 'bi-folder') ?>"></i>
-                                        </span>
-                                        <span>
-                                            <span class="table-product__name"><?= e($category['name']) ?></span>
-                                            <span class="table-product__meta text-mono"><?= e($category['slug']) ?></span>
-                                        </span>
+                                        <?php if (!empty($category['image'])): ?>
+                                            <img class="table-thumb" src="<?= e(upload_url($category['image'])) ?>" alt="" style="object-fit:cover">
+                                        <?php else: ?>
+                                            <span class="table-thumb d-grid" style="place-items:center;background:#111;color:#F5C400">
+                                                <i class="bi <?= e($category['icon'] ?: 'bi-folder') ?>"></i>
+                                            </span>
+                                        <?php endif; ?>
+                                        <span class="table-product__name"><?= e($category['name']) ?></span>
                                     </div>
                                 </td>
                                 <td>
@@ -43,17 +45,7 @@
                                         <?= e($types[$category['type']] ?? $category['type']) ?>
                                     </span>
                                 </td>
-                                <td class="text-muted-2"><?= e($category['parent_name'] ?? '—') ?></td>
                                 <td class="num"><?= (int) $category['products_count'] ?></td>
-                                <td><?= (int) $category['sort_order'] ?></td>
-                                <td>
-                                    <span class="chip chip--<?= (int) $category['active'] === 1 ? 'ok' : 'neutral' ?>">
-                                        <?= (int) $category['active'] === 1 ? 'Activa' : 'Inactiva' ?>
-                                    </span>
-                                    <?php if ((int) $category['featured'] === 1): ?>
-                                        <span class="chip chip--accent">Destacada</span>
-                                    <?php endif; ?>
-                                </td>
                                 <td class="actions">
                                     <button type="button" class="btn-icon" title="Editar"
                                             data-bs-toggle="modal" data-bs-target="#catModal<?= (int) $category['id'] ?>">
@@ -98,42 +90,16 @@
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label" for="c-parent">Categoría padre</label>
-                        <select class="form-select" id="c-parent" name="parent_id">
-                            <option value="">Ninguna (categoría principal)</option>
-                            <?php foreach ($categories as $category): ?>
-                                <option value="<?= (int) $category['id'] ?>">
-                                    <?= e($category['name']) ?> (<?= e($types[$category['type']] ?? '') ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="col-8">
-                        <label class="form-label" for="c-icon">Ícono</label>
+                        <label class="form-label" for="c-icon">Ícono <span class="text-muted-2">(opcional)</span></label>
                         <input type="text" class="form-control text-mono" id="c-icon" name="icon"
                                maxlength="60" placeholder="bi-truck-front-fill">
-                        <p class="form-hint">Nombre de un ícono de Bootstrap Icons.</p>
-                    </div>
-
-                    <div class="col-4">
-                        <label class="form-label" for="c-order">Orden</label>
-                        <input type="number" class="form-control" id="c-order" name="sort_order" value="0">
-                    </div>
-
-                    <div class="col-12">
-                        <label class="form-label" for="c-desc">Descripción</label>
-                        <textarea class="form-control" id="c-desc" name="description" rows="3" maxlength="2000"></textarea>
+                        <p class="form-hint">Nombre de un ícono de <a href="https://icons.getbootstrap.com/" target="_blank" rel="noopener">Bootstrap Icons</a>.</p>
                     </div>
 
                     <div class="col-12">
                         <label class="form-label" for="c-image">Imagen</label>
-                        <input type="file" class="form-control" id="c-image" name="image" accept="image/*">
-                    </div>
-
-                    <div class="col-12">
-                        <label class="filter-check"><input type="checkbox" name="featured" value="1"> Destacada en la home</label>
-                        <label class="filter-check"><input type="checkbox" name="active" value="1" checked> Activa</label>
+                        <input type="file" class="form-control" id="c-image" name="image" accept="image/png,image/jpeg,image/webp">
+                        <p class="form-hint">Si subís una imagen, se usa en vez del ícono (útil cuando Bootstrap Icons no tiene el dibujo, ej. un autoelevador). PNG con fondo transparente, ~120&times;120 px.</p>
                     </div>
 
                     <div class="col-12">
@@ -163,7 +129,7 @@
                                 <label class="form-label">Nombre *</label>
                                 <input type="text" class="form-control" name="name" required maxlength="120" value="<?= e($category['name']) ?>">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-12">
                                 <label class="form-label">Tipo *</label>
                                 <select class="form-select" name="type" required>
                                     <?php foreach ($types as $value => $label): ?>
@@ -171,49 +137,19 @@
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Categoría padre</label>
-                                <select class="form-select" name="parent_id">
-                                    <option value="">Ninguna</option>
-                                    <?php foreach ($categories as $option): ?>
-                                        <?php if ((int) $option['id'] === (int) $category['id']) { continue; } ?>
-                                        <option value="<?= (int) $option['id'] ?>" <?= (int) $category['parent_id'] === (int) $option['id'] ? 'selected' : '' ?>>
-                                            <?= e($option['name']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-8">
-                                <label class="form-label">Ícono</label>
+                            <div class="col-12">
+                                <label class="form-label">Ícono <span class="text-muted-2">(opcional)</span></label>
                                 <input type="text" class="form-control text-mono" name="icon" maxlength="60" value="<?= e($category['icon'] ?? '') ?>">
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Orden</label>
-                                <input type="number" class="form-control" name="sort_order" value="<?= (int) $category['sort_order'] ?>">
-                            </div>
                             <div class="col-12">
-                                <label class="form-label">Descripción</label>
-                                <textarea class="form-control" name="description" rows="3" maxlength="2000"><?= e($category['description'] ?? '') ?></textarea>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Título SEO</label>
-                                <input type="text" class="form-control" name="meta_title" maxlength="180" value="<?= e($category['meta_title'] ?? '') ?>">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Meta descripción</label>
-                                <textarea class="form-control" name="meta_description" rows="2" maxlength="300"><?= e($category['meta_description'] ?? '') ?></textarea>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Reemplazar imagen</label>
-                                <input type="file" class="form-control" name="image" accept="image/*">
-                            </div>
-                            <div class="col-12">
-                                <label class="filter-check">
-                                    <input type="checkbox" name="featured" value="1" <?= (int) $category['featured'] === 1 ? 'checked' : '' ?>> Destacada
-                                </label>
-                                <label class="filter-check">
-                                    <input type="checkbox" name="active" value="1" <?= (int) $category['active'] === 1 ? 'checked' : '' ?>> Activa
-                                </label>
+                                <label class="form-label">Imagen</label>
+                                <?php if (!empty($category['image'])): ?>
+                                    <div class="mb-2">
+                                        <img src="<?= e(upload_url($category['image'])) ?>" alt="" style="max-height:60px;border-radius:6px;border:1px solid #E2E4E8">
+                                    </div>
+                                <?php endif; ?>
+                                <input type="file" class="form-control" name="image" accept="image/png,image/jpeg,image/webp">
+                                <p class="form-hint">Dejalo vacío para conservar la actual.</p>
                             </div>
                         </div>
                     </div>
