@@ -241,82 +241,7 @@
         return div.innerHTML;
     }
 
-    /* -----------------------------------------------------------------
-       Favoritos (localStorage)
-       ----------------------------------------------------------------- */
-    const Favorites = {
-        key: 'shs_favorites',
-
-        all() {
-            try {
-                return JSON.parse(localStorage.getItem(this.key) || '[]').map(Number);
-            } catch (e) { return []; }
-        },
-
-        has(id) { return this.all().includes(Number(id)); },
-
-        toggle(id) {
-            id = Number(id);
-            let list = this.all();
-            const exists = list.includes(id);
-
-            list = exists ? list.filter(i => i !== id) : list.concat(id).slice(-80);
-
-            try { localStorage.setItem(this.key, JSON.stringify(list)); } catch (e) {}
-
-            this.paint();
-            this.sync();
-
-            return !exists;
-        },
-
-        paint() {
-            const list = this.all();
-            $$('[data-favorites-count]').forEach(el => { el.textContent = list.length; });
-            $$('[data-fav-toggle]').forEach(btn => {
-                const active = list.includes(Number(btn.dataset.favToggle));
-                btn.classList.toggle('is-active', active);
-                btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-                const icon = btn.querySelector('i');
-                if (icon) { icon.className = active ? 'bi bi-heart-fill' : 'bi bi-heart'; }
-                btn.title = active ? 'Quitar de favoritos' : 'Guardar en favoritos';
-            });
-            $$('[data-favorites-link]').forEach(link => {
-                link.href = SHS.baseUrl + '/favoritos?ids=' + list.join(',');
-            });
-        },
-
-        sync: debounce(function () {
-            fetch(SHS.baseUrl + '/api/favoritos/sincronizar', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-Token': SHS.csrf || ''
-                },
-                body: JSON.stringify({ ids: Favorites.all() })
-            }).catch(() => {});
-        }, 900)
-    };
-
-    window.shsFavorites = Favorites;
-
-    document.addEventListener('click', e => {
-        const btn = e.target.closest('[data-fav-toggle]');
-        if (!btn) { return; }
-
-        e.preventDefault();
-        const added = Favorites.toggle(btn.dataset.favToggle);
-        toast(added ? 'Agregado a favoritos.' : 'Quitado de favoritos.', added ? 'success' : 'info', 2600);
-    });
-
-    Favorites.paint();
-
-    // Enlace de la página de favoritos: se completa con los IDs guardados
-    if (document.body.classList.contains('page-favorites') && !location.search) {
-        const ids = Favorites.all();
-        if (ids.length) { location.replace(SHS.baseUrl + '/favoritos?ids=' + ids.join(',')); }
-    }
+    /* Favoritos: función retirada (se quitó el botón "guardar en favoritos"). */
 
     /* -----------------------------------------------------------------
        Comparador
@@ -753,6 +678,42 @@
             header.classList.toggle('is-scrolled', y > 60);
             last = y;
         }, { passive: true });
+    })();
+
+    /* -----------------------------------------------------------------
+       Handlers declarativos (reemplazan on*="" inline para cumplir la CSP)
+         data-autosubmit             -> al cambiar, envía su <form>
+         data-submit-form="idForm"   -> click envía ese form (opcional data-confirm="texto")
+         data-form-action="url"      -> click: fija form.action y envía
+         data-image-preview="idImg"  -> al elegir archivo, muestra la vista previa
+       ----------------------------------------------------------------- */
+    (function declarativeHandlers() {
+        document.addEventListener('change', e => {
+            const auto = e.target.closest('[data-autosubmit]');
+            if (auto && auto.form) { auto.form.submit(); return; }
+
+            const prev = e.target.closest('[data-image-preview]');
+            if (prev && prev.files && prev.files[0]) {
+                const img = document.getElementById(prev.dataset.imagePreview);
+                if (img) { img.src = URL.createObjectURL(prev.files[0]); img.hidden = false; }
+            }
+        });
+
+        document.addEventListener('click', e => {
+            const sub = e.target.closest('[data-submit-form]');
+            if (sub) {
+                const msg = sub.dataset.confirm;
+                if (msg && !window.confirm(msg)) { return; }
+                document.getElementById(sub.dataset.submitForm)?.submit();
+                return;
+            }
+
+            const act = e.target.closest('[data-form-action]');
+            if (act) {
+                const f = act.closest('form');
+                if (f) { f.action = act.dataset.formAction; f.submit(); }
+            }
+        });
     })();
 
 })();

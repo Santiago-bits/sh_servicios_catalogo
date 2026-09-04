@@ -249,12 +249,16 @@ abstract class ProductAdminController extends AdminController
             ['id' => (int) $id]
         ) > 0;
 
+        // En los dos casos se borran de disco las fotos, miniaturas,
+        // documentos y videos: no tiene sentido guardar archivos de un
+        // producto que ya no se muestra.
+        $this->purgeMedia((int) $id);
+
         if ($usedInQuotes) {
             $productModel->updateById((int) $id, ['active' => 0]);
             Database::execute('UPDATE products SET deleted_at = NOW() WHERE id = :id', ['id' => (int) $id]);
-            $message = 'El producto se archivó (aparece en cotizaciones, por eso no se borra del todo).';
+            $message = 'El producto se archivó (aparece en cotizaciones) y se borraron sus fotos y documentos.';
         } else {
-            ImageService::removeAll((int) $id);
             $productModel->deleteById((int) $id);
             $message = ucfirst($this->labelSingular) . ' eliminada correctamente.';
         }
@@ -263,6 +267,25 @@ abstract class ProductAdminController extends AdminController
 
         $this->success($message);
         $this->redirect('admin/' . $this->routeBase);
+    }
+
+    /** Borra de disco y de la base las fotos, miniaturas, documentos y videos de un producto. */
+    private function purgeMedia(int $id): void
+    {
+        // Fotos + miniaturas (borra archivos y filas)
+        ImageService::removeAll($id);
+
+        // Documentos: primero los archivos, después las filas
+        foreach (Database::select('SELECT path FROM documents WHERE product_id = :id', ['id' => $id]) as $doc) {
+            Uploader::delete((string) $doc['path']);
+        }
+        Database::delete('documents', 'product_id = :id', ['id' => $id]);
+
+        // Videos: sólo los subidos como archivo tienen algo en disco
+        foreach (Database::select("SELECT video_ref FROM videos WHERE product_id = :id AND provider = 'file'", ['id' => $id]) as $vid) {
+            Uploader::delete((string) $vid['video_ref']);
+        }
+        Database::delete('videos', 'product_id = :id', ['id' => $id]);
     }
 
     // =================================================================
@@ -341,7 +364,7 @@ abstract class ProductAdminController extends AdminController
             'path'       => $result['path'],
             'mime'       => $result['mime'],
             'size_bytes' => $result['size'],
-            'public'     => Request::bool('publico', true) ? 1 : 0,
+            'public'     => Request::flag('publico', true),
         ]);
 
         AuditService::log('upload', $this->permission, 'product', (int) $id, 'Documento agregado');
@@ -454,19 +477,19 @@ abstract class ProductAdminController extends AdminController
             'profit_amount'     => $prices['profit_amount'],
             'final_price'       => $prices['final_price'],
             'currency'          => in_array($input['currency'] ?? 'ARS', ['ARS', 'USD'], true) ? $input['currency'] : 'ARS',
-            'price_visible'     => Request::bool('price_visible', true) ? 1 : 0,
+            'price_visible'     => Request::flag('price_visible', true),
             'price_updated_at'  => date('Y-m-d H:i:s'),
             'availability'      => $data['availability'] ?? 'disponible',
-            'featured'          => Request::bool('featured') ? 1 : 0,
-            'is_new'            => Request::bool('is_new') ? 1 : 0,
-            'active'            => Request::bool('active', true) ? 1 : 0,
+            'featured'          => Request::flag('featured'),
+            'is_new'            => Request::flag('is_new'),
+            'active'            => Request::flag('active'),
         ];
 
         // Oferta: sólo si el formulario la trae.
         if (array_key_exists('offer_price', $input)) {
             $offer = normalize_decimal((string) $input['offer_price']);
             $payload['offer_price'] = $offer > 0 ? $offer : null;
-            $payload['is_offer']    = $offer > 0 && Request::bool('is_offer') ? 1 : 0;
+            $payload['is_offer']    = ($offer > 0 && Request::bool('is_offer')) ? 1 : 0;
         }
 
         // SEO: sólo se toca si el formulario lo trae (el de máquinas ya no lo tiene).

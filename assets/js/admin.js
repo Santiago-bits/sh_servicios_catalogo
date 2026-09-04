@@ -387,11 +387,23 @@
     });
 
     /* -----------------------------------------------------------------
-       Dropzone de imágenes
+       Dropzone de imágenes  (con previsualización + quitar antes de subir)
        ----------------------------------------------------------------- */
     $$('.dropzone').forEach(zone => {
         const input = $('#' + zone.dataset.input);
         if (!input) { return; }
+
+        // Contenedor de miniaturas (se crea si no está en el HTML)
+        let preview = zone.parentElement.querySelector('[data-dz-preview]');
+        if (!preview) {
+            preview = document.createElement('div');
+            preview.className = 'dz-preview';
+            preview.setAttribute('data-dz-preview', '');
+            input.insertAdjacentElement('afterend', preview);
+        }
+
+        const bag  = new DataTransfer();   // lista editable de archivos
+        let   urls = [];
 
         zone.addEventListener('click', () => input.click());
 
@@ -402,19 +414,64 @@
             zone.addEventListener(evt, e => { e.preventDefault(); zone.classList.remove('is-dragover'); })
         );
 
-        zone.addEventListener('drop', e => {
-            input.files = e.dataTransfer.files;
-            updateLabel();
-        });
+        zone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+        input.addEventListener('change', () => addFiles(input.files));
 
-        input.addEventListener('change', updateLabel);
+        function addFiles(list) {
+            Array.from(list || []).forEach(f => {
+                if (!f.type || !f.type.startsWith('image/')) { return; }
+                const dup = Array.from(bag.files).some(x =>
+                    x.name === f.name && x.size === f.size && x.lastModified === f.lastModified);
+                if (!dup) { bag.items.add(f); }
+            });
+            input.files = bag.files;
+            render();
+        }
 
-        function updateLabel() {
-            const label = zone.querySelector('[data-file-label]');
-            if (!label) { return; }
-            label.textContent = input.files.length
-                ? input.files.length + ' archivo(s) seleccionado(s)'
-                : label.dataset.default || 'Arrastrá las imágenes o hacé clic para elegirlas';
+        function removeAt(i) {
+            const keep = Array.from(bag.files).filter((_, idx) => idx !== i);
+            bag.items.clear();
+            keep.forEach(f => bag.items.add(f));
+            input.files = bag.files;
+            render();
+        }
+
+        function render() {
+            urls.forEach(u => URL.revokeObjectURL(u));
+            urls = [];
+            preview.innerHTML = '';
+
+            const files = Array.from(bag.files);
+            zone.querySelectorAll('[data-file-label]').forEach(l => {
+                l.textContent = files.length
+                    ? files.length + ' imagen(es) para subir'
+                    : (l.dataset.default || 'Arrastrá las imágenes o hacé clic para elegirlas');
+            });
+
+            files.forEach((f, i) => {
+                const url = URL.createObjectURL(f);
+                urls.push(url);
+
+                const item = document.createElement('div');
+                item.className = 'dz-preview__item';
+
+                const img = document.createElement('img');
+                img.src = url; img.alt = '';
+
+                const x = document.createElement('button');
+                x.type = 'button';
+                x.className = 'dz-preview__x';
+                x.title = 'Quitar';
+                x.textContent = '×';
+                x.addEventListener('click', ev => { ev.stopPropagation(); removeAt(i); });
+
+                const name = document.createElement('span');
+                name.className = 'dz-preview__name';
+                name.textContent = f.name;
+
+                item.append(img, x, name);
+                preview.appendChild(item);
+            });
         }
     });
 

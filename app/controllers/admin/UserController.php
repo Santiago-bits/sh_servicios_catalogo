@@ -58,8 +58,8 @@ class UserController extends AdminController
             'role_id'        => (int) $data['role_id'],
             'phone'          => $data['phone'] ?? null,
             'position'       => $data['position'] ?? null,
-            'active'         => Request::bool('active', true) ? 1 : 0,
-            'must_change_pw' => Request::bool('must_change_pw') ? 1 : 0,
+            'active'         => Request::flag('active', true),
+            'must_change_pw' => Request::flag('must_change_pw'),
         ]);
 
         AuditService::log('create', 'users', 'user', $id, 'Usuario creado: ' . $data['email']);
@@ -97,7 +97,7 @@ class UserController extends AdminController
             $this->back();
         }
 
-        $active = Request::bool('active', true) ? 1 : 0;
+        $active = Request::flag('active', true);
 
         // Protección: no dejar el sistema sin administradores
         if (($active === 0 || (int) $data['role_id'] !== (int) $user['role_id']) && $model->isLastAdmin((int) $id)) {
@@ -169,6 +169,42 @@ class UserController extends AdminController
         AuditService::log('delete', 'users', 'user', (int) $id, 'Usuario desactivado: ' . $user['email']);
 
         $this->success('Usuario desactivado. Su historial de auditoría se conserva.');
+        $this->back();
+    }
+
+    /**
+     * Borrado definitivo (a diferencia de destroy(), que sólo desactiva).
+     * Las referencias a este usuario en otras tablas (auditoría, consultas
+     * asignadas, historial de precios, productos, cotizaciones, movimientos
+     * de stock) quedan en NULL: ese contenido no se borra, sólo deja de
+     * estar atribuido a alguien.
+     */
+    public function purge(string $id): void
+    {
+        $this->requirePermission('users.manage');
+
+        $model = new User();
+        $user  = $model->find((int) $id);
+
+        if ($user === null) {
+            $this->abort(404, 'El usuario no existe.');
+        }
+
+        if ((int) $id === (int) Auth::id()) {
+            $this->error('No podés eliminar tu propia cuenta.');
+            $this->back();
+        }
+
+        if ($model->isLastAdmin((int) $id)) {
+            $this->error('No podés eliminar al único administrador activo.');
+            $this->back();
+        }
+
+        AuditService::log('delete', 'users', 'user', (int) $id, 'Usuario eliminado definitivamente: ' . $user['email']);
+
+        $model->deleteById((int) $id);
+
+        $this->success('Usuario eliminado definitivamente.');
         $this->back();
     }
 }

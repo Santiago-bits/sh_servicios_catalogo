@@ -8,12 +8,10 @@
  */
 
 use App\Services\PriceService;
-use App\Services\StockService;
 
 $showPrice = PriceService::isPublicPriceVisible($product);
 $price     = PriceService::effectivePrice($product);
 $hasOffer  = (int) $product['is_offer'] === 1 && (float) ($product['offer_price'] ?? 0) > 0;
-$stock     = stock_badge($product);
 $mainImage = $images[0]['path'] ?? $product['image'] ?? null;
 
 $codeTypes = [
@@ -121,12 +119,9 @@ $codeTypes = [
             <div class="product-head">
                 <div class="product-head__meta">
                     <?php if (!empty($product['brand_name'])): ?>
-                        <a href="<?= e(url('repuestos?marca=' . $product['brand_slug'])) ?>" class="tag tag--dark"><?= e($product['brand_name']) ?></a>
+                        <a href="<?= e(url('repuestos?marca=' . urlencode((string) $product['brand_name']))) ?>" class="tag tag--dark"><?= e($product['brand_name']) ?></a>
                     <?php endif; ?>
                     <span class="product-code"><?= e($product['code']) ?></span>
-                    <span class="status status--<?= e($stock['class']) ?>">
-                        <?= e($stock['dot']) ?> <?= e($stock['label']) ?>
-                    </span>
                 </div>
 
                 <h1><?= e($product['name']) ?></h1>
@@ -172,9 +167,6 @@ $codeTypes = [
                     <button type="button" class="btn btn-outline-accent" data-bs-toggle="modal" data-bs-target="#inquiryModal">
                         <i class="bi bi-envelope"></i> Consultar por email
                     </button>
-                    <button type="button" class="icon-action" data-fav-toggle="<?= (int) $product['id'] ?>" title="Guardar en favoritos">
-                        <i class="bi bi-heart"></i>
-                    </button>
                 </div>
 
                 <!-- Datos rápidos -->
@@ -183,7 +175,6 @@ $codeTypes = [
                     $quick = [
                         ['Categoría',    $product['category_name'] ?? null],
                         ['Marca',        $product['brand_name'] ?? null],
-                        ['Fabricante',   $product['manufacturer'] ?? null],
                         ['Origen',       !empty($product['origin']) ? ucfirst((string) $product['origin']) : null],
                         ['Unidad',       $product['unit'] ?? null],
                         ['Peso',         !empty($product['weight_kg']) ? number_es((float) $product['weight_kg'], 2) . ' kg' : null],
@@ -197,13 +188,6 @@ $codeTypes = [
                             </div>
                         <?php endif; ?>
                     <?php endforeach; ?>
-
-                    <?php if ((int) $product['track_stock'] === 1): ?>
-                        <div class="quick-spec">
-                            <span>Stock disponible</span>
-                            <strong><?= StockService::available($product) ?> <?= e($product['unit'] ?? 'u.') ?></strong>
-                        </div>
-                    <?php endif; ?>
                 </div>
 
                 <!-- Compatibilidad -->

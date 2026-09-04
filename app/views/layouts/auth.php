@@ -12,7 +12,7 @@ use App\Services\SettingService;
 <html lang="es" data-base="<?= e(BASE_URL) ?>">
 <head>
     <meta charset="utf-8">
-    <script>document.documentElement.classList.add('js');</script>
+    <script nonce="<?= csp_nonce() ?>">document.documentElement.classList.add('js');</script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#111111">
     <title><?= e($pageTitle ?? 'Acceso · ' . SettingService::companyName()) ?></title>
@@ -30,7 +30,7 @@ use App\Services\SettingService;
 
 <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
-<script>
+<script nonce="<?= csp_nonce() ?>">
     window.SHS = {
         baseUrl: <?= js(BASE_URL) ?>,
         csrf: <?= js(csrf_token()) ?>,

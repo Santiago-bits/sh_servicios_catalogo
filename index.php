@@ -34,16 +34,27 @@ header('X-XSS-Protection: 0'); // obsoleto y contraproducente; se usa CSP
 header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
 header_remove('X-Powered-By');
 
+// HSTS: sólo cuando la respuesta ya viaja por HTTPS (no rompe XAMPP local).
+$overHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+if ($overHttps) {
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+}
+
+// CSP: los <script> inline propios se autorizan con nonce (CSP_NONCE),
+// así se saca 'unsafe-inline' de script-src. style-src lo conserva porque
+// el proyecto usa muchos style="" en las vistas.
 header(
     "Content-Security-Policy: default-src 'self'; " .
-    "img-src 'self' data: https:; " .
+    "img-src 'self' data: blob: https:; " .
     "media-src 'self' https:; " .
     "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://www.google.com https://maps.google.com; " .
-    "script-src 'self' 'unsafe-inline'; " .
+    "script-src 'self' 'nonce-" . CSP_NONCE . "'; " .
     "style-src 'self' 'unsafe-inline'; " .
     "font-src 'self' data:; " .
     "connect-src 'self'; " .
     "form-action 'self'; " .
+    "frame-ancestors 'self'; " .
     "base-uri 'self'; " .
     "object-src 'none'"
 );

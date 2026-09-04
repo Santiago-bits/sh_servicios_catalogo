@@ -37,6 +37,9 @@ class ExportController extends AdminController
         if (!isset(ExportService::DATASETS[$dataset])) {
             $this->abort(404, 'Conjunto de datos inexistente.');
         }
+        if (!in_array($format, ['csv', 'xlsx'], true)) {
+            $this->abort(404, 'Formato no soportado.');
+        }
 
         $data     = ExportService::dataset($dataset);
         $filename = $dataset . '-' . date('Ymd-Hi');

@@ -275,7 +275,7 @@ $activeFilters = array_filter($filters, static fn ($v, $k) => !in_array($k, ['or
                                 <?php endif; ?>
                             <?php endforeach; ?>
                             <label class="form-label mb-0 d-none d-sm-block">Ordenar</label>
-                            <select name="orden" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <select name="orden" class="form-select form-select-sm" data-autosubmit>
                                 <?php foreach ($sorts as $value => $label): ?>
                                     <option value="<?= e($value) ?>" <?= ($filters['orden'] ?? '') === $value ? 'selected' : '' ?>>
                                         <?= e($label) ?>

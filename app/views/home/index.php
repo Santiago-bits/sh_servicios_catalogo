@@ -21,12 +21,17 @@ $totalParts    = array_sum(array_column($partCategories, 'products_count'));
 // El texto del hero se edita desde Configuración -> Empresa.
 $heroTitle = trim((string) setting('company_slogan', ''));
 $heroLead  = trim((string) setting('company_description', ''));
+
+// La imagen del hero (Configuración -> Empresa -> Imagen del inicio) ahora
+// es el fondo completo de la sección, no un recuadro al costado.
+$heroImage = trim((string) setting('hero_image', ''));
+$heroBg    = $heroImage !== '' ? upload_url($heroImage) : asset('img/hero-forklift.svg');
 ?>
 
 <!-- =================================================================
      HERO
      ================================================================= -->
-<section class="hero">
+<section class="hero" style="background-image: linear-gradient(90deg, rgba(8,8,8,.92) 0%, rgba(8,8,8,.68) 42%, rgba(8,8,8,.32) 100%), url('<?= e($heroBg) ?>')">
     <div class="container hero__inner">
         <div class="row align-items-center g-5">
             <div class="col-lg-6">
@@ -61,23 +66,6 @@ $heroLead  = trim((string) setting('company_description', ''));
                     </a>
                 </div>
 
-            </div>
-
-            <div class="col-lg-6">
-                <div class="hero__visual">
-                    <div class="hero__visual-frame">
-                        <?php $heroImage = trim((string) setting('hero_image', '')); ?>
-                        <img src="<?= $heroImage !== '' ? e(upload_url($heroImage)) : asset('img/hero-forklift.svg') ?>"
-                             alt="<?= e(setting('company_name', 'Autoelevador en operación')) ?>" width="800" height="600">
-                    </div>
-                    <div class="hero__visual-tag">
-                        <i class="bi bi-headset"></i>
-                        <div>
-                            <strong class="d-block">Asesoramiento técnico</strong>
-                            <small>Te ayudamos a elegir el equipo</small>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

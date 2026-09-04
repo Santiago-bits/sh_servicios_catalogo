@@ -81,7 +81,7 @@ class PartController extends ProductAdminController
         if (array_key_exists('stock_min', $input) || array_key_exists('track_stock', $input)) {
             Database::update('products', [
                 'stock_min'   => (int) normalize_decimal((string) ($input['stock_min'] ?? '0')),
-                'track_stock' => Request::bool('track_stock', true) ? 1 : 0,
+                'track_stock' => Request::flag('track_stock', true),
             ], 'id = :id', ['id' => $productId]);
         }
 
@@ -117,6 +117,11 @@ class PartController extends ProductAdminController
             ),
             'selectedMachines' => $productId > 0 ? (new SparePart())->machineIds($productId) : [],
             'allBrands'        => (new Brand())->active(),
+            'manufacturers'    => array_column(Database::select(
+                "SELECT DISTINCT manufacturer FROM spare_parts
+                  WHERE manufacturer IS NOT NULL AND manufacturer <> ''
+                  ORDER BY manufacturer ASC"
+            ), 'manufacturer'),
             'origins'          => [
                 'original'        => 'Original',
                 'alternativo'     => 'Alternativo',

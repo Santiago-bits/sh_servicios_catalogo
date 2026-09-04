@@ -135,10 +135,6 @@
                         </button>
                         <div class="filter-group__body">
                             <label class="filter-check">
-                                <input type="checkbox" name="con_stock" value="1" <?= !empty($filters['con_stock']) ? 'checked' : '' ?>>
-                                🟢 Sólo con stock disponible
-                            </label>
-                            <label class="filter-check">
                                 <input type="checkbox" name="ofertas" value="1" <?= !empty($filters['ofertas']) ? 'checked' : '' ?>>
                                 🔖 En oferta
                             </label>
@@ -190,7 +186,7 @@
                                     <input type="hidden" name="<?= e($key) ?>" value="<?= e($value) ?>">
                                 <?php endif; ?>
                             <?php endforeach; ?>
-                            <select name="orden" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <select name="orden" class="form-select form-select-sm" data-autosubmit>
                                 <?php foreach ($sorts as $value => $label): ?>
                                     <option value="<?= e($value) ?>" <?= ($filters['orden'] ?? '') === $value ? 'selected' : '' ?>>
                                         <?= e($label) ?>

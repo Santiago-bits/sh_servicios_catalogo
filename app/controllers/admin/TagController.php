@@ -102,7 +102,7 @@ class TagController extends AdminController
             'color'      => $data['color'],
             'icon'       => $data['icon'] ?? null,
             'sort_order' => (int) ($data['sort_order'] ?? 0),
-            'active'     => Request::bool('active', true) ? 1 : 0,
+            'active'     => Request::flag('active'),
         ];
     }
 }

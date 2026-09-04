@@ -135,9 +135,9 @@ class FinancingController extends AdminController
             'max_amount'           => $max > 0 ? $max : null,
             'currency'             => Request::post('currency') === 'USD' ? 'USD' : 'ARS',
             'applies_to'           => $data['applies_to'],
-            'featured'             => Request::bool('featured') ? 1 : 0,
+            'featured'             => Request::flag('featured'),
             'sort_order'           => (int) ($data['sort_order'] ?? 0),
-            'active'               => Request::bool('active', true) ? 1 : 0,
+            'active'               => Request::flag('active', true),
         ];
     }
 
@@ -188,7 +188,7 @@ class FinancingController extends AdminController
             'icon'             => $data['icon'] ?? null,
             'discount_percent' => (float) ($data['discount_percent'] ?? 0),
             'sort_order'       => (int) ($data['sort_order'] ?? 0),
-            'active'           => Request::bool('active', true) ? 1 : 0,
+            'active'           => Request::flag('active', true),
         ];
     }
 }

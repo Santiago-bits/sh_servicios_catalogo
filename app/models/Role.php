@@ -27,6 +27,22 @@ class Role extends Model
         );
     }
 
+    /**
+     * Permisos que no controlan nada visible hoy en el panel simplificado
+     * (sus secciones están comentadas en config/routes.php). Se ocultan
+     * para no confundir con casilleros que no cambian nada al tildarlos.
+     * Los datos quedan intactos en la base por si esas secciones se
+     * reactivan más adelante.
+     */
+    private const HIDDEN_PERMISSIONS = [
+        'features.manage',                                              // Características (oculta)
+        'prices.view', 'prices.history',                                // sólo la página /admin/precios (oculta) las usa
+        'financing.manage',                                             // Financiación (oculta)
+        'quotes.view', 'quotes.create', 'quotes.edit', 'quotes.delete', // Cotizaciones (oculta)
+        'stats.view',                                                   // Estadísticas (oculta)
+        'stock.view', 'stock.move',                                     // Stock (oculto)
+    ];
+
     /** Todos los permisos agrupados por módulo. @return array<string,array<int,array<string,mixed>>> */
     public function allPermissions(): array
     {
@@ -34,6 +50,9 @@ class Role extends Model
         $grouped = [];
 
         foreach ($rows as $row) {
+            if (in_array($row['slug'], self::HIDDEN_PERMISSIONS, true)) {
+                continue;
+            }
             $grouped[$row['module']][] = $row;
         }
 

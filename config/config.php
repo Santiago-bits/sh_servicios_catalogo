@@ -89,6 +89,22 @@ define('APP_ENV',   Core\Env::get('APP_ENV', 'production'));
 define('APP_NAME',  Core\Env::get('APP_NAME', 'SH Servicios'));
 define('APP_KEY',   Core\Env::get('APP_KEY', 'sh-servicios-default-key'));
 
+// En producción no se arranca con una APP_KEY débil o de ejemplo: firma
+// tokens CSRF y el fingerprint de sesión, así que tiene que ser larga y
+// aleatoria de verdad.
+if (APP_ENV === 'production'
+    && (strlen(APP_KEY) < 32
+        || APP_KEY === 'sh-servicios-default-key'
+        || str_contains(APP_KEY, 'cambiar-esta-clave'))) {
+    http_response_code(500);
+    error_log('[APP] APP_KEY no configurada: definí una cadena aleatoria de 32+ caracteres en .env');
+    exit('Configuración incompleta.');
+}
+
+// Nonce para la CSP: permite los <script> inline propios sin abrir
+// 'unsafe-inline'. Se genera uno nuevo por request.
+define('CSP_NONCE', base64_encode(random_bytes(16)));
+
 date_default_timezone_set(Core\Env::get('APP_TIMEZONE', 'America/Argentina/Buenos_Aires'));
 setlocale(LC_ALL, 'es_AR.UTF-8', 'es_AR', 'Spanish_Argentina', 'es');
 mb_internal_encoding('UTF-8');

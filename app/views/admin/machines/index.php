@@ -60,33 +60,33 @@ use App\Services\PriceService;
             </select>
         </div>
 
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 ms-auto">
             <button type="submit" class="btn btn-dark-2"><i class="bi bi-funnel"></i> Filtrar</button>
             <a href="<?= admin_url('maquinaria') ?>" class="btn btn-ghost">Limpiar</a>
-        </div>
-
-        <div class="ms-auto d-flex gap-2">
-            <?php if (can('machines.create')): ?>
-                <a href="<?= admin_url('maquinaria/crear') ?>" class="btn btn-accent">
-                    <i class="bi bi-plus-lg"></i> Nueva máquina
-                </a>
-            <?php endif; ?>
-            <?php if (can('data.export')): ?>
-                <a href="<?= admin_url('exportar/maquinaria/xlsx') ?>" class="btn btn-ghost" title="Exportar a Excel">
-                    <i class="bi bi-file-earmark-excel"></i>
-                </a>
-            <?php endif; ?>
         </div>
     </form>
 </div>
 
 <div class="card-admin">
     <div class="card-admin__head">
-        <h2><i class="bi bi-truck-front-fill"></i> Maquinaria</h2>
-        <span class="text-muted-2 small">
-            <?= number_es($result['total']) ?> registro(s)
-            <?php if ($result['total'] > 0): ?>· <?= (int) $result['from'] ?>–<?= (int) $result['to'] ?><?php endif; ?>
-        </span>
+        <h2>
+            <i class="bi bi-truck-front-fill"></i> Maquinaria
+            <span class="text-muted-2 small fw-normal ms-1">
+                <?= number_es($result['total']) ?> registro(s)<?php if ($result['total'] > 0): ?> · <?= (int) $result['from'] ?>–<?= (int) $result['to'] ?><?php endif; ?>
+            </span>
+        </h2>
+        <div class="d-flex gap-2 flex-wrap">
+            <?php if (can('machines.create')): ?>
+                <a href="<?= admin_url('maquinaria/crear') ?>" class="btn btn-accent btn-sm">
+                    <i class="bi bi-plus-lg"></i> Nueva máquina
+                </a>
+            <?php endif; ?>
+            <?php if (can('data.export')): ?>
+                <a href="<?= admin_url('exportar/maquinaria/xlsx') ?>" class="btn btn-ghost btn-sm" title="Exportar a Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+            <?php endif; ?>
+        </div>
     </div>
 
     <div class="card-admin__body card-admin__body--flush">

@@ -73,10 +73,17 @@ use Core\Auth;
                                         </button>
                                         <?php if ((int) $user['id'] !== (int) Auth::id()): ?>
                                             <form method="post" action="<?= admin_url('usuarios/' . (int) $user['id'] . '/eliminar') ?>"
-                                                  class="d-inline" data-confirm="¿Desactivar la cuenta de <?= e($user['name']) ?>?">
+                                                  class="d-inline" data-confirm="¿Desactivar la cuenta de <?= e($user['name']) ?>? Se puede reactivar después.">
                                                 <?= csrf_field() ?>
-                                                <button type="submit" class="btn-icon btn-icon--danger" title="Desactivar">
+                                                <button type="submit" class="btn-icon" title="Desactivar (se puede reactivar)">
                                                     <i class="bi bi-person-x"></i>
+                                                </button>
+                                            </form>
+                                            <form method="post" action="<?= admin_url('usuarios/' . (int) $user['id'] . '/borrar') ?>"
+                                                  class="d-inline" data-confirm="¿Eliminar DEFINITIVAMENTE la cuenta de <?= e($user['name']) ?>? No se puede deshacer.">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="btn-icon btn-icon--danger" title="Eliminar definitivamente (no se puede deshacer)">
+                                                    <i class="bi bi-trash3-fill"></i>
                                                 </button>
                                             </form>
                                         <?php endif; ?>
@@ -154,10 +161,16 @@ use Core\Auth;
                         </div>
                         <div class="col-12">
                             <label class="form-label" for="u-role">Rol *</label>
+                            <?php $defaultRolePicked = false; ?>
                             <select class="form-select" id="u-role" name="role_id" required>
                                 <?php foreach ($roles as $role): ?>
-                                    <?php if ($role['slug'] === 'cliente') { continue; } ?>
-                                    <option value="<?= (int) $role['id'] ?>" <?= $role['slug'] === 'operario' ? 'selected' : '' ?>>
+                                    <?php
+                                    // Por seguridad, nunca se pre-selecciona Administrador: si no se
+                                    // elige nada a propósito, que quede el primer rol NO admin.
+                                    $preSelect = !$defaultRolePicked && $role['slug'] !== 'admin';
+                                    if ($preSelect) { $defaultRolePicked = true; }
+                                    ?>
+                                    <option value="<?= (int) $role['id'] ?>" <?= $preSelect ? 'selected' : '' ?>>
                                         <?= e($role['name']) ?>
                                     </option>
                                 <?php endforeach; ?>

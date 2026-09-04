@@ -62,14 +62,11 @@ $isAdminRole = $role['slug'] === 'admin';
                     </div>
                     <div class="perm-module__body">
                         <?php foreach ($items as $permission): ?>
-                            <label class="perm-check">
+                            <label class="perm-check" title="<?= e($permission['slug']) ?>">
                                 <input type="checkbox" name="permissions[]" value="<?= (int) $permission['id'] ?>"
                                     <?= $isAdminRole || in_array((int) $permission['id'], $assigned, true) ? 'checked' : '' ?>
                                     <?= $isAdminRole ? 'disabled' : '' ?>>
-                                <span>
-                                    <?= e($permission['name']) ?>
-                                    <code class="d-block text-muted-2" style="font-size:.7rem"><?= e($permission['slug']) ?></code>
-                                </span>
+                                <span><?= e($permission['name']) ?></span>
                             </label>
                         <?php endforeach; ?>
                     </div>

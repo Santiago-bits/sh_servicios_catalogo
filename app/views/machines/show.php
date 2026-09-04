@@ -35,7 +35,7 @@ $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
         <div class="product-layout">
 
             <!-- ============ GALERÍA ============ -->
-            <div>
+            <div class="gallery-col">
                 <div class="gallery__main" id="galleryMain">
                     <img src="<?= e(upload_url($mainImage)) ?>" alt="<?= e($product['name']) ?>" width="800" height="600">
                     <span class="gallery__zoom-hint"><i class="bi bi-zoom-in"></i> Pasá el mouse para ampliar</span>
@@ -51,30 +51,6 @@ $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
                                      alt="<?= e($image['alt'] ?: $product['name']) ?>" loading="lazy">
                             </div>
                         <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-
-                <!-- Video -->
-                <?php if (!empty($videos)): ?>
-                    <div class="panel mt-4">
-                        <div class="panel__head">
-                            <h2><i class="bi bi-play-btn-fill"></i> Ver la máquina trabajando</h2>
-                        </div>
-                        <div class="panel__body">
-                            <?php foreach (array_slice($videos, 0, 2) as $video): ?>
-                                <div class="video-embed mb-3">
-                                    <?php if ($video['provider'] === 'youtube'): ?>
-                                        <iframe src="https://www.youtube-nocookie.com/embed/<?= e($video['video_ref']) ?>"
-                                                title="<?= e($video['title']) ?>" allowfullscreen loading="lazy"></iframe>
-                                    <?php elseif ($video['provider'] === 'vimeo'): ?>
-                                        <iframe src="https://player.vimeo.com/video/<?= e($video['video_ref']) ?>"
-                                                title="<?= e($video['title']) ?>" allowfullscreen loading="lazy"></iframe>
-                                    <?php else: ?>
-                                        <video controls src="<?= e(upload_url($video['video_ref'])) ?>"></video>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
                     </div>
                 <?php endif; ?>
             </div>
@@ -144,9 +120,6 @@ $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
                     <button type="button" class="btn btn-outline-accent" data-bs-toggle="modal" data-bs-target="#inquiryModal">
                         <i class="bi bi-envelope"></i> Consultar por email
                     </button>
-                    <button type="button" class="icon-action" data-fav-toggle="<?= (int) $product['id'] ?>" title="Guardar en favoritos">
-                        <i class="bi bi-heart"></i>
-                    </button>
                     <button type="button" class="icon-action" data-compare-toggle="<?= (int) $product['id'] ?>" title="Comparar">
                         <i class="bi bi-bar-chart-steps"></i>
                     </button>
@@ -194,9 +167,38 @@ $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
                 <?php endif; ?>
 
 
-                <!-- Documentación -->
-                <?php if (!empty($documents)): ?>
-                    <div class="panel mt-3">
+            </div>
+
+            <!-- ============ VIDEO ============ -->
+            <?php if (!empty($videos)): ?>
+                <div class="product-video">
+                    <div class="panel">
+                        <div class="panel__head">
+                            <h2><i class="bi bi-play-btn-fill"></i> Ver la máquina trabajando</h2>
+                        </div>
+                        <div class="panel__body">
+                            <?php foreach (array_slice($videos, 0, 2) as $video): ?>
+                                <div class="video-embed mb-3">
+                                    <?php if ($video['provider'] === 'youtube'): ?>
+                                        <iframe src="https://www.youtube-nocookie.com/embed/<?= e($video['video_ref']) ?>"
+                                                title="<?= e($video['title']) ?>" allowfullscreen loading="lazy"></iframe>
+                                    <?php elseif ($video['provider'] === 'vimeo'): ?>
+                                        <iframe src="https://player.vimeo.com/video/<?= e($video['video_ref']) ?>"
+                                                title="<?= e($video['title']) ?>" allowfullscreen loading="lazy"></iframe>
+                                    <?php else: ?>
+                                        <video controls src="<?= e(upload_url($video['video_ref'])) ?>"></video>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- ============ DOCUMENTACIÓN ============ -->
+            <?php if (!empty($documents)): ?>
+                <div class="product-docs">
+                    <div class="panel">
                         <div class="panel__head"><h2><i class="bi bi-file-earmark-pdf"></i> Documentación</h2></div>
                         <div class="panel__body">
                             <?php foreach ($documents as $doc): ?>
@@ -216,8 +218,8 @@ $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
                             <?php endforeach; ?>
                         </div>
                     </div>
-                <?php endif; ?>
-            </div>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </section>

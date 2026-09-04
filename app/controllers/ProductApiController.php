@@ -50,7 +50,7 @@ class ProductApiController extends Controller
                 'price'         => PriceService::isPublicPriceVisible($safe) ? PriceService::effectivePrice($safe) : null,
                 'price_label'   => PriceService::displayPrice($safe),
                 'currency'      => $safe['currency'],
-                'image'         => upload_url($safe['image'] ?? null),
+                'image'         => product_image_url($safe, false),
                 'url'           => product_url($safe),
                 'whatsapp'      => WhatsAppService::productLink($safe),
                 'features'      => $productModel->features((int) $id),

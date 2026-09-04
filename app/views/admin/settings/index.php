@@ -79,7 +79,7 @@
                                     </div>
                                     <input type="file" class="form-control" id="set-file-<?= e($key) ?>"
                                            name="file_<?= e($key) ?>" accept="image/png,image/jpeg,image/webp,image/gif"
-                                           onchange="var p=document.getElementById('prev-<?= e($key) ?>');if(this.files[0]){p.src=URL.createObjectURL(this.files[0]);p.hidden=false;}">
+                                           data-image-preview="prev-<?= e($key) ?>">
                                     <p class="form-hint">
                                         <?= !empty($setting['help']) ? e($setting['help']) . ' ' : '' ?>
                                         Elegí un archivo PNG, JPG o WEBP y tocá <strong>Guardar configuración</strong>.
@@ -143,7 +143,7 @@
                             seguí cargando el valor a mano en el campo de arriba.
                         </p>
                         <button type="button" class="btn btn-outline-accent btn-sm"
-                                onclick="this.form.action='<?= admin_url('configuracion/dolar') ?>'; this.form.submit();">
+                                data-form-action="<?= admin_url('configuracion/dolar') ?>">
                             <i class="bi bi-arrow-repeat"></i> Actualizar ahora desde lanacion.com.ar
                         </button>
                     <?php endif; ?>

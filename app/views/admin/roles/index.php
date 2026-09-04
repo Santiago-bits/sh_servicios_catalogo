@@ -66,30 +66,6 @@
             </div>
         </div>
 
-        <div class="card-admin">
-            <div class="card-admin__head"><h2><i class="bi bi-list-check"></i> Permisos disponibles</h2></div>
-            <div class="card-admin__body">
-                <p class="form-hint">
-                    Cada permiso se verifica en el servidor antes de ejecutar la acción, no sólo al mostrar el menú.
-                </p>
-                <?php foreach ($permissions as $module => $items): ?>
-                    <div class="perm-module">
-                        <div class="perm-module__head"><strong><?= e(ucfirst($module)) ?></strong></div>
-                        <div class="perm-module__body">
-                            <?php foreach ($items as $permission): ?>
-                                <div class="perm-check">
-                                    <i class="bi bi-dot"></i>
-                                    <span>
-                                        <?= e($permission['name']) ?>
-                                        <code class="d-block text-muted-2" style="font-size:.72rem"><?= e($permission['slug']) ?></code>
-                                    </span>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
     </div>
 
     <div class="col-lg-4">
@@ -113,7 +89,7 @@
                         <label class="form-label">Permisos iniciales</label>
                         <div class="picker" style="max-height:340px">
                             <?php foreach ($permissions as $module => $items): ?>
-                                <div class="perm-module__head"><strong><?= e(ucfirst($module)) ?></strong></div>
+                                <div class="perm-module__head"><strong><?= e($moduleNames[$module] ?? ucfirst($module)) ?></strong></div>
                                 <?php foreach ($items as $permission): ?>
                                     <label class="picker__item">
                                         <input type="checkbox" name="permissions[]" value="<?= (int) $permission['id'] ?>">

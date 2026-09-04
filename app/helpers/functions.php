@@ -23,6 +23,12 @@ function e(mixed $value): string
     return htmlspecialchars((string) ($value ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+/** Nonce de la CSP para autorizar un <script> inline propio. */
+function csp_nonce(): string
+{
+    return defined('CSP_NONCE') ? CSP_NONCE : '';
+}
+
 /**
  * JSON seguro para imprimir DENTRO de un bloque <script>.
  *
@@ -48,8 +54,14 @@ function ejs(mixed $value): string
 }
 
 /**
- * Limpia HTML proveniente del editor del panel dejando sólo etiquetas
- * seguras. Se usa para las descripciones largas de productos.
+ * Limpia HTML proveniente del editor del panel dejando sólo una lista
+ * blanca de etiquetas Y de atributos. Se usa para las descripciones
+ * largas de productos y servicios.
+ *
+ * A diferencia de strip_tags(), acá se recorre el árbol DOM y se borra
+ * cualquier atributo que no esté explícitamente permitido, y los href
+ * se limitan a http(s)/mailto/tel/rutas internas. Eso cierra los vectores
+ * clásicos de XSS almacenado (on*=, javascript:, data:, style, etc.).
  */
 function clean_html(?string $html): string
 {
@@ -57,14 +69,71 @@ function clean_html(?string $html): string
         return '';
     }
 
-    $allowed = '<p><br><strong><b><em><i><u><ul><ol><li><h3><h4><h5><span><table><thead><tbody><tr><th><td><a>';
-    $clean   = strip_tags($html, $allowed);
+    $allowedTags  = ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'ul', 'ol', 'li',
+                     'h3', 'h4', 'h5', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'a'];
+    $allowedAttrs = [
+        'a'  => ['href'],
+        'td' => ['colspan', 'rowspan'],
+        'th' => ['colspan', 'rowspan'],
+    ];
 
-    // Elimina atributos peligrosos (on*, javascript:, style con expression)
-    $clean = preg_replace('/\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $clean) ?? '';
-    $clean = preg_replace('/javascript\s*:/i', '', $clean) ?? '';
+    // Primer filtro por etiqueta.
+    $html = strip_tags($html, '<' . implode('><', $allowedTags) . '>');
 
-    return $clean;
+    // Sin DOM disponible (muy raro): al menos se quitan atributos on* y
+    // los esquemas peligrosos con regex, como respaldo.
+    if (!class_exists('DOMDocument') || !str_contains($html, '<')) {
+        $html = preg_replace('/\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $html) ?? '';
+        $html = preg_replace('/(javascript|vbscript|data)\s*:/i', '', $html) ?? '';
+        return trim($html);
+    }
+
+    $dom  = new DOMDocument();
+    $prev = libxml_use_internal_errors(true);
+    $dom->loadHTML(
+        '<?xml encoding="UTF-8"><div id="clean-html-root">' . $html . '</div>',
+        LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NONET
+    );
+    libxml_clear_errors();
+    libxml_use_internal_errors($prev);
+
+    $root = $dom->getElementById('clean-html-root');
+    if ($root === null) {
+        return '';
+    }
+
+    foreach (iterator_to_array($root->getElementsByTagName('*')) as $el) {
+        $tag = strtolower($el->nodeName);
+        $ok  = $allowedAttrs[$tag] ?? [];
+
+        foreach (iterator_to_array($el->attributes ?? []) as $attr) {
+            $name = strtolower($attr->nodeName);
+
+            if (!in_array($name, $ok, true)) {
+                $el->removeAttribute($attr->nodeName);
+                continue;
+            }
+
+            if ($name === 'href') {
+                $href = trim((string) $attr->nodeValue);
+                // http(s), mailto, tel o ruta interna de un solo "/"
+                // (se rechaza "//host" protocol-relative).
+                if (!preg_match('#^(https?://|mailto:|tel:|/(?!/))#i', $href)) {
+                    $el->removeAttribute('href');
+                } else {
+                    $el->setAttribute('rel', 'noopener nofollow');
+                    $el->setAttribute('target', '_blank');
+                }
+            }
+        }
+    }
+
+    $out = '';
+    foreach (iterator_to_array($root->childNodes) as $child) {
+        $out .= $dom->saveHTML($child);
+    }
+
+    return trim($out);
 }
 
 // ---------------------------------------------------------------------
@@ -129,6 +198,25 @@ function upload_url(?string $path, string $fallback = 'img/placeholder-machine.s
         return $path;
     }
     return BASE_URL . '/' . ltrim($path, '/');
+}
+
+/**
+ * URL de la foto de un producto. Cuando no tiene imagen cargada usa el
+ * placeholder que corresponde al tipo (máquina o repuesto).
+ *
+ * @param array<string,mixed> $product
+ */
+function product_image_url(array $product, bool $preferThumb = true): string
+{
+    $path = $preferThumb
+        ? ($product['thumb'] ?? $product['image'] ?? null)
+        : ($product['image'] ?? $product['thumb'] ?? null);
+
+    $fallback = ($product['type'] ?? 'machine') === 'spare_part'
+        ? 'img/placeholder-part.svg'
+        : 'img/placeholder-machine.svg';
+
+    return upload_url($path !== null && $path !== '' ? (string) $path : null, $fallback);
 }
 
 function machine_url(array $product): string

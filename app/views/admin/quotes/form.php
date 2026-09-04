@@ -266,6 +266,6 @@ $catalogJs = array_map(static fn (array $p): array => [
     </div>
 </template>
 
-<script>
+<script nonce="<?= csp_nonce() ?>">
     window.QUOTE_CATALOG = <?= js($catalogJs) ?>;
 </script>

@@ -16,6 +16,15 @@ declare(strict_types=1);
 // El proyecto ya no usa /public: este archivo está en la raíz.
 $root = __DIR__;
 
+// En producción no se sirve salvo que se pida a propósito con ?ok=1,
+// así un escáner que pegue en /compatibilidad.php no obtiene nada.
+$envFile = @file_get_contents($root . '/.env');
+$isProd  = is_string($envFile) && preg_match('/^\s*APP_ENV\s*=\s*production\s*$/mi', $envFile);
+if ($isProd && ($_GET['ok'] ?? '') !== '1') {
+    http_response_code(404);
+    exit('No encontrado. (Si estás instalando, entrá con ?ok=1 y borrá este archivo al terminar.)');
+}
+
 /** @return array{ok:bool,label:string,detail:string,level:string} */
 function check(string $label, bool $ok, string $okText, string $failText, string $level = 'critico'): array
 {

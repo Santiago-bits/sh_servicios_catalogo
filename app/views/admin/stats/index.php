@@ -7,7 +7,7 @@
     <form method="get" class="d-flex flex-wrap gap-2 align-items-end w-100">
         <div>
             <label class="form-label" for="f-dias">Período</label>
-            <select class="form-select" id="f-dias" name="dias" onchange="this.form.submit()">
+            <select class="form-select" id="f-dias" name="dias" data-autosubmit>
                 <?php foreach ([7 => 'Últimos 7 días', 30 => 'Últimos 30 días', 90 => 'Últimos 90 días', 180 => 'Últimos 6 meses', 365 => 'Último año'] as $value => $label): ?>
                     <option value="<?= $value ?>" <?= $days === $value ? 'selected' : '' ?>><?= e($label) ?></option>
                 <?php endforeach; ?>

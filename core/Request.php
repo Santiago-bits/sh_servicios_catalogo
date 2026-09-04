@@ -144,6 +144,12 @@ final class Request
         return in_array(strtolower((string) $value), ['1', 'true', 'on', 'yes', 'si'], true);
     }
 
+    /** Igual que bool() pero devuelve 1/0, listo para guardar en la base. */
+    public static function flag(string $key, bool $default = false): int
+    {
+        return self::bool($key, $default) ? 1 : 0;
+    }
+
     /** @return array<int,string> */
     public static function array(string $key): array
     {
@@ -221,15 +227,26 @@ final class Request
 
     public static function ip(): string
     {
-        foreach (['HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'] as $key) {
-            if (!empty($_SERVER[$key])) {
-                $ip = trim(explode(',', (string) $_SERVER[$key])[0]);
-                if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                    return $ip;
+        $remote = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+
+        // Los headers de proxy (X-Forwarded-For, CF-Connecting-IP) sólo se
+        // creen si la conexión llega desde un proxy declarado de confianza
+        // en TRUSTED_PROXIES (.env, IPs separadas por coma). Sin eso,
+        // cualquier cliente podría falsear su IP.
+        $trusted = array_filter(array_map('trim', explode(',', (string) Env::get('TRUSTED_PROXIES', ''))));
+
+        if ($trusted !== [] && in_array($remote, $trusted, true)) {
+            foreach (['HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR'] as $key) {
+                if (!empty($_SERVER[$key])) {
+                    $ip = trim(explode(',', (string) $_SERVER[$key])[0]);
+                    if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                        return $ip;
+                    }
                 }
             }
         }
-        return '0.0.0.0';
+
+        return filter_var($remote, FILTER_VALIDATE_IP) ? $remote : '0.0.0.0';
     }
 
     public static function userAgent(): string

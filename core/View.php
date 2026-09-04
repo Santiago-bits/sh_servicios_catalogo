@@ -54,6 +54,12 @@ final class View
     /** @param array<string,mixed> $data */
     private function capture(string $template, array $data): string
     {
+        // Los nombres de plantilla son siempre literales del código; este
+        // control evita cualquier salto de carpeta si eso cambiara.
+        if (!preg_match('#^[A-Za-z0-9_][A-Za-z0-9_/.\-]*$#', $template) || str_contains($template, '..')) {
+            throw new \RuntimeException('Nombre de vista inválido: ' . $template);
+        }
+
         $file = VIEW_PATH . '/' . str_replace('.', '/', $template) . '.php';
 
         if (!is_file($file)) {

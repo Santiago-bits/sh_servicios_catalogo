@@ -61,11 +61,12 @@ final class Auth
             return ['ok' => false, 'message' => $genericError];
         }
 
-        // Rehash si el algoritmo por defecto cambió o subió el costo
-        if (password_needs_rehash((string) $user['password'], PASSWORD_DEFAULT)) {
+        // Rehash si el algoritmo por defecto cambió o subió el costo.
+        // Mismo costo (12) que Auth::hash(), para no generar hashes más débiles.
+        if (password_needs_rehash((string) $user['password'], PASSWORD_DEFAULT, ['cost' => 12])) {
             Database::update(
                 'users',
-                ['password' => password_hash($password, PASSWORD_DEFAULT)],
+                ['password' => password_hash($password, PASSWORD_DEFAULT, ['cost' => 12])],
                 'id = :id',
                 ['id' => (int) $user['id']]
             );
@@ -78,8 +79,9 @@ final class Auth
             'last_login_ip' => Request::ip(),
         ], 'id = :id', ['id' => (int) $user['id']]);
 
-        // Anti session fixation: ID nuevo al autenticar
+        // Anti session fixation: ID nuevo al autenticar + token CSRF nuevo
         Session::regenerate();
+        Csrf::rotate();
         Session::set(self::SESSION_KEY, (int) $user['id']);
         Session::set('_auth_fingerprint', self::fingerprint());
 
@@ -244,6 +246,6 @@ final class Auth
 
     private static function fingerprint(): string
     {
-        return hash('sha256', APP_KEY . '|' . Request::userAgent());
+        return hash_hmac('sha256', Request::userAgent(), APP_KEY);
     }
 }

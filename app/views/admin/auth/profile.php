@@ -13,14 +13,16 @@
 
                     <div class="col-md-6">
                         <label class="form-label" for="p-name">Nombre y apellido</label>
-                        <input type="text" class="form-control" id="p-name" name="name" required
+                        <input type="text" class="form-control <?= isset($errors['name']) ? 'is-invalid' : '' ?>" id="p-name" name="name" required
                                maxlength="120" value="<?= e($user['name']) ?>">
+                        <span class="form-error"><?= e($errors['name'] ?? '') ?></span>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label" for="p-email">Email</label>
-                        <input type="email" class="form-control" id="p-email" name="email" required
+                        <input type="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>" id="p-email" name="email" required
                                maxlength="160" value="<?= e($user['email']) ?>">
+                        <span class="form-error"><?= e($errors['email'] ?? '') ?></span>
                     </div>
 
                     <div class="col-md-6">
@@ -33,6 +35,13 @@
                         <label class="form-label">Rol</label>
                         <input type="text" class="form-control" value="<?= e($user['role_name']) ?>" disabled>
                         <p class="form-hint">Sólo un administrador puede cambiar tu rol.</p>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="p-datos-current">Confirmá tu contraseña actual para guardar</label>
+                        <input type="password" class="form-control <?= isset($errors['current_password']) ? 'is-invalid' : '' ?>"
+                               id="p-datos-current" name="current_password" required autocomplete="current-password">
+                        <span class="form-error"><?= e($errors['current_password'] ?? '') ?></span>
                     </div>
 
                     <div class="col-12">
@@ -50,21 +59,23 @@
 
                     <div class="col-12">
                         <label class="form-label" for="p-current">Contraseña actual</label>
-                        <input type="password" class="form-control" id="p-current" name="current_password"
-                               required autocomplete="current-password">
+                        <input type="password" class="form-control <?= isset($errors['current_password']) ? 'is-invalid' : '' ?>"
+                               id="p-current" name="current_password" required autocomplete="current-password">
+                        <span class="form-error"><?= e($errors['current_password'] ?? '') ?></span>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label" for="p-new">Contraseña nueva</label>
-                        <input type="password" class="form-control" id="p-new" name="password"
-                               required minlength="8" autocomplete="new-password">
-                        <p class="form-hint">Mínimo 8 caracteres, con letras y números.</p>
+                        <input type="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>"
+                               id="p-new" name="password" required minlength="12" autocomplete="new-password">
+                        <p class="form-hint">Mínimo 12 caracteres, combinando al menos 3 de: mayúsculas, minúsculas, números y símbolos. Evitá palabras obvias.</p>
+                        <span class="form-error"><?= e($errors['password'] ?? '') ?></span>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label" for="p-confirm">Repetir contraseña</label>
                         <input type="password" class="form-control" id="p-confirm" name="password_confirmation"
-                               required minlength="8" autocomplete="new-password">
+                               required minlength="12" autocomplete="new-password">
                     </div>
 
                     <div class="col-12">

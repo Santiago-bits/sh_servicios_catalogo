@@ -26,6 +26,7 @@ class RoleController extends AdminController
             'robots'      => 'noindex, nofollow',
             'roles'       => $model->allWithCounts(),
             'permissions' => $model->allPermissions(),
+            'moduleNames' => $this->moduleNames(),
         ]);
     }
 
@@ -91,7 +92,7 @@ class RoleController extends AdminController
         $payload = [
             'name'        => $data['name'],
             'description' => $data['description'] ?? null,
-            'active'      => Request::bool('active', true) ? 1 : 0,
+            'active'      => Request::flag('active', true),
         ];
 
         // Los roles de sistema no cambian de nombre clave ni se desactivan

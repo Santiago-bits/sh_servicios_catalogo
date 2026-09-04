@@ -62,7 +62,11 @@ final class Csrf
 
             http_response_code(419);
             Session::flash('danger', 'El token de seguridad expiró. Volvé a enviar el formulario.');
-            $referer = $_SERVER['HTTP_REFERER'] ?? BASE_URL;
+            // Sólo se admite volver a una URL de este mismo sitio (anti open redirect).
+            $referer = $_SERVER['HTTP_REFERER'] ?? '';
+            if (!is_string($referer) || !str_starts_with($referer, BASE_URL)) {
+                $referer = BASE_URL;
+            }
             header('Location: ' . $referer);
             exit;
         }

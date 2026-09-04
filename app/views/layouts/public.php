@@ -20,7 +20,7 @@ $robotsMeta  = $robots ?? 'index, follow';
 <html lang="es" data-base="<?= e(BASE_URL) ?>">
 <head>
     <meta charset="utf-8">
-    <script>document.documentElement.classList.add('js');</script>
+    <script nonce="<?= csp_nonce() ?>">document.documentElement.classList.add('js');</script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#111111">
 
@@ -90,7 +90,7 @@ $robotsMeta  = $robots ?? 'index, follow';
 <!-- Contenedor de notificaciones -->
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 
-<script>
+<script nonce="<?= csp_nonce() ?>">
     window.SHS = {
         baseUrl: <?= js(BASE_URL) ?>,
         csrf: <?= js(csrf_token()) ?>,

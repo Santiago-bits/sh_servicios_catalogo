@@ -427,12 +427,13 @@ $ab = $isEdit ? availability_badge((string) $product['availability']) : null;
                                         <div class="img-tile__actions">
                                             <?php if ((int) $image['is_main'] !== 1): ?>
                                                 <button type="button" title="Marcar como principal"
-                                                        onclick="document.getElementById('mainImg<?= (int) $image['id'] ?>').submit()">
+                                                        data-submit-form="mainImg<?= (int) $image['id'] ?>">
                                                     <i class="bi bi-star"></i>
                                                 </button>
                                             <?php endif; ?>
                                             <button type="button" title="Eliminar"
-                                                    onclick="if(confirm('¿Eliminar esta imagen?')) document.getElementById('delImg<?= (int) $image['id'] ?>').submit()">
+                                                    data-submit-form="delImg<?= (int) $image['id'] ?>"
+                                                    data-confirm="¿Eliminar esta imagen?">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
@@ -504,7 +505,8 @@ $ab = $isEdit ? availability_badge((string) $product['availability']) : null;
                                             </span>
                                             <a href="<?= e(upload_url($doc['path'])) ?>" target="_blank" class="btn-icon" title="Ver"><i class="bi bi-eye"></i></a>
                                             <button type="button" class="btn-icon btn-icon--danger" title="Quitar"
-                                                    onclick="if(confirm('¿Eliminar el documento?')) document.getElementById('delDoc<?= (int) $doc['id'] ?>').submit()">
+                                                    data-submit-form="delDoc<?= (int) $doc['id'] ?>"
+                                                    data-confirm="¿Eliminar el documento?">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>

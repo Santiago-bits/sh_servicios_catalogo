@@ -8,7 +8,6 @@
  */
 
 use App\Services\PriceService;
-use App\Services\StockService;
 use App\Services\WhatsAppService;
 
 $isMachine   = ($product['type'] ?? 'machine') === 'machine';
@@ -19,6 +18,21 @@ $price       = PriceService::effectivePrice($product);
 $hasOffer    = (int) ($product['is_offer'] ?? 0) === 1 && (float) ($product['offer_price'] ?? 0) > 0;
 $tags        = $product['tags'] ?? [];
 $listView    = ($viewMode ?? 'grid') === 'lista';
+
+// Etiquetas de la tarjeta (se muestran sobre la imagen en escritorio y,
+// en teléfono, dentro del cuerpo en lugar de las características).
+$cardTags = [];
+if ((int) ($product['featured'] ?? 0) === 1) {
+    $cardTags[] = ['color' => 'accent', 'icon' => 'bi-star-fill', 'label' => 'Destacado'];
+}
+if ($hasOffer) {
+    $cardTags[] = ['color' => 'danger', 'icon' => 'bi-tag-fill', 'label' => 'Oferta'];
+}
+foreach (array_slice($tags, 0, 2) as $tag) {
+    if (!in_array($tag['slug'], ['destacado', 'oferta'], true)) {
+        $cardTags[] = ['color' => $tag['color'], 'icon' => null, 'label' => $tag['name']];
+    }
+}
 ?>
 <article class="pcard reveal" data-product-id="<?= (int) $product['id'] ?>">
 
@@ -32,26 +46,12 @@ $listView    = ($viewMode ?? 'grid') === 'lista';
             </span>
         <?php endif; ?>
 
-        <span class="pcard__badges">
-            <?php if ((int) ($product['featured'] ?? 0) === 1): ?>
-                <span class="tag tag--accent"><i class="bi bi-star-fill"></i> Destacado</span>
-            <?php endif; ?>
-            <?php if ($hasOffer): ?>
-                <span class="tag tag--danger"><i class="bi bi-tag-fill"></i> Oferta</span>
-            <?php endif; ?>
-            <?php foreach (array_slice($tags, 0, 2) as $tag): ?>
-                <?php if (!in_array($tag['slug'], ['destacado', 'oferta'], true)): ?>
-                    <span class="tag tag--<?= e($tag['color']) ?>"><?= e($tag['name']) ?></span>
-                <?php endif; ?>
-            <?php endforeach; ?>
-        </span>
+        <?php if ($cardTags !== []): ?>
+            <span class="pcard__badges"><?php $view->partial('tag-list', ['tags' => $cardTags]); ?></span>
+        <?php endif; ?>
     </a>
 
     <div class="pcard__actions">
-        <button type="button" class="icon-action" data-fav-toggle="<?= (int) $product['id'] ?>"
-                aria-pressed="false" title="Guardar en favoritos">
-            <i class="bi bi-heart"></i>
-        </button>
         <?php if ($isMachine): ?>
             <button type="button" class="icon-action" data-compare-toggle="<?= (int) $product['id'] ?>"
                     title="Agregar al comparador">
@@ -76,6 +76,10 @@ $listView    = ($viewMode ?? 'grid') === 'lista';
 
         <?php if ($listView && !empty($product['short_description'])): ?>
             <p class="text-muted-2 small mb-1"><?= e(str_limit((string) $product['short_description'], 150)) ?></p>
+        <?php endif; ?>
+
+        <?php if ($cardTags !== []): ?>
+            <div class="pcard__tags"><?php $view->partial('tag-list', ['tags' => $cardTags]); ?></div>
         <?php endif; ?>
 
         <div class="pcard__specs">
@@ -103,16 +107,7 @@ $listView    = ($viewMode ?? 'grid') === 'lista';
         </div>
 
         <div class="mt-1">
-            <?php if (!$isMachine && (int) ($product['track_stock'] ?? 0) === 1): ?>
-                <?php $stock = stock_badge($product); ?>
-                <span class="status status--<?= e($stock['class']) ?>"><?= e($stock['label']) ?>
-                    <?php if ($stock['class'] === 'ok' || $stock['class'] === 'warn'): ?>
-                        <small class="text-muted-2">(<?= StockService::available($product) ?>)</small>
-                    <?php endif; ?>
-                </span>
-            <?php else: ?>
-                <span class="status status--<?= e($availability['class']) ?>"><?= e($availability['label']) ?></span>
-            <?php endif; ?>
+            <span class="status status--<?= e($availability['class']) ?>"><?= e($availability['label']) ?></span>
         </div>
 
         <div class="pcard__foot">

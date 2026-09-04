@@ -86,7 +86,23 @@ final class Uploader
         $fullPath = $directory . '/' . $name;
 
         if (!self::processImage($file['tmp_name'], $fullPath, $maxWidth, 82)) {
-            return ['ok' => false, 'message' => 'No se pudo procesar la imagen.'];
+            /* GD no pudo con este formato (típico: WebP sin soporte compilado
+               en el hosting). La imagen YA pasó la validación de tipo real,
+               así que se guarda tal cual: el navegador la muestra igual. */
+            @unlink($fullPath);
+            $extension = self::IMAGE_TYPES[$check['mime']] ?? 'jpg';
+            $name      = self::uniqueName($extension);
+
+            if (!move_uploaded_file($file['tmp_name'], $directory . '/' . $name)) {
+                return ['ok' => false, 'message' => 'No se pudo procesar ni guardar la imagen.'];
+            }
+
+            @chmod($directory . '/' . $name, 0644);
+
+            return [
+                'ok'   => true,
+                'path' => 'uploads/' . trim($folder, '/') . '/' . $name,
+            ];
         }
 
         $relative = 'uploads/' . trim($folder, '/') . '/' . $name;

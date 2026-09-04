@@ -44,15 +44,19 @@ class Product extends Model
     /** Columnas internas (incluye costo y ganancia). Sólo con permiso. */
     public const INTERNAL_COLUMNS = self::PUBLIC_COLUMNS . ', p.cost_price, p.profit_percent, p.profit_amount, p.description, p.active, p.price_updated_at';
 
-    private const JOIN_BASE = '
-        FROM products p
-        LEFT JOIN brands b     ON b.id = p.brand_id
-        LEFT JOIN categories c ON c.id = p.category_id
-        LEFT JOIN machines m   ON m.product_id = p.id
+    /** Joins secundarios comunes a casi todas las consultas de producto. */
+    private const JOIN_META = '
+        LEFT JOIN brands b       ON b.id = p.brand_id
+        LEFT JOIN categories c   ON c.id = p.category_id
+        LEFT JOIN machines m     ON m.product_id = p.id
         LEFT JOIN spare_parts sp ON sp.product_id = p.id';
 
+    private const JOIN_BASE = ' FROM products p' . self::JOIN_META;
+
     private const EXTRA_COLUMNS = "
-        b.name AS brand_name, b.slug AS brand_slug, b.logo AS brand_logo,
+        CASE WHEN p.type = 'spare_part' THEN sp.manufacturer ELSE b.name END AS brand_name,
+        CASE WHEN p.type = 'spare_part' THEN NULL ELSE b.slug END AS brand_slug,
+        CASE WHEN p.type = 'spare_part' THEN NULL ELSE b.logo END AS brand_logo,
         c.name AS category_name, c.slug AS category_slug,
         m.model, m.year, m.hours, m.fuel, m.condition_type, m.capacity_kg,
         m.lift_height_mm, m.power_hp, m.location, m.voltage, m.engine, m.transmission,
@@ -134,8 +138,11 @@ class Product extends Model
             }
         }
 
-        // --- Marca ---------------------------------------------------
+        // --- Marca -------------------------------------------------------
+        // En repuestos la "marca" es texto libre (spare_parts.manufacturer),
+        // no una fila de la tabla brands. En máquinas sigue siendo brand_id/slug.
         if (!empty($filters['marca'])) {
+            $isPart = ($params['type'] ?? '') === 'spare_part';
             $marcas = is_array($filters['marca']) ? $filters['marca'] : [$filters['marca']];
             $in     = [];
             foreach (array_values($marcas) as $i => $marca) {
@@ -144,12 +151,16 @@ class Product extends Model
                 }
                 $key         = 'brand' . $i;
                 $in[]        = ':' . $key;
-                $params[$key] = ctype_digit((string) $marca) ? (int) $marca : (string) $marca;
+                $params[$key] = (!$isPart && ctype_digit((string) $marca)) ? (int) $marca : (string) $marca;
             }
             if ($in !== []) {
-                $conditions[] = ctype_digit((string) $marcas[array_key_first($marcas)])
-                    ? 'p.brand_id IN (' . implode(',', $in) . ')'
-                    : 'b.slug IN (' . implode(',', $in) . ')';
+                if ($isPart) {
+                    $conditions[] = 'sp.manufacturer IN (' . implode(',', $in) . ')';
+                } else {
+                    $conditions[] = ctype_digit((string) $marcas[array_key_first($marcas)])
+                        ? 'p.brand_id IN (' . implode(',', $in) . ')'
+                        : 'b.slug IN (' . implode(',', $in) . ')';
+                }
             }
         }
 
@@ -402,11 +413,7 @@ class Product extends Model
         return Database::select(
             'SELECT ' . self::PUBLIC_COLUMNS . ', ' . self::EXTRA_COLUMNS . ', msp.recommended, msp.note
                FROM machine_spare_parts msp
-               INNER JOIN products p ON p.id = msp.spare_part_id
-               LEFT JOIN brands b     ON b.id = p.brand_id
-               LEFT JOIN categories c ON c.id = p.category_id
-               LEFT JOIN machines m   ON m.product_id = p.id
-               LEFT JOIN spare_parts sp ON sp.product_id = p.id
+               INNER JOIN products p ON p.id = msp.spare_part_id' . self::JOIN_META . '
               WHERE msp.machine_id = :id AND p.active = 1 AND p.deleted_at IS NULL
               ORDER BY msp.recommended DESC, p.name ASC
               LIMIT ' . max(1, $limit),
@@ -420,11 +427,7 @@ class Product extends Model
         return Database::select(
             'SELECT ' . self::PUBLIC_COLUMNS . ', ' . self::EXTRA_COLUMNS . '
                FROM machine_spare_parts msp
-               INNER JOIN products p ON p.id = msp.machine_id
-               LEFT JOIN brands b     ON b.id = p.brand_id
-               LEFT JOIN categories c ON c.id = p.category_id
-               LEFT JOIN machines m   ON m.product_id = p.id
-               LEFT JOIN spare_parts sp ON sp.product_id = p.id
+               INNER JOIN products p ON p.id = msp.machine_id' . self::JOIN_META . '
               WHERE msp.spare_part_id = :id AND p.active = 1 AND p.deleted_at IS NULL
               ORDER BY p.name ASC
               LIMIT ' . max(1, $limit),
@@ -468,11 +471,7 @@ class Product extends Model
         return Database::select(
             'SELECT DISTINCT ' . self::PUBLIC_COLUMNS . ', ' . self::EXTRA_COLUMNS . '
                FROM spare_part_compatibility spc
-               INNER JOIN products p ON p.id = spc.spare_part_id
-               LEFT JOIN brands b     ON b.id = p.brand_id
-               LEFT JOIN categories c ON c.id = p.category_id
-               LEFT JOIN machines m   ON m.product_id = p.id
-               LEFT JOIN spare_parts sp ON sp.product_id = p.id
+               INNER JOIN products p ON p.id = spc.spare_part_id' . self::JOIN_META . '
               WHERE spc.model LIKE :model AND p.active = 1 AND p.deleted_at IS NULL
               ORDER BY p.featured DESC, p.name ASC
               LIMIT ' . max(1, $limit),
@@ -595,6 +594,20 @@ class Product extends Model
     /** Marcas presentes en el catálogo de un tipo. @return array<int,array<string,mixed>> */
     public function availableBrands(string $type): array
     {
+        // Repuestos: la marca es texto libre (spare_parts.manufacturer),
+        // así que la lista sale de los valores realmente cargados.
+        if ($type === 'spare_part') {
+            return Database::select(
+                "SELECT sp.manufacturer AS name, sp.manufacturer AS slug, COUNT(*) AS total
+                   FROM products p
+                   INNER JOIN spare_parts sp ON sp.product_id = p.id
+                  WHERE p.type = 'spare_part' AND p.active = 1 AND p.deleted_at IS NULL
+                    AND sp.manufacturer IS NOT NULL AND sp.manufacturer <> ''
+                  GROUP BY sp.manufacturer
+                  ORDER BY sp.manufacturer ASC"
+            );
+        }
+
         return Database::select(
             'SELECT b.id, b.name, b.slug, COUNT(p.id) AS total
                FROM brands b

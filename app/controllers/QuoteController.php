@@ -84,7 +84,7 @@ class QuoteController extends Controller
                 'quantity'    => $i['quantity'],
                 'unit_price'  => $i['price_hidden'] ? null : $i['unit_price'],
                 'line_total'  => $i['price_hidden'] ? null : $i['line_total'],
-                'image'       => upload_url($i['product']['thumb'] ?? $i['product']['image']),
+                'image'       => product_image_url($i['product']),
                 'url'         => product_url($i['product']),
             ], $items),
         ]);
@@ -98,6 +98,13 @@ class QuoteController extends Controller
     {
         // Honeypot anti-spam: campo oculto que sólo completan los bots
         if (Request::post('website') !== null && Request::post('website') !== '') {
+            $this->redirect('cotizador');
+        }
+
+        // Límite por IP (cada cotización web también genera una consulta,
+        // así que se reutiliza el mismo contador).
+        if ((new Inquiry())->tooManyFrom(Request::ip(), 8)) {
+            $this->error('Recibimos varias solicitudes desde esta conexión. Probá más tarde o escribinos por WhatsApp.');
             $this->redirect('cotizador');
         }
 

@@ -48,7 +48,7 @@ use App\Services\PriceService;
                     <?php foreach ($items as $item): ?>
                         <div class="quote-item">
                             <img class="quote-item__img"
-                                 src="<?= e(upload_url($item['product']['thumb'] ?? $item['product']['image'])) ?>"
+                                 src="<?= e(product_image_url($item['product'])) ?>"
                                  alt="<?= e($item['description']) ?>">
 
                             <div class="quote-item__body">

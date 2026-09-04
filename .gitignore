@@ -17,6 +17,15 @@
 # Conexión con credenciales reales (subir sólo coneccion.example.php)
 coneccion.php
 
+# Volcados de base y paquetes de deploy: llevan datos de clientes y/o
+# credenciales, nunca se versionan.
+*.sql
+*.zip
+/sh-servicios-hostinger*
+
+# Lockfile del catálogo de skills de ECC (no es parte de la app)
+skills-lock.json
+
 # Sistema operativo / editores
 .DS_Store
 Thumbs.db

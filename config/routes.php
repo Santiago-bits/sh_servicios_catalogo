@@ -41,7 +41,7 @@ $router->post('/contacto', 'InquiryController@store');
 // --- Buscador y herramientas ----------------------------------------
 $router->get('/buscar', 'SearchController@index');
 $router->get('/comparar', 'CompareController@index');
-$router->get('/favoritos', 'FavoriteController@index');
+// Favoritos: función retirada (se quitó el botón "guardar en favoritos").
 $router->get('/recomendador', 'RecommenderController@index');
 $router->post('/recomendador', 'RecommenderController@result');
 
@@ -67,8 +67,7 @@ $router->group('/api', static function (Router $router): void {
     $router->post('/cotizador/quitar', 'QuoteController@removeItem');
     $router->post('/cotizador/vaciar', 'QuoteController@clear');
     $router->get('/cotizador', 'QuoteController@cart');
-    $router->post('/favoritos/sincronizar', 'FavoriteController@sync');
-});
+}, ['api-throttle']);
 
 // =====================================================================
 // PANEL ADMINISTRATIVO
@@ -127,16 +126,8 @@ $router->group('/admin', static function (Router $router): void {
     $router->post('/marcas/{id:\d+}', 'Admin\BrandController@update', ['permission:brands.manage']);
     $router->post('/marcas/{id:\d+}/eliminar', 'Admin\BrandController@destroy', ['permission:brands.manage']);
 
-    // Sección "Características" oculta: la ficha técnica de la máquina usa
-    // solo los campos fijos del formulario, así que la lista de características
-    // personalizadas ya no se usa. El controlador sigue existiendo; para
-    // reactivarla, descomentar esto y volver a agregar su ítem en el menú.
-    /*
-    $router->get('/caracteristicas', 'Admin\FeatureController@index', ['permission:features.manage']);
-    $router->post('/caracteristicas', 'Admin\FeatureController@store', ['permission:features.manage']);
-    $router->post('/caracteristicas/{id:\d+}', 'Admin\FeatureController@update', ['permission:features.manage']);
-    $router->post('/caracteristicas/{id:\d+}/eliminar', 'Admin\FeatureController@destroy', ['permission:features.manage']);
-    */
+    // La ficha técnica de la máquina usa sólo los campos fijos del formulario:
+    // la lista de "características" personalizadas y su ABM se retiraron.
 
     $router->get('/etiquetas', 'Admin\TagController@index', ['permission:tags.manage']);
     $router->post('/etiquetas', 'Admin\TagController@store', ['permission:tags.manage']);
@@ -188,17 +179,13 @@ $router->group('/admin', static function (Router $router): void {
     $router->post('/consultas/{id:\d+}', 'Admin\InquiryController@update', ['permission:inquiries.manage']);
     $router->post('/consultas/{id:\d+}/eliminar', 'Admin\InquiryController@destroy', ['permission:inquiries.manage']);
 
-    /*
-    // --- Stock -------------------------------------------------------
-    $router->get('/stock', 'Admin\StockController@index', ['permission:stock.view']);
-    $router->post('/stock/movimiento', 'Admin\StockController@store', ['permission:stock.move']);
-    $router->get('/stock/{id:\d+}/historial', 'Admin\StockController@history', ['permission:stock.view']);
-
-    // --- Usuarios y roles --------------------------------------------
+    // --- Usuarios y roles (reactivado: permite crear cuentas de menor
+    //     privilegio y así ejercer de verdad el control por permisos) --
     $router->get('/usuarios', 'Admin\UserController@index', ['permission:users.view']);
     $router->post('/usuarios', 'Admin\UserController@store', ['permission:users.manage']);
     $router->post('/usuarios/{id:\d+}', 'Admin\UserController@update', ['permission:users.manage']);
     $router->post('/usuarios/{id:\d+}/eliminar', 'Admin\UserController@destroy', ['permission:users.manage']);
+    $router->post('/usuarios/{id:\d+}/borrar', 'Admin\UserController@purge', ['permission:users.manage']);
 
     $router->get('/roles', 'Admin\RoleController@index', ['permission:roles.manage']);
     $router->get('/roles/{id:\d+}', 'Admin\RoleController@edit', ['permission:roles.manage']);
@@ -206,10 +193,13 @@ $router->group('/admin', static function (Router $router): void {
     $router->post('/roles/{id:\d+}', 'Admin\RoleController@update', ['permission:roles.manage']);
     $router->post('/roles/{id:\d+}/eliminar', 'Admin\RoleController@destroy', ['permission:roles.manage']);
 
-    // --- Estadísticas y auditoría ------------------------------------
+    // --- Auditoría (reactivada: revisión de eventos de seguridad) ----
+    $router->get('/auditoria', 'Admin\AuditController@index', ['permission:audit.view']);
+
+    /*
+    // --- Estadísticas (sigue oculta en el panel simplificado) -------
     $router->get('/estadisticas', 'Admin\StatsController@index', ['permission:stats.view']);
     $router->get('/estadisticas/datos', 'Admin\StatsController@data', ['permission:stats.view']);
-    $router->get('/auditoria', 'Admin\AuditController@index', ['permission:audit.view']);
     */
 
     // --- Configuración -----------------------------------------------

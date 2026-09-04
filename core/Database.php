@@ -34,17 +34,23 @@ final class Database
         /** @var array<string,mixed> $config */
         $config = require CONFIG_PATH . '/database.php';
 
+        // El charset NO va en el DSN a propósito: algunos hostings tienen una
+        // versión del cliente MySQL que rechaza  charset=utf8mb4  ahí y tiran
+        // SQLSTATE[HY000] [2019] Unknown character set. Se fija después de
+        // conectar con SET NAMES, que funciona en todos lados.
         $dsn = sprintf(
-            '%s:host=%s;port=%d;dbname=%s;charset=%s',
+            '%s:host=%s;port=%d;dbname=%s',
             $config['driver'],
             $config['host'],
             $config['port'],
-            $config['database'],
-            $config['charset']
+            $config['database']
         );
+
+        $charset = preg_replace('/[^A-Za-z0-9_]/', '', (string) ($config['charset'] ?? 'utf8mb4')) ?: 'utf8mb4';
 
         try {
             self::$pdo = new PDO($dsn, $config['username'], $config['password'], $config['options']);
+            self::$pdo->exec("SET NAMES '{$charset}'");
             self::$pdo->exec("SET SESSION sql_mode = 'STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION'");
         } catch (PDOException $e) {
             error_log('[DB] ' . $e->getMessage());
@@ -131,10 +137,32 @@ final class Database
         return self::query($sql, $params)->rowCount();
     }
 
+    /**
+     * Verifica que tabla y columnas sean identificadores simples antes de
+     * interpolarlos en el SQL. Defensa en profundidad: hoy los nombres
+     * siempre son literales del código, nunca entrada del usuario.
+     *
+     * @param array<int,string> $columns
+     */
+    private static function assertIdentifiers(string $table, array $columns): void
+    {
+        $valid = static fn (string $id): bool => (bool) preg_match('/^[A-Za-z0-9_]+$/', $id);
+
+        if (!$valid($table)) {
+            throw new \InvalidArgumentException('Nombre de tabla inválido: ' . $table);
+        }
+        foreach ($columns as $column) {
+            if (!is_string($column) || !$valid($column)) {
+                throw new \InvalidArgumentException('Nombre de columna inválido: ' . var_export($column, true));
+            }
+        }
+    }
+
     /** Inserta un registro y devuelve el ID generado. @param array<string,mixed> $data */
     public static function insert(string $table, array $data): int
     {
-        $columns      = array_keys($data);
+        $columns = array_keys($data);
+        self::assertIdentifiers($table, $columns);
         $placeholders = array_map(static fn (string $c): string => ':' . $c, $columns);
 
         $sql = sprintf(
@@ -157,6 +185,8 @@ final class Database
      */
     public static function update(string $table, array $data, string $where, array $whereParams = []): int
     {
+        self::assertIdentifiers($table, array_keys($data));
+
         $sets = [];
         foreach (array_keys($data) as $column) {
             $sets[] = sprintf('`%s` = :set_%s', $column, $column);
@@ -178,6 +208,7 @@ final class Database
     /** @param array<string,mixed> $params */
     public static function delete(string $table, string $where, array $params = []): int
     {
+        self::assertIdentifiers($table, []);
         return self::execute(sprintf('DELETE FROM `%s` WHERE %s', $table, $where), $params);
     }
 

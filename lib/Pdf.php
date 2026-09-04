@@ -473,7 +473,8 @@ class Pdf
             return false;
         }
 
-        $key = md5($file . '|' . (string) filemtime($file));
+        // Clave de caché interna (no es un hash de seguridad).
+        $key = hash('crc32b', $file . '|' . (string) filemtime($file));
 
         if (!isset($this->images[$key])) {
             $info = @getimagesize($file);

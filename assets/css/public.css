@@ -6,6 +6,33 @@
    ===================================================================== */
 
 /* ---------------------------------------------------------------------
+   0. Transición suave entre páginas
+   Cada acción (guardar, hacer clic en un link del menú) recarga la
+   página entera —no es una app de una sola página—, así que el
+   navegador reemplaza todo de golpe. Esto suaviza ese cambio en dos
+   capas, sin JavaScript:
+     a) navegador moderno (Chrome/Edge): "@view-transition" hace que el
+        propio navegador difumine la página vieja hacia la nueva.
+     b) resto de navegadores: la página nueva aparece con un fundido
+        breve en vez de aparecer de golpe.
+   Se respeta "menos movimiento" para quien lo tenga activado en el SO.
+   --------------------------------------------------------------------- */
+@view-transition {
+    navigation: auto;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    body {
+        animation: page-fade-in .18s ease-out;
+    }
+}
+
+@keyframes page-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ---------------------------------------------------------------------
    1. Variables
    --------------------------------------------------------------------- */
 :root {
@@ -189,7 +216,10 @@ img { max-width: 100%; height: auto; }
 /* ---------------------------------------------------------------------
    5. Cabecera
    --------------------------------------------------------------------- */
-.site-header { position: sticky; top: 0; z-index: 1030; }
+/* z-index alto: el <header> crea contexto de apilado y el menu movil vive
+   adentro; si queda por debajo del backdrop transparente, los clicks en los
+   links del menu los captura el backdrop y no navegan. */
+.site-header { position: sticky; top: 0; z-index: 1200; }
 
 .mainbar { background: var(--dark-2); border-bottom: 3px solid var(--yellow); }
 .mainbar__inner {
@@ -325,6 +355,7 @@ img { max-width: 100%; height: auto; }
 .hero {
     position: relative; background: var(--black); color: var(--white);
     overflow: hidden; padding: clamp(56px, 8vw, 104px) 0 clamp(70px, 9vw, 120px);
+    background-size: cover; background-position: center; background-repeat: no-repeat;
 }
 .hero::before {
     content: ''; position: absolute; inset: 0;
@@ -383,26 +414,6 @@ img { max-width: 100%; height: auto; }
     .hero__actions .btn:hover .btn__label,
     .hero__actions .btn:focus-visible .btn__label { max-width: 240px; opacity: 1; }
 }
-
-.hero__visual { position: relative; }
-.hero__visual-frame {
-    position: relative; border-radius: var(--radius-lg); overflow: hidden;
-    border: 1px solid rgba(255,255,255,.12);
-    background: linear-gradient(160deg, #2A2A2A, #141414);
-    aspect-ratio: 4 / 3; display: grid; place-items: center;
-}
-.hero__visual-frame img { width: 100%; height: 100%; object-fit: cover; }
-.hero__visual-frame::after {
-    content: ''; position: absolute; inset: auto 0 0 0; height: 6px;
-    background: repeating-linear-gradient(135deg, var(--yellow) 0 14px, transparent 14px 28px);
-}
-.hero__visual-tag {
-    position: absolute; left: -14px; bottom: 26px; z-index: 3;
-    background: var(--yellow); color: var(--black); padding: 12px 18px;
-    border-radius: var(--radius); font-weight: 800; box-shadow: var(--shadow);
-    display: flex; align-items: center; gap: 10px;
-}
-.hero__visual-tag i { font-size: 1.3rem; }
 
 /* Bandas de confianza bajo el hero */
 .trustbar { background: var(--yellow); }
@@ -532,6 +543,8 @@ img { max-width: 100%; height: auto; }
 .pcard__specs {
     display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px;
 }
+/* Etiquetas dentro del cuerpo: sólo en teléfono (ver media query). */
+.pcard__tags { display: none; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
 .spec-pill {
     display: inline-flex; align-items: center; gap: 5px;
     background: var(--gray-bg); border-radius: 4px; padding: 4px 9px;
@@ -721,8 +734,28 @@ img { max-width: 100%; height: auto; }
 /* ---------------------------------------------------------------------
    10. Ficha de producto
    --------------------------------------------------------------------- */
-.product-layout { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 40px; }
-@media (max-width: 991px) { .product-layout { grid-template-columns: 1fr; gap: 26px; } }
+/* Escritorio: imagen y video apilados en la columna izquierda, info a la derecha.
+   Celular: imagen -> info -> video (una sola columna). */
+.product-layout {
+    display: grid; gap: 40px 40px; align-items: start;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+    grid-template-rows: min-content min-content 1fr;
+    grid-template-areas: "gallery info" "video info" "docs info";
+}
+.product-layout > .gallery-col   { grid-area: gallery; min-width: 0; }
+.product-layout > .product-head  { grid-area: info; }
+.product-layout > .product-video { grid-area: video; min-width: 0; align-self: start; }
+.product-layout > .product-docs  { grid-area: docs;  min-width: 0; align-self: start; }
+.product-layout > .product-video .panel,
+.product-layout > .product-docs .panel { margin-bottom: 0; }
+
+@media (max-width: 991px) {
+    .product-layout {
+        grid-template-columns: 1fr; gap: 22px;
+        grid-template-rows: auto;
+        grid-template-areas: "gallery" "info" "docs" "video";
+    }
+}
 
 .gallery__main {
     position: relative; aspect-ratio: 4/3; border-radius: var(--radius-lg); overflow: hidden;
@@ -782,11 +815,12 @@ img { max-width: 100%; height: auto; }
 .quick-specs {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px;
     background: var(--gray-light); border: 1px solid var(--gray-light);
-    border-radius: var(--radius); overflow: hidden; margin: 22px 0;
+    border-radius: var(--radius); overflow: hidden; margin: 22px 0; max-width: 100%;
 }
-.quick-spec { background: var(--white); padding: 14px 15px; }
+@media (max-width: 600px) { .quick-specs { grid-template-columns: 1fr 1fr; } }
+.quick-spec { background: var(--white); padding: 14px 15px; min-width: 0; overflow-wrap: anywhere; }
 .quick-spec span { display: block; font-size: .72rem; color: var(--gray); text-transform: uppercase; letter-spacing: .07em; }
-.quick-spec strong { font-size: 1rem; color: var(--black); }
+.quick-spec strong { font-size: 1rem; color: var(--black); display: block; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
 .quick-spec--filler { background: var(--white); }
 
 .product-head { min-width: 0; }
@@ -870,15 +904,49 @@ img { max-width: 100%; height: auto; }
 /* ---------------------------------------------------------------------
    11. Comparador
    --------------------------------------------------------------------- */
-.compare-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.compare-hint {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+    background: #FFF9E6; border: 1px solid #F0E4B0; border-radius: var(--radius);
+    padding: 11px 15px; font-size: .9rem; color: #7a5c00;
+}
+.compare-hint i { font-size: 1.05rem; }
+
+.compare-wrap {
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--gray-light); border-radius: var(--radius-lg);
+}
+.compare-table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--white); }
 .compare-table th, .compare-table td {
     padding: 13px 16px; border-bottom: 1px solid var(--gray-light); vertical-align: middle;
+    min-width: 170px;
 }
-.compare-table thead th { background: var(--black); color: var(--white); position: sticky; top: 86px; z-index: 5; }
-.compare-table tbody th { text-align: left; color: var(--gray); font-weight: 600; font-size: .88rem; width: 210px; background: var(--gray-bg); }
-.compare-table td { text-align: center; font-weight: 700; }
-.compare-table tr:hover td { background: #FFFDF3; }
-.compare-table .is-best { color: #1E7A45; }
+.compare-table thead th { background: var(--black); color: var(--white); position: sticky; top: 0; z-index: 5; text-align: center; }
+.compare-table tbody th,
+.compare-table__label {
+    text-align: left; color: var(--gray); font-weight: 600; font-size: .86rem;
+    width: 190px; min-width: 160px; background: var(--gray-bg);
+    position: sticky; left: 0; z-index: 4;
+}
+.compare-table thead .compare-table__label { z-index: 6; background: #1b1b1b; }
+.compare-table td { text-align: center; font-weight: 700; color: var(--black); }
+.compare-table tbody tr:nth-child(even) td { background: #FBFBFA; }
+.compare-table tbody tr:hover td { background: #FFFDF3; }
+.compare-table tbody tr:last-child th,
+.compare-table tbody tr:last-child td { border-bottom: 0; }
+
+.compare-table__img {
+    width: 100%; max-width: 150px; aspect-ratio: 4 / 3; object-fit: cover;
+    border-radius: 6px; margin-bottom: 8px; background: #fff;
+}
+.compare-table__name { display: block; font-size: .92rem; line-height: 1.3; font-weight: 700; }
+.compare-table__head-actions { display: flex; gap: 6px; justify-content: center; margin-top: 10px; }
+.compare-table__remove { padding-inline: 9px; }
+.compare-table__actions { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+
+.compare-table td.is-best {
+    color: #1E7A45; background: #E9F7EE !important; position: relative;
+}
+.compare-table__best { color: #1E7A45; font-size: .85rem; margin-left: 4px; vertical-align: -1px; }
 
 .compare-bar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 1100;
@@ -888,13 +956,17 @@ img { max-width: 100%; height: auto; }
 }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: none; } }
 .compare-bar__inner { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.compare-bar__items { display: flex; gap: 10px; flex: 1; flex-wrap: wrap; }
+.compare-bar__items { display: flex; gap: 10px; flex: 1; flex-wrap: wrap; min-width: 0; }
 .compare-chip {
     display: flex; align-items: center; gap: 9px; background: #1F1F1F;
     border: 1px solid #333; border-radius: var(--radius); padding: 6px 10px; color: #E4E4E4; font-size: .82rem;
+    flex: 0 0 auto; max-width: 100%;
 }
-.compare-chip img { width: 34px; height: 34px; object-fit: cover; border-radius: 4px; }
-.compare-chip button { background: none; border: 0; color: #8A8A8A; cursor: pointer; }
+.compare-chip img { width: 34px; height: 34px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+.compare-chip span {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;
+}
+.compare-chip button { background: none; border: 0; color: #8A8A8A; cursor: pointer; flex-shrink: 0; padding: 0; }
 .compare-chip button:hover { color: var(--danger); }
 .compare-bar__actions { display: flex; gap: 8px; align-items: center; }
 .compare-bar .btn-ghost { color: #B0B0B0; border-color: #3A3A3A; }
@@ -1200,6 +1272,9 @@ mark { background: rgba(245,196,0,.42); color: inherit; padding: 0 2px; border-r
 @media (max-width: 991px) {
     .mainbar__toggle { display: flex; }
     .mainbar__cta { display: none; }   /* el CTA va dentro del menú */
+    /* El menu pasa a panel lateral: sin el, la busqueda y el hamburguesa
+       quedan pegados al logo. Se empujan a la derecha. */
+    .mainbar__actions { margin-left: auto; }
 
     .navmenu {
         position: fixed; inset: 0 0 0 auto; width: min(330px, 88vw);
@@ -1218,10 +1293,6 @@ mark { background: rgba(245,196,0,.42); color: inherit; padding: 0 2px; border-r
     .navmenu__list a::after { display: none; }
     .navmenu__cta { display: flex; justify-content: center; width: 100%; }
 
-    /* En mobile/tablet la imagen del hero se traslada abajo y queda mal:
-       se oculta por completo (en desktop >=992px se ve normal). */
-    .hero .row > .col-lg-6:last-child { display: none; }
-
     .brand-cell { flex-basis: calc(33.333% - 1px); }   /* ~3 por fila en tablet */
 }
 
@@ -1236,7 +1307,67 @@ mark { background: rgba(245,196,0,.42); color: inherit; padding: 0 2px; border-r
     .pcard__price strong { font-size: 1.05rem; }
     .pcard__cta .btn span { display: none; }
     .cta-band { padding: 24px; }
-    .compare-table tbody th { width: 130px; font-size: .8rem; }
+
+    /* En teléfono la tarjeta no muestra las características de abajo;
+       las etiquetas ocupan ese lugar (y se sacan de la imagen). */
+    .pcard__specs { display: none; }
+    .pcard__badges { display: none; }
+    .pcard__tags { display: flex; }
+    .pcard__tags .tag { font-size: .62rem; padding: 3px 7px; }
+
+    /* Comparador en celular: que entren 2 columnas y se pueda deslizar
+       para ver la tercera, sin que todo quede aplastado. */
+    .compare-wrap { scroll-snap-type: x proximity; }
+    .compare-table th, .compare-table td {
+        padding: 9px 10px; min-width: 130px; font-size: .82rem; scroll-snap-align: start;
+    }
+    .compare-table tbody th,
+    .compare-table__label {
+        width: 82px; min-width: 82px; font-size: .7rem; padding: 9px 8px;
+    }
+    .compare-table thead th { font-size: .78rem; padding-top: 12px; }
+    .compare-table__img { max-width: 92px; margin-bottom: 6px; }
+    .compare-table__name { font-size: .8rem; }
+    .compare-table__head-actions { flex-direction: column; gap: 5px; margin-top: 8px; }
+    .compare-table__head-actions .btn { width: 100%; }
+    .compare-table__best { display: block; margin: 3px auto 0; }
+    .compare-table thead .compare-table__label .eyebrow { font-size: .58rem; letter-spacing: .03em; }
+    .compare-table thead .compare-table__label .eyebrow::before { display: none; }
+
+    /* Barra flotante del comparador: chips en una fila que se desliza,
+       y los botones en su propia fila (no apilados ni cortados). */
+    .compare-bar { padding: 8px 0; }
+    .compare-bar__inner { flex-wrap: wrap; gap: 8px; }
+    .compare-bar__items {
+        flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto;
+        -webkit-overflow-scrolling: touch; padding-bottom: 2px;
+    }
+    .compare-chip { padding: 5px 8px; gap: 7px; }
+    .compare-chip img { width: 26px; height: 26px; }
+    .compare-chip span { max-width: 110px; font-size: .74rem; }
+    .compare-bar__actions { flex: 1 1 100%; justify-content: flex-end; gap: 8px; }
+    .compare-bar__actions .btn { padding: 9px 14px; }
+
+    /* Hero centrado en el celular: ya no hay una columna de imagen al
+       costado que lo justifique a la izquierda, se ve mejor centrado. */
+    .hero__inner .col-lg-6 { text-align: center; }
+    .hero__lead { margin-left: auto; margin-right: auto; }
+    .hero__actions { justify-content: center; }
+
+    /* Todo más centrado en el celular: encabezados de sección, tarjetas
+       de categoría, la barra de confianza y las tarjetas de servicio. */
+    .section-head { flex-direction: column; align-items: center; text-align: center; }
+    .section-lead { margin-left: auto; margin-right: auto; }
+
+    .cat-card { align-items: center; text-align: center; }
+
+    .trustbar__item { flex-direction: column; text-align: center; gap: 6px; }
+
+    .service-card { text-align: center; }
+    .service-card__icon { margin-left: auto; margin-right: auto; }
+    /* La lista de características queda centrada como bloque, pero cada
+       ítem sigue alineado a la izquierda entre sí para que se lea bien. */
+    .service-card__list { display: inline-block; text-align: left; }
 }
 
 @media (max-width: 575px) {

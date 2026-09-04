@@ -37,13 +37,18 @@ $nav  = [
     ['label' => 'Importar',       'icon' => 'bi-upload',            'path' => 'importar',        'perm' => 'data.import'],
     ['label' => 'Exportar',       'icon' => 'bi-download',          'path' => 'exportar',        'perm' => 'data.export'],
     ['label' => 'Configuración',  'icon' => 'bi-gear-fill',         'path' => 'configuracion',   'perm' => 'settings.manage'],
+
+    ['section' => 'Seguridad'],
+    ['label' => 'Usuarios',       'icon' => 'bi-people-fill',       'path' => 'usuarios',        'perm' => 'users.view'],
+    ['label' => 'Roles',          'icon' => 'bi-shield-lock-fill',  'path' => 'roles',           'perm' => 'roles.manage'],
+    ['label' => 'Auditoría',      'icon' => 'bi-clipboard-check-fill','path' => 'auditoria',     'perm' => 'audit.view'],
 ];
 ?>
 <!doctype html>
 <html lang="es" data-base="<?= e(BASE_URL) ?>">
 <head>
     <meta charset="utf-8">
-    <script>document.documentElement.classList.add('js');</script>
+    <script nonce="<?= csp_nonce() ?>">document.documentElement.classList.add('js');</script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#111111">
     <title><?= e($pageTitle ?? 'Panel · ' . SettingService::companyName()) ?></title>
@@ -156,7 +161,7 @@ $nav  = [
 <div class="admin-backdrop" id="adminBackdrop"></div>
 <div class="toast-stack" id="toastStack" aria-live="polite"></div>
 
-<script>
+<script nonce="<?= csp_nonce() ?>">
     window.SHS = {
         baseUrl: <?= js(BASE_URL) ?>,
         csrf: <?= js(csrf_token()) ?>,

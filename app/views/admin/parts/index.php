@@ -4,7 +4,6 @@
  * Listado administrativo de repuestos.
  */
 
-use App\Services\StockService;
 ?>
 
 <div class="admin-filters">
@@ -29,14 +28,9 @@ use App\Services\StockService;
 
         <div>
             <label class="form-label" for="f-brand">Marca</label>
-            <select class="form-select" id="f-brand" name="marca">
-                <option value="">Todas</option>
-                <?php foreach ($brands as $brand): ?>
-                    <option value="<?= (int) $brand['id'] ?>" <?= (string) ($filters['marca'] ?? '') === (string) $brand['id'] ? 'selected' : '' ?>>
-                        <?= e($brand['name']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+            <input type="text" class="form-control" id="f-brand" name="marca"
+                   value="<?= e(is_array($filters['marca'] ?? '') ? '' : (string) ($filters['marca'] ?? '')) ?>"
+                   placeholder="Ej: Bosch">
         </div>
 
         <div>
@@ -50,44 +44,41 @@ use App\Services\StockService;
 
         <div class="d-flex align-items-center gap-3 pb-1">
             <label class="filter-check m-0">
-                <input type="checkbox" name="stock_bajo" value="1" <?= !empty($filters['stock_bajo']) ? 'checked' : '' ?>>
-                Stock bajo
-            </label>
-            <label class="filter-check m-0">
                 <input type="checkbox" name="sin_precio" value="1" <?= !empty($filters['sin_precio']) ? 'checked' : '' ?>>
                 Sin precio
             </label>
         </div>
 
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 ms-auto">
             <button type="submit" class="btn btn-dark-2"><i class="bi bi-funnel"></i> Filtrar</button>
             <a href="<?= admin_url('repuestos') ?>" class="btn btn-ghost">Limpiar</a>
-        </div>
-
-        <div class="ms-auto d-flex gap-2">
-            <?php if (can('parts.create')): ?>
-                <a href="<?= admin_url('repuestos/crear') ?>" class="btn btn-accent">
-                    <i class="bi bi-plus-lg"></i> Nuevo repuesto
-                </a>
-            <?php endif; ?>
-            <?php if (can('data.import')): ?>
-                <a href="<?= admin_url('importar') ?>" class="btn btn-ghost" title="Importar desde CSV">
-                    <i class="bi bi-upload"></i>
-                </a>
-            <?php endif; ?>
-            <?php if (can('data.export')): ?>
-                <a href="<?= admin_url('exportar/repuestos/xlsx') ?>" class="btn btn-ghost" title="Exportar a Excel">
-                    <i class="bi bi-file-earmark-excel"></i>
-                </a>
-            <?php endif; ?>
         </div>
     </form>
 </div>
 
 <div class="card-admin">
     <div class="card-admin__head">
-        <h2><i class="bi bi-nut-fill"></i> Repuestos</h2>
-        <span class="text-muted-2 small"><?= number_es($result['total']) ?> registro(s)</span>
+        <h2>
+            <i class="bi bi-nut-fill"></i> Repuestos
+            <span class="text-muted-2 small fw-normal ms-1"><?= number_es($result['total']) ?> registro(s)</span>
+        </h2>
+        <div class="d-flex gap-2 flex-wrap">
+            <?php if (can('parts.create')): ?>
+                <a href="<?= admin_url('repuestos/crear') ?>" class="btn btn-accent btn-sm">
+                    <i class="bi bi-plus-lg"></i> Nuevo repuesto
+                </a>
+            <?php endif; ?>
+            <?php if (can('data.import')): ?>
+                <a href="<?= admin_url('importar') ?>" class="btn btn-ghost btn-sm" title="Importar desde CSV">
+                    <i class="bi bi-upload"></i>
+                </a>
+            <?php endif; ?>
+            <?php if (can('data.export')): ?>
+                <a href="<?= admin_url('exportar/repuestos/xlsx') ?>" class="btn btn-ghost btn-sm" title="Exportar a Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+            <?php endif; ?>
+        </div>
     </div>
 
     <div class="card-admin__body card-admin__body--flush">
@@ -98,15 +89,12 @@ use App\Services\StockService;
                         <th>Repuesto</th>
                         <th>Códigos</th>
                         <th>Categoría</th>
-                        <th class="num">Stock</th>
                         <th class="num">Precio</th>
-                        <th>Ubicación</th>
                         <th class="actions">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php foreach ($products as $product): ?>
-                    <?php $stock = stock_badge($product); ?>
                     <tr>
                         <td>
                             <div class="table-product">
@@ -137,42 +125,16 @@ use App\Services\StockService;
                         <td><?= e($product['category_name'] ?? '—') ?></td>
 
                         <td class="num">
-                            <span class="chip chip--<?= $stock['class'] === 'ok' ? 'ok' : ($stock['class'] === 'off' ? 'danger' : ($stock['class'] === 'warn' ? 'warn' : 'neutral')) ?>">
-                                <?php if ((int) $product['track_stock'] === 1): ?>
-                                    <?= StockService::available($product) ?> u.
-                                <?php else: ?>
-                                    Sin control
-                                <?php endif; ?>
-                            </span>
-                            <?php if ((int) $product['stock_reserved'] > 0): ?>
-                                <small class="d-block text-muted-2"><?= (int) $product['stock_reserved'] ?> reservada(s)</small>
-                            <?php endif; ?>
-                        </td>
-
-                        <td class="num">
                             <strong><?= e(money((float) $product['final_price'], (string) $product['currency'])) ?></strong>
                             <?php if ($canSeeCost && (float) ($product['profit_percent'] ?? 0) > 0): ?>
                                 <small class="d-block text-muted-2">+<?= e(percent((float) $product['profit_percent'], 0)) ?></small>
                             <?php endif; ?>
                         </td>
 
-                        <td class="small text-muted-2">
-                            <?= e(trim(($product['shelf'] ?? '') . ' ' . ($product['position'] ?? ''))) ?: '—' ?>
-                        </td>
-
                         <td class="actions">
                             <a href="<?= e(part_url($product)) ?>" target="_blank" class="btn-icon" title="Ver en el sitio">
                                 <i class="bi bi-box-arrow-up-right"></i>
                             </a>
-                            <?php if (can('stock.move')): ?>
-                                <button type="button" class="btn-icon btn-icon--ok" title="Movimiento de stock"
-                                        data-bs-toggle="modal" data-bs-target="#stockModal"
-                                        data-stock-move="<?= (int) $product['id'] ?>"
-                                        data-product-name="<?= e($product['name']) ?>"
-                                        data-current-stock="<?= (int) $product['stock'] ?>">
-                                    <i class="bi bi-box-seam"></i>
-                                </button>
-                            <?php endif; ?>
                             <?php if (can('parts.edit')): ?>
                                 <a href="<?= admin_url('repuestos/' . (int) $product['id'] . '/editar') ?>" class="btn-icon" title="Editar">
                                     <i class="bi bi-pencil"></i>
@@ -193,7 +155,7 @@ use App\Services\StockService;
 
                 <?php if (empty($products)): ?>
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted-2">
+                        <td colspan="5" class="text-center py-5 text-muted-2">
                             <i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:8px"></i>
                             No hay repuestos que coincidan con los filtros.
                         </td>
@@ -208,7 +170,3 @@ use App\Services\StockService;
         <div class="card-admin__foot"><?php $view->partial('pagination', ['result' => $result]); ?></div>
     <?php endif; ?>
 </div>
-
-<?php if (can('stock.move')): ?>
-    <?php $view->include('admin/stock/modal'); ?>
-<?php endif; ?>

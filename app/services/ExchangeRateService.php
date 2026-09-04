@@ -54,6 +54,13 @@ final class ExchangeRateService
     public static function refreshIfStale(): void
     {
         try {
+            // No se sale a internet en el camino de una API ni de un POST:
+            // ahí un lanacion.com.ar lento sería un cuello de botella.
+            $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+            if ($method !== 'GET' || str_starts_with(\Core\Request::uri(), '/api')) {
+                return;
+            }
+
             if (!SettingService::bool('usd_rate_auto', false)) {
                 return;
             }

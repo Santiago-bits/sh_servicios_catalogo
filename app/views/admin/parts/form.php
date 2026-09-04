@@ -85,15 +85,19 @@ $ab = $isEdit ? availability_badge((string) $product['availability']) : null;
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label" for="brand_id">Marca</label>
-                                <select class="form-select" id="brand_id" name="brand_id">
-                                    <option value="">Sin marca</option>
-                                    <?php foreach ($brands as $brand): ?>
-                                        <option value="<?= (int) $brand['id'] ?>" <?= (int) $val('brand_id') === (int) $brand['id'] ? 'selected' : '' ?>>
-                                            <?= e($brand['name']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
+                                <label class="form-label" for="manufacturer">Marca</label>
+                                <input type="text" class="form-control" id="manufacturer" name="manufacturer"
+                                       maxlength="120" value="<?= e($val('manufacturer')) ?>"
+                                       list="manufacturerList" placeholder="Ej: Mann Filter, Bosch, SKF…">
+                                <?php $manufacturers = $manufacturers ?? []; ?>
+                                <?php if ($manufacturers !== []): ?>
+                                    <datalist id="manufacturerList">
+                                        <?php foreach ($manufacturers as $m): ?>
+                                            <option value="<?= e($m) ?>"></option>
+                                        <?php endforeach; ?>
+                                    </datalist>
+                                <?php endif; ?>
+                                <p class="form-hint">Texto libre. No aparece en las marcas de la portada.</p>
                             </div>
                         </div>
                     </div>
@@ -165,7 +169,8 @@ $ab = $isEdit ? availability_badge((string) $product['availability']) : null;
                                         <?php endif; ?>
                                         <div class="img-tile__actions">
                                             <button type="button" title="Eliminar"
-                                                    onclick="if(confirm('¿Eliminar esta imagen?')) document.getElementById('delImg<?= (int) $image['id'] ?>').submit()">
+                                                    data-submit-form="delImg<?= (int) $image['id'] ?>"
+                                                    data-confirm="¿Eliminar esta imagen?">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
