@@ -8,6 +8,11 @@
 
 <div class="admin-filters">
     <form method="get" class="d-flex flex-wrap gap-2 align-items-end w-100">
+        <?php foreach (['sin_imagen', 'sin_categoria'] as $flag): ?>
+            <?php if (!empty($filters[$flag])): ?>
+                <input type="hidden" name="<?= $flag ?>" value="1">
+            <?php endif; ?>
+        <?php endforeach; ?>
         <div>
             <label class="form-label" for="f-q">Buscar</label>
             <input type="search" class="form-control" id="f-q" name="q" placeholder="Nombre, código, OEM"
@@ -55,6 +60,20 @@
         </div>
     </form>
 </div>
+
+<?php
+$activeFaults = array_values(array_filter([
+    !empty($filters['sin_precio'])    ? 'sin precio'    : null,
+    !empty($filters['sin_imagen'])    ? 'sin foto'      : null,
+    !empty($filters['sin_categoria']) ? 'sin categoría' : null,
+]));
+?>
+<?php if ($activeFaults !== []): ?>
+    <div class="alert alert-warning d-flex flex-wrap gap-2 justify-content-between align-items-center py-2 px-3 mb-3">
+        <span><i class="bi bi-funnel-fill"></i> Mostrando sólo repuestos <strong><?= e(implode(' y ', $activeFaults)) ?></strong>.</span>
+        <a href="<?= admin_url('repuestos') ?>" class="btn btn-ghost btn-sm">Ver todos</a>
+    </div>
+<?php endif; ?>
 
 <div class="card-admin">
     <div class="card-admin__head">

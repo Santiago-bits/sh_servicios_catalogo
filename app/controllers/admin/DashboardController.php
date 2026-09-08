@@ -44,28 +44,30 @@ class DashboardController extends AdminController
             'inquiries_total' => $n('SELECT COUNT(*) FROM inquiries'),
         ];
 
-        // Cosas para revisar (cada una enlaza al listado filtrado)
-        $review = [
-            'no_price' => [
-                'label' => 'Productos sin precio',
-                'count' => $n("SELECT COUNT(*) FROM products WHERE final_price <= 0 AND $activeProduct"),
-                'url'   => admin_url('repuestos?sin_precio=1'),
-                'icon'  => 'bi-tag',
-            ],
-            'no_image' => [
-                'label' => 'Productos sin foto',
-                'count' => $n("SELECT COUNT(*) FROM products p WHERE $activeProduct
-                                AND NOT EXISTS (SELECT 1 FROM product_images pi WHERE pi.product_id = p.id)"),
-                'url'   => admin_url('maquinaria?sin_imagen=1'),
-                'icon'  => 'bi-image',
-            ],
-            'no_category' => [
-                'label' => 'Productos sin categoría',
-                'count' => $n("SELECT COUNT(*) FROM products WHERE category_id IS NULL AND $activeProduct"),
-                'url'   => admin_url('maquinaria'),
-                'icon'  => 'bi-folder-x',
-            ],
+        // Cosas para revisar. Cada fila es de un tipo (maquinaria o repuestos)
+        // y su "Ver" lleva al listado de ESE tipo con el filtro aplicado, así
+        // sólo se ven los productos que tienen esa falta (y no todo el catálogo).
+        $checks = [
+            'sin_precio'    => ['sin precio',    'p.final_price <= 0',                                                     'bi-tag'],
+            'sin_imagen'    => ['sin foto',      'NOT EXISTS (SELECT 1 FROM product_images pi WHERE pi.product_id = p.id)', 'bi-image'],
+            'sin_categoria' => ['sin categoría', 'p.category_id IS NULL',                                                  'bi-folder-x'],
         ];
+
+        $review = [];
+        foreach (['machine' => ['Máquinas', 'maquinaria'], 'spare_part' => ['Repuestos', 'repuestos']] as $type => [$label, $base]) {
+            foreach ($checks as $key => [$suffix, $cond, $icon]) {
+                $count = $n("SELECT COUNT(*) FROM products p WHERE p.type = '$type' AND $activeProduct AND ($cond)");
+                if ($count === 0) {
+                    continue;
+                }
+                $review[$type . '_' . $key] = [
+                    'label' => $label . ' ' . $suffix,
+                    'count' => $count,
+                    'url'   => admin_url($base . '?' . $key . '=1'),
+                    'icon'  => $icon,
+                ];
+            }
+        }
 
         $this->view('admin/dashboard/index', [
             'pageTitle'  => 'Inicio · Panel',

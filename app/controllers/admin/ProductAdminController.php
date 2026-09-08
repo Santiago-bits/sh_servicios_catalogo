@@ -64,9 +64,10 @@ abstract class ProductAdminController extends AdminController
             'marca'      => Request::get('marca'),
             'estado'     => Request::get('estado'),
             'activo'     => Request::get('activo'),
-            'sin_precio' => Request::get('sin_precio'),
-            'sin_imagen' => Request::get('sin_imagen'),
-            'orden'      => Request::get('orden', 'nuevos'),
+            'sin_precio'    => Request::get('sin_precio'),
+            'sin_imagen'    => Request::get('sin_imagen'),
+            'sin_categoria' => Request::get('sin_categoria'),
+            'orden'         => Request::get('orden', 'nuevos'),
         ];
 
         $result = (new Product())->catalog(

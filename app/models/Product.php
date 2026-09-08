@@ -260,6 +260,9 @@ class Product extends Model
         if (!empty($filters['sin_imagen'])) {
             $conditions[] = 'NOT EXISTS (SELECT 1 FROM product_images pi WHERE pi.product_id = p.id)';
         }
+        if (!empty($filters['sin_categoria'])) {
+            $conditions[] = 'p.category_id IS NULL';
+        }
         if (!empty($filters['compatible_con'])) {
             $conditions[] = 'EXISTS (SELECT 1 FROM machine_spare_parts msp WHERE msp.spare_part_id = p.id AND msp.machine_id = :compat)';
             $params['compat'] = (int) $filters['compatible_con'];
