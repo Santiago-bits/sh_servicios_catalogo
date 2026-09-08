@@ -1,28 +1,14 @@
 <?php
 /**
  * ARCHIVO: app/views/admin/dashboard/index.php
- * Inicio: novedades + resumen del catálogo + cosas para revisar + últimas consultas.
+ * Inicio: resumen del catálogo + cosas para revisar + últimas consultas.
  *
  * @var array<string,int> $stats
  * @var array<string,array{label:string,count:int,url:string,icon:string}> $review
  * @var array<int,array<string,mixed>> $inquiries
- * @var string $news  HTML de content/novedades.html (notas de las actualizaciones)
  */
 $totalReview = array_sum(array_column($review, 'count'));
 ?>
-
-<!-- ================= NOVEDADES ================= -->
-<?php if ($news !== ''): ?>
-<div class="card-admin card-admin--news mb-3">
-    <div class="card-admin__head">
-        <h2><i class="bi bi-megaphone-fill"></i> Novedades</h2>
-        <a href="<?= admin_url('novedades') ?>" class="text-muted-2 small">Ver todas</a>
-    </div>
-    <div class="card-admin__body">
-        <div class="news-body"><?= $news ?></div>
-    </div>
-</div>
-<?php endif; ?>
 
 <!-- ================= NÚMEROS PRINCIPALES ================= -->
 <div class="stat-grid">

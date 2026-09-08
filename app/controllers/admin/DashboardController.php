@@ -74,7 +74,6 @@ class DashboardController extends AdminController
             'stats'      => $stats,
             'review'     => $review,
             'inquiries'  => (new Inquiry())->latest(6),
-            'news'       => self::newsHtml(),
         ]);
     }
 
