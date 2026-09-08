@@ -93,12 +93,12 @@ $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
                         <?php endif; ?>
                         <div class="price-box__value"><?= e(money($price, (string) $product['currency'])) ?></div>
                         <?php if (setting('show_dual_currency', '0') === '1'): ?>
+                            <?php
+                            $altCurrency = $product['currency'] === 'ARS' ? 'USD' : 'ARS';
+                            $altAmount   = money(CurrencyService::convert($price, (string) $product['currency'], $altCurrency), $altCurrency, 0);
+                            ?>
                             <div class="price-box__alt">
-                                Equivalente aprox. <strong><?= e(money(
-                                    CurrencyService::convert($price, (string) $product['currency'], $product['currency'] === 'ARS' ? 'USD' : 'ARS'),
-                                    $product['currency'] === 'ARS' ? 'USD' : 'ARS',
-                                    0
-                                )) ?></strong>
+                                Equivalente aprox. <strong><?= e($altCurrency === 'ARS' ? 'ARS' . $altAmount : $altAmount) ?></strong>
                             </div>
                         <?php endif; ?>
                         <p class="price-box__note">Precio + IVA. Sujeto a modificación sin previo aviso.</p>
