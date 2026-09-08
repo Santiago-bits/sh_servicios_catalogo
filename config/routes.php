@@ -86,6 +86,7 @@ $router->group('/admin', static function (Router $router): void {
 
     // --- Dashboard ---------------------------------------------------
     $router->get('/', 'Admin\DashboardController@index', ['permission:dashboard.view']);
+    $router->post('/novedades', 'Admin\DashboardController@updateNews', ['permission:settings.manage']);
     // Panel simplificado: alertas del sistema desactivadas.
     // $router->get('/alertas', 'Admin\DashboardController@alerts', ['permission:dashboard.view']);
 

@@ -11,10 +11,18 @@ declare(strict_types=1);
 namespace App\Controllers\Admin;
 
 use App\Models\Inquiry;
+use App\Models\Setting;
+use App\Services\AuditService;
+use App\Services\SettingService;
+use Core\Auth;
 use Core\Database;
+use Core\Request;
 
 class DashboardController extends AdminController
 {
+    /** Clave del ajuste donde vive el HTML de "Novedades". */
+    private const NEWS_KEY = 'dashboard_news';
+
     public function index(): void
     {
         $n = static fn (string $sql): int => (int) Database::scalar($sql);
@@ -61,12 +69,40 @@ class DashboardController extends AdminController
         ];
 
         $this->view('admin/dashboard/index', [
-            'pageTitle'  => 'Inicio · Panel',
-            'adminTitle' => 'Inicio',
-            'robots'     => 'noindex, nofollow',
-            'stats'      => $stats,
-            'review'     => $review,
-            'inquiries'  => (new Inquiry())->latest(6),
+            'pageTitle'   => 'Inicio · Panel',
+            'adminTitle'  => 'Inicio',
+            'robots'      => 'noindex, nofollow',
+            'stats'       => $stats,
+            'review'      => $review,
+            'inquiries'   => (new Inquiry())->latest(6),
+            'news'        => (string) SettingService::get(self::NEWS_KEY, ''),
+            'canEditNews' => Auth::can('settings.manage'),
         ]);
+    }
+
+    /**
+     * Guarda el HTML de "Novedades" (notas de las actualizaciones que ve
+     * el cliente en el inicio del panel). Se escribe en HTML directo y se
+     * pasa por clean_html() para no dejar entrar scripts ni estilos raros.
+     */
+    public function updateNews(): void
+    {
+        if (!Auth::can('settings.manage')) {
+            $this->abort(403, 'No tenés permiso para editar las novedades.');
+        }
+
+        $html = clean_html((string) Request::post('news', ''));
+
+        if (mb_strlen($html) > 40000) {
+            $html = mb_substr($html, 0, 40000);
+        }
+
+        (new Setting())->upsert(self::NEWS_KEY, $html, 'sistema', 'textarea', 'Novedades del panel');
+        SettingService::flush();
+
+        AuditService::log('settings', 'settings', null, null, 'Novedades del panel actualizadas', [self::NEWS_KEY]);
+
+        $this->success('Novedades actualizadas.');
+        $this->redirect('admin');
     }
 }

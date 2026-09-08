@@ -1,14 +1,50 @@
 <?php
 /**
  * ARCHIVO: app/views/admin/dashboard/index.php
- * Inicio: resumen del catálogo + cosas para revisar + últimas consultas.
+ * Inicio: novedades + resumen del catálogo + cosas para revisar + últimas consultas.
  *
  * @var array<string,int> $stats
  * @var array<string,array{label:string,count:int,url:string,icon:string}> $review
  * @var array<int,array<string,mixed>> $inquiries
+ * @var string $news         HTML ya saneado con las notas de las actualizaciones
+ * @var bool   $canEditNews  ¿el usuario actual puede editar las novedades?
  */
 $totalReview = array_sum(array_column($review, 'count'));
 ?>
+
+<!-- ================= NOVEDADES ================= -->
+<?php if ($news !== '' || $canEditNews): ?>
+<div class="card-admin card-admin--news mb-3">
+    <div class="card-admin__head">
+        <h2><i class="bi bi-megaphone-fill"></i> Novedades</h2>
+        <span class="text-muted-2 small">Notas de las últimas actualizaciones del sistema</span>
+    </div>
+    <div class="card-admin__body">
+        <?php if ($news !== ''): ?>
+            <div class="news-body"><?= $news ?></div>
+        <?php else: ?>
+            <p class="text-muted-2 mb-0">Todavía no hay novedades cargadas.</p>
+        <?php endif; ?>
+
+        <?php if ($canEditNews): ?>
+            <details class="news-editor mt-3"<?= $news === '' ? ' open' : '' ?>>
+                <summary><i class="bi bi-pencil"></i> Editar novedades</summary>
+                <form method="post" action="<?= admin_url('novedades') ?>" class="mt-3">
+                    <?= csrf_field() ?>
+                    <label class="form-label" for="news-html">Contenido en HTML</label>
+                    <textarea class="form-control text-mono" id="news-html" name="news" rows="12"
+                              placeholder="&lt;h4&gt;07/09/2026&lt;/h4&gt;&#10;&lt;ul&gt;&lt;li&gt;Ahora se pueden subir videos a las máquinas y repuestos.&lt;/li&gt;&lt;/ul&gt;"><?= e($news) ?></textarea>
+                    <p class="form-hint">
+                        HTML directo. Se permiten <code>&lt;p&gt; &lt;h3&gt; &lt;h4&gt; &lt;ul&gt; &lt;ol&gt; &lt;li&gt;
+                        &lt;strong&gt; &lt;em&gt; &lt;a href&gt;</code> y tablas. Los scripts y estilos se quitan solos.
+                    </p>
+                    <button type="submit" class="btn btn-accent btn-sm"><i class="bi bi-check-lg"></i> Guardar novedades</button>
+                </form>
+            </details>
+        <?php endif; ?>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- ================= NÚMEROS PRINCIPALES ================= -->
 <div class="stat-grid">

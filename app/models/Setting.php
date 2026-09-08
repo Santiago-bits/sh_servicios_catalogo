@@ -45,6 +45,20 @@ class Setting extends Model
         );
     }
 
+    /**
+     * Guarda un ajuste creándolo si no existe (para claves que no vienen
+     * en el seed inicial, como las novedades del panel).
+     */
+    public function upsert(string $key, string $value, string $group = 'sistema', string $type = 'textarea', string $label = ''): void
+    {
+        Database::execute(
+            'INSERT INTO site_settings (group_name, key_name, value, type, label)
+                  VALUES (:g, :k, :v, :t, :l)
+             ON DUPLICATE KEY UPDATE value = VALUES(value)',
+            ['g' => $group, 'k' => $key, 'v' => $value, 't' => $type, 'l' => $label !== '' ? $label : $key]
+        );
+    }
+
     /** @return array<int,array<string,mixed>> */
     public function currencies(): array
     {
