@@ -4,8 +4,7 @@
  * Novedades del panel. El contenido sale de content/novedades.html
  * (HTML plano que se edita a mano). Acá sólo se muestra.
  *
- * @var string $news      HTML del archivo
- * @var string $newsPath  Ruta del archivo (para el aviso)
+ * @var string $news  HTML del archivo
  */
 ?>
 
@@ -22,10 +21,3 @@
         <?php endif; ?>
     </div>
 </div>
-
-<p class="text-muted-2 small">
-    <i class="bi bi-info-circle"></i>
-    Para cambiar este texto, editá el archivo <code><?= e($newsPath) ?></code> con el bloc de notas
-    y subilo con el resto de la carpeta. Es HTML común: <code>&lt;h4&gt;</code> para la fecha,
-    <code>&lt;ul&gt;&lt;li&gt;</code> para la lista.
-</p>

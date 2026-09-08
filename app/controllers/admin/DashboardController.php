@@ -85,7 +85,6 @@ class DashboardController extends AdminController
             'adminTitle' => 'Novedades',
             'robots'     => 'noindex, nofollow',
             'news'       => self::newsHtml(),
-            'newsPath'   => 'content/novedades.html',
         ]);
     }
 
