@@ -130,7 +130,6 @@ class PartController extends Controller
 
             'product'           => $product,
             'images'            => $productModel->images((int) $product['id']),
-            'featureGroups'     => $productModel->features((int) $product['id']),
             'tags'              => $productModel->tags((int) $product['id']),
             'documents'         => $productModel->documents((int) $product['id']),
             'videos'            => $productModel->videos((int) $product['id']),

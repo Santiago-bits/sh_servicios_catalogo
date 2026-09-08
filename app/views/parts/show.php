@@ -281,41 +281,13 @@ $codeTypes = [
     </div>
 </section>
 
-<!-- ============ DESCRIPCIÓN Y ESPECIFICACIONES ============ -->
-<?php if (!empty($product['description']) || !empty($featureGroups)): ?>
+<!-- ============ DESCRIPCIÓN ============ -->
+<?php if (!empty($product['description'])): ?>
 <section class="section section--gray" style="padding-top:0">
     <div class="container">
-        <div class="row g-4">
-            <div class="col-lg-7">
-                <?php if (!empty($product['description'])): ?>
-                    <div class="panel">
-                        <div class="panel__head"><h2><i class="bi bi-card-text"></i> Descripción</h2></div>
-                        <div class="panel__body"><?= clean_html((string) $product['description']) ?></div>
-                    </div>
-                <?php endif; ?>
-            </div>
-            <div class="col-lg-5">
-                <?php if (!empty($featureGroups)): ?>
-                    <div class="panel">
-                        <div class="panel__head"><h2><i class="bi bi-sliders"></i> Especificaciones</h2></div>
-                        <div class="panel__body panel__body--flush">
-                            <?php foreach ($featureGroups as $groupName => $features): ?>
-                                <h3 class="spec-group__title"><?= e($groupName) ?></h3>
-                                <table class="spec-table">
-                                    <tbody>
-                                    <?php foreach ($features as $feature): ?>
-                                        <tr>
-                                            <th scope="row"><?= e($feature['name']) ?></th>
-                                            <td><?= e($feature['value_text']) ?> <?= e($feature['unit'] ?? '') ?></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            </div>
+        <div class="panel">
+            <div class="panel__head"><h2><i class="bi bi-card-text"></i> Descripción</h2></div>
+            <div class="panel__body"><?= clean_html((string) $product['description']) ?></div>
         </div>
     </div>
 </section>

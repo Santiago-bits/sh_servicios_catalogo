@@ -229,41 +229,6 @@ $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
     </div>
 </section>
 
-<!-- ============ FICHA TÉCNICA ============ -->
-<?php if (!empty($featureGroups)): ?>
-<section class="section section--gray" style="padding-top:0">
-    <div class="container">
-        <div class="row g-4">
-            <div class="col-12">
-                <div class="panel">
-                    <div class="panel__head"><h2><i class="bi bi-sliders"></i> Características técnicas</h2></div>
-                    <div class="panel__body panel__body--flush">
-                        <?php foreach ($featureGroups as $groupName => $features): ?>
-                            <h3 class="spec-group__title"><?= e($groupName) ?></h3>
-                            <table class="spec-table">
-                                <tbody>
-                                <?php foreach ($features as $feature): ?>
-                                    <tr>
-                                        <th scope="row"><?= e($feature['name']) ?></th>
-                                        <td>
-                                            <?= e($feature['value_text']) ?>
-                                            <?php if (!empty($feature['unit'])): ?>
-                                                <span class="text-muted-2"><?= e($feature['unit']) ?></span>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-<?php endif; ?>
-
 <!-- ============ REPUESTOS COMPATIBLES ============ -->
 <?php if (!empty($compatibleParts)): ?>
 <section class="section">
