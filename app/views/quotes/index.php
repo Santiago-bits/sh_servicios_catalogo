@@ -27,10 +27,10 @@ use App\Services\PriceService;
                         <h2 class="section-title" style="font-size:1.4rem">Tu pedido</h2>
                     </div>
                     <?php if (!empty($items)): ?>
-                        <form method="post" action="<?= url('api/cotizador/vaciar') ?>" data-confirm="¿Vaciar la cotización?">
-                            <?= csrf_field() ?>
-                            <button type="submit" class="btn btn-ghost btn-sm"><i class="bi bi-trash"></i> Vaciar</button>
-                        </form>
+                        <button type="button" class="btn btn-ghost btn-sm"
+                                data-quote-clear="¿Vaciar la cotización?">
+                            <i class="bi bi-trash"></i> Vaciar
+                        </button>
                     <?php endif; ?>
                 </div>
 
@@ -60,7 +60,13 @@ use App\Services\PriceService;
                                     <?php if (!empty($item['product']['brand_name'])): ?>
                                         · <?= e($item['product']['brand_name']) ?>
                                     <?php endif; ?>
-                                    · Cantidad: <strong><?= number_es($item['quantity']) ?></strong>
+                                </div>
+
+                                <div class="qty-stepper qty-stepper--sm mt-2" data-qty>
+                                    <button type="button" data-qty-minus aria-label="Restar uno">−</button>
+                                    <input type="text" inputmode="numeric" value="<?= number_es($item['quantity']) ?>"
+                                           data-qty-input data-qline-input="<?= (int) $item['product_id'] ?>" aria-label="Cantidad">
+                                    <button type="button" data-qty-plus aria-label="Sumar uno">+</button>
                                 </div>
                             </div>
 
@@ -68,12 +74,7 @@ use App\Services\PriceService;
                                 <?php if ($item['price_hidden']): ?>
                                     <span class="text-muted-2 small">A cotizar</span>
                                 <?php else: ?>
-                                    <?= e(money($item['line_total'], (string) $item['product']['currency'])) ?>
-                                    <?php if ($item['quantity'] > 1): ?>
-                                        <small class="d-block text-muted-2 fw-normal">
-                                            <?= number_es($item['quantity']) ?> × <?= e(money($item['unit_price'], (string) $item['product']['currency'])) ?>
-                                        </small>
-                                    <?php endif; ?>
+                                    <span data-line-total><?= e(money($item['line_total'], (string) $item['product']['currency'])) ?></span>
                                 <?php endif; ?>
 
                                 <button type="button" class="btn btn-ghost btn-sm mt-2" data-quote-remove="<?= (int) $item['product_id'] ?>">
@@ -173,7 +174,7 @@ use App\Services\PriceService;
                     </div>
                     <div class="summary-row">
                         <span>Subtotal estimado</span>
-                        <strong><?= e(money($totals['subtotal'])) ?></strong>
+                        <strong id="sumSubtotal"><?= e(money($totals['subtotal'])) ?></strong>
                     </div>
                     <div class="summary-row">
                         <span>Descuentos</span>
@@ -186,7 +187,7 @@ use App\Services\PriceService;
 
                     <div class="summary-total">
                         <span>Total estimado</span>
-                        <strong><?= e(money($totals['total'])) ?></strong>
+                        <strong id="sumTotal"><?= e(money($totals['total'])) ?></strong>
                     </div>
 
                     <p class="form-hint mt-3">

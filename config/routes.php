@@ -64,6 +64,7 @@ $router->group('/api', static function (Router $router): void {
     $router->get('/comparar', 'CompareController@data');
     $router->post('/consulta', 'InquiryController@quickStore');
     $router->post('/cotizador/agregar', 'QuoteController@addItem');
+    $router->post('/cotizador/cantidad', 'QuoteController@updateItem');
     $router->post('/cotizador/quitar', 'QuoteController@removeItem');
     $router->post('/cotizador/vaciar', 'QuoteController@clear');
     $router->get('/cotizador', 'QuoteController@cart');
@@ -100,6 +101,8 @@ $router->group('/admin', static function (Router $router): void {
     $router->post('/maquinaria/{id:\d+}/imagenes/{imageId:\d+}/eliminar', 'Admin\MachineController@deleteImage', ['permission:machines.edit']);
     $router->post('/maquinaria/{id:\d+}/documentos', 'Admin\MachineController@uploadDocument', ['permission:machines.edit']);
     $router->post('/maquinaria/{id:\d+}/documentos/{docId:\d+}/eliminar', 'Admin\MachineController@deleteDocument', ['permission:machines.edit']);
+    $router->post('/maquinaria/{id:\d+}/videos', 'Admin\MachineController@uploadVideo', ['permission:machines.edit']);
+    $router->post('/maquinaria/{id:\d+}/videos/{videoId:\d+}/eliminar', 'Admin\MachineController@deleteVideo', ['permission:machines.edit']);
 
     // --- Repuestos ---------------------------------------------------
     $router->get('/repuestos', 'Admin\PartController@index', ['permission:parts.view']);
@@ -114,6 +117,8 @@ $router->group('/admin', static function (Router $router): void {
     $router->post('/repuestos/{id:\d+}/compatibilidad/{compatId:\d+}/eliminar', 'Admin\PartController@deleteCompatibility', ['permission:parts.edit']);
     $router->post('/repuestos/{id:\d+}/codigos', 'Admin\PartController@addCode', ['permission:parts.edit']);
     $router->post('/repuestos/{id:\d+}/codigos/{codeId:\d+}/eliminar', 'Admin\PartController@deleteCode', ['permission:parts.edit']);
+    $router->post('/repuestos/{id:\d+}/videos', 'Admin\PartController@uploadVideo', ['permission:parts.edit']);
+    $router->post('/repuestos/{id:\d+}/videos/{videoId:\d+}/eliminar', 'Admin\PartController@deleteVideo', ['permission:parts.edit']);
 
     // --- Taxonomías --------------------------------------------------
     $router->get('/categorias', 'Admin\CategoryController@index', ['permission:categories.manage']);

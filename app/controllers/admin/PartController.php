@@ -70,6 +70,12 @@ class PartController extends ProductAdminController
                 ['id' => $productId]
             );
         }
+
+        // Videos: enlaces de YouTube/Vimeo del textarea (los subidos como
+        // archivo se administran aparte y no se tocan acá).
+        if (array_key_exists('videos', $input)) {
+            $this->saveVideoLinks($productId, (string) $input['videos']);
+        }
     }
 
     /** @return array<string,mixed> */
@@ -81,6 +87,19 @@ class PartController extends ProductAdminController
         return [
             'codes'           => $productId > 0 ? $model->codes($productId) : [],
             'compatibility'   => $productId > 0 ? $model->compatibilityList($productId) : [],
+            'videos' => $productId > 0
+                ? implode("\n", array_map(
+                    static fn (array $v): string => $v['provider'] === 'youtube'
+                        ? 'https://www.youtube.com/watch?v=' . $v['video_ref']
+                        : ($v['provider'] === 'vimeo'
+                            ? 'https://vimeo.com/' . $v['video_ref']
+                            : (string) $v['video_ref']),
+                    array_filter(
+                        $model->videos($productId),
+                        static fn (array $v): bool => ($v['provider'] ?? '') !== 'file'
+                    )
+                ))
+                : '',
             'availableMachines' => Database::select(
                 'SELECT p.id, p.code, p.name, m.model
                    FROM products p INNER JOIN machines m ON m.product_id = p.id

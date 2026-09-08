@@ -48,9 +48,9 @@ class Brand extends Model
     }
 
     /**
-     * Marcas para la grilla de la home. Sólo las marcas activas que tienen
-     * al menos una máquina: la marca de un repuesto es texto libre y no
-     * vive en esta tabla, así que nunca aparece acá.
+     * Marcas para la grilla de la home: TODAS las marcas activas, tengan
+     * o no productos cargados (así se puede mostrar "trabajamos con Heli"
+     * aunque todavía no haya ninguna Heli en el catálogo).
      *
      * El orden es el del campo "Orden" y, a igualdad, el de creación:
      * así una marca nueva aparece siempre debajo de las que ya están.
@@ -62,12 +62,6 @@ class Brand extends Model
     {
         $sql = "SELECT b.* FROM brands b
                  WHERE b.active = 1
-                   AND EXISTS (
-                       SELECT 1 FROM products p
-                        WHERE p.brand_id = b.id
-                          AND p.type = 'machine'
-                          AND p.deleted_at IS NULL
-                   )
                  ORDER BY b.sort_order ASC, b.id ASC";
         if ($limit > 0) {
             $sql .= ' LIMIT ' . $limit;

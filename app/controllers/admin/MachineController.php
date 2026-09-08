@@ -70,8 +70,11 @@ class MachineController extends ProductAdminController
             array_map('intval', (array) ($input['recommended_parts'] ?? []))
         );
 
-        // Videos (una URL de YouTube por línea)
-        $this->saveVideos($productId, (string) ($input['videos'] ?? ''));
+        // Videos: enlaces de YouTube/Vimeo del textarea (los subidos como
+        // archivo se administran aparte y no se tocan acá).
+        if (array_key_exists('videos', $input)) {
+            $this->saveVideoLinks($productId, (string) $input['videos']);
+        }
     }
 
     /** @return array<string,mixed> */
@@ -97,8 +100,13 @@ class MachineController extends ProductAdminController
                 ? implode("\n", array_map(
                     static fn (array $v): string => $v['provider'] === 'youtube'
                         ? 'https://www.youtube.com/watch?v=' . $v['video_ref']
-                        : (string) $v['video_ref'],
-                    (new Product())->videos($productId)
+                        : ($v['provider'] === 'vimeo'
+                            ? 'https://vimeo.com/' . $v['video_ref']
+                            : (string) $v['video_ref']),
+                    array_filter(
+                        (new Product())->videos($productId),
+                        static fn (array $v): bool => ($v['provider'] ?? '') !== 'file'
+                    )
                 ))
                 : '',
             'fuels' => [
@@ -117,40 +125,6 @@ class MachineController extends ProductAdminController
                 'reacondicionado' => 'Reacondicionado',
             ],
         ];
-    }
-
-    private function saveVideos(int $productId, string $raw): void
-    {
-        Database::delete('videos', 'product_id = :id', ['id' => $productId]);
-
-        $lines = array_filter(array_map('trim', explode("\n", $raw)));
-        $order = 0;
-
-        foreach ($lines as $line) {
-            if ($line === '') {
-                continue;
-            }
-
-            $provider = 'youtube';
-            $ref      = $line;
-
-            if (preg_match('~(?:youtube\.com/watch\?(?:[^\s]*&)?v=|youtu\.be/|youtube\.com/(?:embed|shorts|live|v)/)([A-Za-z0-9_-]{6,20})~i', $line, $m)) {
-                $ref = $m[1];
-            } elseif (preg_match('~vimeo\.com/(?:video/)?(\d+)~i', $line, $m)) {
-                $provider = 'vimeo';
-                $ref      = $m[1];
-            } elseif (!preg_match('/^[A-Za-z0-9_-]{6,20}$/', $line)) {
-                continue; // no parece un video válido
-            }
-
-            Database::insert('videos', [
-                'product_id' => $productId,
-                'title'      => 'Ver la máquina trabajando',
-                'provider'   => $provider,
-                'video_ref'  => $ref,
-                'sort_order' => $order++,
-            ]);
-        }
     }
 
     // ----------------------------------------------------------------

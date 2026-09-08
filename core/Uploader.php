@@ -28,6 +28,13 @@ final class Uploader
         'image/gif'  => 'gif',
     ];
 
+    private const VIDEO_TYPES = [
+        'video/mp4'        => 'mp4',
+        'video/webm'       => 'webm',
+        'video/quicktime'  => 'mov',
+        'video/x-m4v'      => 'm4v',
+    ];
+
     private const DOC_TYPES = [
         'application/pdf'   => 'pdf',
         'application/msword'=> 'doc',
@@ -151,6 +158,44 @@ final class Uploader
 
         if (!move_uploaded_file($file['tmp_name'], $directory . '/' . $name)) {
             return ['ok' => false, 'message' => 'No se pudo guardar el archivo.'];
+        }
+
+        @chmod($directory . '/' . $name, 0644);
+
+        return [
+            'ok'   => true,
+            'path' => 'uploads/' . trim($folder, '/') . '/' . $name,
+            'mime' => $check['mime'],
+            'size' => (int) $file['size'],
+        ];
+    }
+
+    /**
+     * Sube un video corto (MP4/WebM/MOV). No se procesa ni recomprime:
+     * se guarda tal cual, con nombre generado por el servidor y en la
+     * carpeta /uploads (que tiene un .htaccess que impide ejecutar PHP).
+     *
+     * @param array<string,mixed> $file
+     * @return array{ok:bool,path?:string,mime?:string,size?:int,message?:string}
+     */
+    public static function video(array $file, string $folder): array
+    {
+        $check = self::validate($file, array_keys(self::VIDEO_TYPES), Env::int('UPLOAD_MAX_MB_VIDEO', 40));
+        if (!$check['ok']) {
+            return $check;
+        }
+
+        $extension = self::VIDEO_TYPES[$check['mime']] ?? 'mp4';
+        $directory = rtrim(UPLOAD_PATH . '/' . trim($folder, '/'), '/');
+
+        if (!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory)) {
+            return ['ok' => false, 'message' => 'No se pudo crear la carpeta de destino.'];
+        }
+
+        $name = self::uniqueName($extension);
+
+        if (!move_uploaded_file($file['tmp_name'], $directory . '/' . $name)) {
+            return ['ok' => false, 'message' => 'No se pudo guardar el video.'];
         }
 
         @chmod($directory . '/' . $name, 0644);

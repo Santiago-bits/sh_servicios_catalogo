@@ -140,6 +140,12 @@ abstract class ProductAdminController extends AdminController
             'featureValues'=> $isEdit ? $featureModel->valuesFor((int) $product['id']) : [],
             'images'      => $isEdit ? $productModel->images((int) $product['id']) : [],
             'documents'   => $isEdit ? $productModel->documents((int) $product['id'], false) : [],
+            'uploadedVideos' => $isEdit
+                ? array_values(array_filter(
+                    $productModel->videos((int) $product['id']),
+                    static fn (array $v): bool => ($v['provider'] ?? '') === 'file'
+                ))
+                : [],
             'imageZones'  => ImageService::ZONES,
             'nextCode'    => $isEdit ? null : $productModel->nextCode($this->type),
             'canSeeCost'  => Auth::canSeeCost(),
@@ -388,6 +394,107 @@ abstract class ProductAdminController extends AdminController
         }
 
         $this->back();
+    }
+
+    // =================================================================
+    // Video subido como archivo (MP4/WebM/MOV)
+    // =================================================================
+
+    public function uploadVideo(string $id): void
+    {
+        $this->ensureExists((int) $id);
+
+        $file = Request::file('video');
+        if ($file === null) {
+            $this->error('Seleccioná un archivo de video.');
+            $this->back();
+        }
+
+        $result = Uploader::video($file, 'videos');
+        if (!$result['ok']) {
+            $this->error($result['message']);
+            $this->back();
+        }
+
+        $order = (int) Database::scalar(
+            'SELECT COALESCE(MAX(sort_order), -1) + 1 FROM videos WHERE product_id = :id',
+            ['id' => (int) $id]
+        );
+
+        Database::insert('videos', [
+            'product_id' => (int) $id,
+            'title'      => mb_substr((string) (Request::post('titulo') ?: 'Video'), 0, 180),
+            'provider'   => 'file',
+            'video_ref'  => $result['path'],
+            'sort_order' => $order,
+        ]);
+
+        AuditService::log('upload', $this->permission, 'product', (int) $id, 'Video agregado');
+
+        $this->success('Video agregado.');
+        $this->back();
+    }
+
+    public function deleteVideo(string $id, string $videoId): void
+    {
+        $this->ensureExists((int) $id);
+
+        $video = Database::selectOne(
+            'SELECT * FROM videos WHERE id = :vid AND product_id = :id',
+            ['vid' => (int) $videoId, 'id' => (int) $id]
+        );
+
+        if ($video !== null) {
+            if (($video['provider'] ?? '') === 'file') {
+                Uploader::delete((string) $video['video_ref']);
+            }
+            Database::delete('videos', 'id = :vid', ['vid' => (int) $videoId]);
+            $this->success('Video eliminado.');
+        }
+
+        $this->back();
+    }
+
+    /**
+     * Guarda los videos de YouTube/Vimeo del textarea (una URL por línea).
+     * NO toca los videos subidos como archivo (provider = 'file'): esos se
+     * administran uno por uno con su propio botón.
+     */
+    protected function saveVideoLinks(int $productId, string $raw): void
+    {
+        Database::delete('videos', "product_id = :id AND provider <> 'file'", ['id' => $productId]);
+
+        $lines = array_filter(array_map('trim', explode("\n", $raw)));
+        $order = (int) Database::scalar(
+            'SELECT COALESCE(MAX(sort_order), -1) + 1 FROM videos WHERE product_id = :id',
+            ['id' => $productId]
+        );
+
+        foreach ($lines as $line) {
+            if ($line === '') {
+                continue;
+            }
+
+            $provider = 'youtube';
+            $ref      = $line;
+
+            if (preg_match('~(?:youtube\.com/watch\?(?:[^\s]*&)?v=|youtu\.be/|youtube\.com/(?:embed|shorts|live|v)/)([A-Za-z0-9_-]{6,20})~i', $line, $m)) {
+                $ref = $m[1];
+            } elseif (preg_match('~vimeo\.com/(?:video/)?(\d+)~i', $line, $m)) {
+                $provider = 'vimeo';
+                $ref      = $m[1];
+            } elseif (!preg_match('/^[A-Za-z0-9_-]{6,20}$/', $line)) {
+                continue; // no parece un video válido
+            }
+
+            Database::insert('videos', [
+                'product_id' => $productId,
+                'title'      => 'Ver el producto en video',
+                'provider'   => $provider,
+                'video_ref'  => $ref,
+                'sort_order' => $order++,
+            ]);
+        }
     }
 
     // =================================================================

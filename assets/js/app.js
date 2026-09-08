@@ -349,6 +349,28 @@
     /* -----------------------------------------------------------------
        Cotizador: agregar/quitar ítems
        ----------------------------------------------------------------- */
+    /* Selector de cantidad (− / +) reutilizable: cualquier bloque
+       [data-qty] con un [data-qty-input] entre dos botones. */
+    const clampQty = (n) => Math.max(1, Math.min(999, Math.round(Number(n) || 1)));
+
+    document.addEventListener('click', e => {
+        const step = e.target.closest('[data-qty-minus], [data-qty-plus]');
+        if (!step) { return; }
+
+        const box   = step.closest('[data-qty]');
+        const input = box && box.querySelector('[data-qty-input]');
+        if (!input || input.disabled) { return; }
+
+        const delta = step.hasAttribute('data-qty-plus') ? 1 : -1;
+        input.value = clampQty(Number(input.value) + delta);
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    document.addEventListener('change', e => {
+        const input = e.target.closest('[data-qty-input]');
+        if (input) { input.value = clampQty(input.value); }
+    });
+
     document.addEventListener('click', async e => {
         const btn = e.target.closest('[data-quote-add]');
         if (!btn) { return; }
@@ -356,10 +378,13 @@
         e.preventDefault();
         btn.disabled = true;
 
+        const qtyInput = btn.closest('.product-actions, [data-quote-wrap]')?.querySelector('[data-qty-input]');
+        const quantity = qtyInput ? clampQty(qtyInput.value) : (btn.dataset.quoteQty || 1);
+
         try {
             const data = await postForm(SHS.baseUrl + '/api/cotizador/agregar', {
                 product_id: btn.dataset.quoteAdd,
-                quantity: btn.dataset.quoteQty || 1
+                quantity: quantity
             });
 
             toast(data.message, data.ok ? 'success' : 'warning');
@@ -367,6 +392,62 @@
         } catch (err) {
             toast('No se pudo agregar el producto.', 'danger');
         } finally {
+            btn.disabled = false;
+        }
+    });
+
+    /* Cambiar la cantidad de una línea ya agregada al carrito. */
+    document.addEventListener('change', async e => {
+        const input = e.target.closest('[data-qline-input]');
+        if (!input) { return; }
+
+        const productId = input.dataset.qlineInput;
+        input.disabled = true;
+
+        try {
+            const data = await postForm(SHS.baseUrl + '/api/cotizador/cantidad', {
+                product_id: productId,
+                quantity: clampQty(input.value)
+            });
+
+            if (data.ok && data.line) {
+                // El servidor manda la cantidad ya normalizada: así el campo
+                // se autocorrige si hubo clics muy rápidos.
+                input.value = clampQty(data.line.quantity);
+
+                const total = document.querySelector('#sumTotal');
+                const sub   = document.querySelector('#sumSubtotal');
+                if (data.totals && total) { total.textContent = data.totals.total_fmt; }
+                if (data.totals && sub)   { sub.textContent   = data.totals.subtotal_fmt; }
+
+                const row = input.closest('.quote-item');
+                const cell = row && row.querySelector('[data-line-total]');
+                if (cell && data.line.line_total_fmt) { cell.textContent = data.line.line_total_fmt; }
+            } else {
+                location.reload();
+            }
+        } catch (err) {
+            toast('No se pudo actualizar la cantidad.', 'danger');
+            location.reload();
+        } finally {
+            input.disabled = false;
+        }
+    });
+
+    /* Vaciar la cotización (antes era un form que dejaba ver el JSON crudo). */
+    document.addEventListener('click', async e => {
+        const btn = e.target.closest('[data-quote-clear]');
+        if (!btn) { return; }
+
+        e.preventDefault();
+        if (!window.confirm(btn.dataset.quoteClear || '¿Vaciar la cotización?')) { return; }
+
+        btn.disabled = true;
+        try {
+            await postForm(SHS.baseUrl + '/api/cotizador/vaciar', {});
+            location.reload();
+        } catch (err) {
+            toast('No se pudo vaciar la cotización.', 'danger');
             btn.disabled = false;
         }
     });

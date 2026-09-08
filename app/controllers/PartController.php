@@ -133,6 +133,7 @@ class PartController extends Controller
             'featureGroups'     => $productModel->features((int) $product['id']),
             'tags'              => $productModel->tags((int) $product['id']),
             'documents'         => $productModel->documents((int) $product['id']),
+            'videos'            => $productModel->videos((int) $product['id']),
             'codes'             => $productModel->codes((int) $product['id']),
             'compatibility'     => $productModel->compatibilityList((int) $product['id']),
             'compatibleMachines'=> $productModel->compatibleMachines((int) $product['id'], 8),

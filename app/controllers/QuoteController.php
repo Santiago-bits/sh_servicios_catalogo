@@ -56,6 +56,42 @@ class QuoteController extends Controller
         ], $result['ok'] ? 200 : 422);
     }
 
+    public function updateItem(): void
+    {
+        $productId = Request::int('product_id');
+        $quantity  = max(1.0, min(999.0, Request::float('quantity', 1)));
+
+        QuoteService::setQuantity($productId, $quantity);
+
+        $items  = QuoteService::cartItems();
+        $totals = QuoteService::totals($items);
+        $line   = null;
+        foreach ($items as $i) {
+            if ((int) $i['product_id'] === $productId) {
+                $currency = (string) $i['product']['currency'];
+                $line = [
+                    'quantity'        => $i['quantity'],
+                    'line_total'      => $i['price_hidden'] ? null : $i['line_total'],
+                    'line_total_fmt'  => $i['price_hidden'] ? null : money((float) $i['line_total'], $currency),
+                    'unit_price_fmt'  => $i['price_hidden'] ? null : money((float) $i['unit_price'], $currency),
+                ];
+                break;
+            }
+        }
+
+        $this->json([
+            'ok'     => true,
+            'count'  => count($items),
+            'totals' => [
+                'subtotal'     => $totals['subtotal'],
+                'total'        => $totals['total'],
+                'subtotal_fmt' => money((float) $totals['subtotal']),
+                'total_fmt'    => money((float) $totals['total']),
+            ],
+            'line'   => $line,
+        ]);
+    }
+
     public function removeItem(): void
     {
         $count = QuoteService::removeFromCart(Request::int('product_id'));

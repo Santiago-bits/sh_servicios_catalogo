@@ -147,9 +147,6 @@ $codeTypes = [
                         <div class="price-box__value"><?= e(money($price, (string) $product['currency'])) ?></div>
                         <p class="price-box__note">
                             Precio + IVA por <?= e($product['unit'] ?? 'unidad') ?>.
-                            <?php if (!empty($product['lead_time_days']) && (int) $product['lead_time_days'] > 0): ?>
-                                Entrega estimada: <?= (int) $product['lead_time_days'] ?> día(s).
-                            <?php endif; ?>
                         </p>
                     <?php else: ?>
                         <div class="price-box__value">Consultar</div>
@@ -161,6 +158,11 @@ $codeTypes = [
                     <a href="<?= e($whatsappLink) ?>" target="_blank" rel="noopener" class="btn btn-wa btn-lg">
                         <i class="bi bi-whatsapp"></i> Consultar disponibilidad
                     </a>
+                    <div class="qty-stepper" data-qty>
+                        <button type="button" data-qty-minus aria-label="Restar uno">−</button>
+                        <input type="text" inputmode="numeric" value="1" data-qty-input aria-label="Cantidad">
+                        <button type="button" data-qty-plus aria-label="Sumar uno">+</button>
+                    </div>
                     <button type="button" class="btn btn-accent btn-lg" data-quote-add="<?= (int) $product['id'] ?>">
                         <i class="bi bi-file-earmark-plus"></i> Agregar a mi cotización
                     </button>
@@ -217,6 +219,28 @@ $codeTypes = [
                             <?php else: ?>
                                 <p class="text-muted-2 mb-0">Consultanos la compatibilidad con tu equipo.</p>
                             <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Video -->
+                <?php if (!empty($videos)): ?>
+                    <div class="panel">
+                        <div class="panel__head"><h2><i class="bi bi-play-btn-fill"></i> Video</h2></div>
+                        <div class="panel__body">
+                            <?php foreach (array_slice($videos, 0, 2) as $video): ?>
+                                <div class="video-embed mb-3">
+                                    <?php if ($video['provider'] === 'youtube'): ?>
+                                        <iframe src="https://www.youtube-nocookie.com/embed/<?= e($video['video_ref']) ?>"
+                                                title="<?= e($video['title']) ?>" allowfullscreen loading="lazy"></iframe>
+                                    <?php elseif ($video['provider'] === 'vimeo'): ?>
+                                        <iframe src="https://player.vimeo.com/video/<?= e($video['video_ref']) ?>"
+                                                title="<?= e($video['title']) ?>" allowfullscreen loading="lazy"></iframe>
+                                    <?php else: ?>
+                                        <video controls preload="metadata" src="<?= e(upload_url($video['video_ref'])) ?>"></video>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 <?php endif; ?>

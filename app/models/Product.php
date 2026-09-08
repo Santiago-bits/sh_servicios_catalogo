@@ -124,8 +124,12 @@ class Product extends Model
         // --- Categoría (acepta slug o id, incluye subcategorías) -----
         if (!empty($filters['categoria'])) {
             if (ctype_digit((string) $filters['categoria'])) {
-                $conditions[]  = '(p.category_id = :cat OR c.parent_id = :cat)';
-                $params['cat'] = (int) $filters['categoria'];
+                // Dos placeholders distintos a propósito: con sentencias
+                // realmente preparadas (EMULATE_PREPARES=false) un mismo
+                // :nombre no se puede repetir en el SQL.
+                $conditions[]   = '(p.category_id = :cat OR c.parent_id = :cat2)';
+                $params['cat']  = (int) $filters['categoria'];
+                $params['cat2'] = (int) $filters['categoria'];
             } else {
                 $conditions[]      = '(c.slug = :catslug OR c.parent_id = (SELECT id FROM categories c2 WHERE c2.slug = :catslug2 AND c2.type = :type2 LIMIT 1))';
                 $params['catslug']  = (string) $filters['categoria'];

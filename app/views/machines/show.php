@@ -114,6 +114,11 @@ $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
                     <a href="<?= e($whatsappLink) ?>" target="_blank" rel="noopener" class="btn btn-wa btn-lg">
                         <i class="bi bi-whatsapp"></i> Consultar por WhatsApp
                     </a>
+                    <div class="qty-stepper" data-qty>
+                        <button type="button" data-qty-minus aria-label="Restar uno">−</button>
+                        <input type="text" inputmode="numeric" value="1" data-qty-input aria-label="Cantidad">
+                        <button type="button" data-qty-plus aria-label="Sumar uno">+</button>
+                    </div>
                     <button type="button" class="btn btn-accent btn-lg" data-quote-add="<?= (int) $product['id'] ?>">
                         <i class="bi bi-file-earmark-plus"></i> Agregar a mi cotización
                     </button>
@@ -186,7 +191,7 @@ $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
                                         <iframe src="https://player.vimeo.com/video/<?= e($video['video_ref']) ?>"
                                                 title="<?= e($video['title']) ?>" allowfullscreen loading="lazy"></iframe>
                                     <?php else: ?>
-                                        <video controls src="<?= e(upload_url($video['video_ref'])) ?>"></video>
+                                        <video controls preload="metadata" src="<?= e(upload_url($video['video_ref'])) ?>"></video>
                                     <?php endif; ?>
                                 </div>
                             <?php endforeach; ?>

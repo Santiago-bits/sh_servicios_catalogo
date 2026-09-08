@@ -49,7 +49,7 @@ $ab = $isEdit ? availability_badge((string) $product['availability']) : null;
         <nav class="form-tabs" role="tablist" aria-label="Secciones del repuesto">
             <button type="button" class="form-tab" data-tab="general" role="tab">General</button>
             <button type="button" class="form-tab" data-tab="precio"  role="tab">Precio</button>
-            <button type="button" class="form-tab" data-tab="fotos"   role="tab">Fotos</button>
+            <button type="button" class="form-tab" data-tab="fotos"   role="tab">Fotos y video</button>
         </nav>
 
         <div class="pform-body">
@@ -139,6 +139,7 @@ $ab = $isEdit ? availability_badge((string) $product['availability']) : null;
                                 <div class="form-switch-row">
                                     <div><strong>Mostrar precio al público</strong><small>Si está apagado dice “Consultar”</small></div>
                                     <div class="form-check form-switch m-0">
+                                        <input type="hidden" name="price_visible" value="0">
                                         <input class="form-check-input" type="checkbox" name="price_visible" value="1"
                                                <?= !$isEdit || (int) $product['price_visible'] === 1 ? 'checked' : '' ?>>
                                     </div>
@@ -179,6 +180,51 @@ $ab = $isEdit ? availability_badge((string) $product['availability']) : null;
                             </div>
                         <?php elseif ($isEdit): ?>
                             <p class="form-hint mt-3 mb-0">Todavía no hay imágenes cargadas.</p>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="pform-card">
+                        <h2 class="pform-card__title">Video</h2>
+                        <label class="form-label" for="videos">URLs de YouTube o Vimeo (una por línea)</label>
+                        <textarea class="form-control text-mono" id="videos" name="videos" rows="3"
+                                  placeholder="https://www.youtube.com/watch?v=XXXXXXXXXXX"><?= e($videos ?? '') ?></textarea>
+                        <p class="form-hint">Se muestran en la ficha pública del repuesto.</p>
+
+                        <?php if ($isEdit): ?>
+                            <hr class="my-3">
+                            <label class="form-label" for="video-file">Subir un video desde tu compu</label>
+                            <div class="row g-2 align-items-end">
+                                <div class="col-sm-7">
+                                    <input type="file" class="form-control" id="video-file" name="video"
+                                           form="videoUploadForm" accept="video/mp4,video/webm,video/quicktime" required>
+                                </div>
+                                <div class="col-sm-5">
+                                    <button type="submit" form="videoUploadForm" class="btn btn-dark-2 w-100">
+                                        <i class="bi bi-upload"></i> Subir video
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="form-hint">MP4, WebM o MOV · máx. 40 MB. Para videos largos, mejor subilo a YouTube y pegá el link arriba.</p>
+
+                            <?php if (!empty($uploadedVideos)): ?>
+                                <div class="mt-3 d-flex flex-column gap-2">
+                                    <?php foreach ($uploadedVideos as $vid): ?>
+                                        <div class="doc-row">
+                                            <span class="doc-row__icon"><i class="bi bi-film"></i></span>
+                                            <span class="flex-grow-1">
+                                                <span class="doc-row__name d-block"><?= e($vid['title']) ?></span>
+                                                <span class="doc-row__meta">Archivo subido</span>
+                                            </span>
+                                            <a href="<?= e(upload_url($vid['video_ref'])) ?>" target="_blank" class="btn-icon" title="Ver"><i class="bi bi-eye"></i></a>
+                                            <button type="button" class="btn-icon btn-icon--danger" title="Quitar"
+                                                    data-submit-form="delVideo<?= (int) $vid['id'] ?>"
+                                                    data-confirm="¿Eliminar este video?">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 </section>
@@ -262,6 +308,17 @@ $ab = $isEdit ? availability_badge((string) $product['availability']) : null;
     <?php foreach ($images as $image): ?>
         <form id="delImg<?= (int) $image['id'] ?>" method="post"
               action="<?= admin_url('repuestos/' . $id . '/imagenes/' . (int) $image['id'] . '/eliminar') ?>" class="d-none">
+            <?= csrf_field() ?>
+        </form>
+    <?php endforeach; ?>
+
+    <form id="videoUploadForm" method="post"
+          action="<?= admin_url('repuestos/' . $id . '/videos') ?>" enctype="multipart/form-data" class="d-none">
+        <?= csrf_field() ?>
+    </form>
+    <?php foreach ($uploadedVideos as $vid): ?>
+        <form id="delVideo<?= (int) $vid['id'] ?>" method="post"
+              action="<?= admin_url('repuestos/' . $id . '/videos/' . (int) $vid['id'] . '/eliminar') ?>" class="d-none">
             <?= csrf_field() ?>
         </form>
     <?php endforeach; ?>
