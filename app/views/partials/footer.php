@@ -115,7 +115,6 @@ $footerParts    = (new Category())->featuredWithProducts('spare_part', 6);
                 <a href="<?= url('servicios') ?>">Servicios</a>
                 <a href="<?= url('recomendador') ?>">Asistente</a>
                 <a href="<?= url('comparar') ?>">Comparador</a>
-                <a href="<?= admin_url('login') ?>" rel="nofollow">Acceso interno</a>
             </nav>
             <p class="site-footer__credit">
                 Creado por <a href="https://baseocho.com/" target="_blank" rel="noopener">baseocho</a>
