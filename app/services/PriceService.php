@@ -208,10 +208,6 @@ final class PriceService
             $product['price_updated_at'],
             $product['created_by'],
             $product['updated_by'],
-            $product['sector'],
-            $product['shelf'],
-            $product['position'],
-            $product['warehouse_id'],
             $product['serial_number']
         );
 

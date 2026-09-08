@@ -21,6 +21,7 @@ use Core\Csrf;
 use Core\Request;
 use Core\Router;
 use Core\View;
+use App\Services\AuditService;
 use App\Services\ExchangeRateService;
 use App\Services\SettingService;
 
@@ -84,6 +85,9 @@ View::share('currentUri', $uri);
 // Cotización del dólar automática (lanacion.com.ar). Sólo sale a
 // internet cuando venció el TTL configurado y nunca rompe la página.
 ExchangeRateService::refreshIfStale();
+
+// Auditoría: se conserva sólo la última semana, se revisa una vez por día.
+AuditService::purgeIfDue();
 
 // ---------------------------------------------------------------------
 // Enrutamiento

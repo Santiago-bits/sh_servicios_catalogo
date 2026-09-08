@@ -31,7 +31,6 @@ class PartController extends Controller
         'precio_desc' => 'Precio: mayor a menor',
         'nuevos'      => 'Más nuevos',
         'vistos'      => 'Más buscados',
-        'stock'       => 'Mayor stock',
     ];
 
     public function index(?string $category = null): void
@@ -72,7 +71,7 @@ class PartController extends Controller
                 ? $currentCategory['name'] . ' · Repuestos · ' . SettingService::companyName()
                 : 'Repuestos · ' . SettingService::companyName(),
             'metaDescription' => $currentCategory['description']
-                ?? 'Buscá repuestos por código interno, código OEM o modelo de máquina. Filtros, compatibilidad y stock en tiempo real.',
+                ?? 'Buscá repuestos por código interno, código OEM o modelo de máquina. Filtros y compatibilidad por marca y modelo.',
             'bodyClass'       => 'page-catalog page-parts',
 
             'result'          => $result,
@@ -153,7 +152,6 @@ class PartController extends Controller
             'precio_min' => Request::get('precio_min'),
             'precio_max' => Request::get('precio_max'),
             'etiqueta'   => Request::get('etiqueta'),
-            'con_stock'  => Request::get('con_stock'),
             'destacados' => Request::get('destacados'),
             'ofertas'    => Request::get('ofertas'),
             'orden'      => Request::get('orden', 'destacados'),

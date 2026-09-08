@@ -157,7 +157,6 @@ class RoleController extends AdminController
             'parts'     => 'Repuestos',
             'catalog'   => 'Catálogo (categorías, marcas, etc.)',
             'prices'    => 'Precios',
-            'stock'     => 'Stock',
             'financing' => 'Financiación',
             'quotes'    => 'Cotizaciones',
             'inquiries' => 'Consultas',

@@ -157,7 +157,7 @@ $heroBg    = $heroImage !== '' ? upload_url($heroImage) : asset('img/hero-forkli
 <!-- =================================================================
      BUSCADOR DE REPUESTOS
      ================================================================= -->
-<section class="section section--dark">
+<section class="section section--dark section--search">
     <div class="container">
         <div class="row align-items-center g-5">
             <div class="col-lg-5">
@@ -339,7 +339,7 @@ $heroBg    = $heroImage !== '' ? upload_url($heroImage) : asset('img/hero-forkli
 <!-- =================================================================
      CONSULTA + CONTACTO
      ================================================================= -->
-<section class="section">
+<section class="section section--contact">
     <div class="container">
         <div class="row g-4">
             <div class="col-lg-7">

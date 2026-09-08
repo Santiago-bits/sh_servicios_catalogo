@@ -27,18 +27,16 @@ class Product extends Model
         'cost_price', 'profit_percent', 'profit_amount', 'final_price',
         'offer_price', 'currency', 'price_visible', 'price_updated_at',
         'availability', 'featured', 'is_new', 'is_offer',
-        'stock', 'stock_reserved', 'stock_min', 'track_stock',
         'meta_title', 'meta_description', 'og_image',
         'views', 'active', 'created_by', 'updated_by',
     ];
 
-    protected array $sortable = ['id', 'name', 'code', 'final_price', 'views', 'created_at', 'updated_at', 'stock'];
+    protected array $sortable = ['id', 'name', 'code', 'final_price', 'views', 'created_at', 'updated_at'];
 
     /** Columnas que pueden viajar al sitio público. */
     public const PUBLIC_COLUMNS = 'p.id, p.type, p.code, p.name, p.slug, p.short_description,
         p.final_price, p.offer_price, p.currency, p.price_visible, p.availability,
-        p.featured, p.is_new, p.is_offer, p.stock, p.stock_reserved, p.stock_min,
-        p.track_stock, p.views, p.meta_title, p.meta_description, p.og_image,
+        p.featured, p.is_new, p.is_offer, p.views, p.meta_title, p.meta_description, p.og_image,
         p.category_id, p.brand_id, p.created_at';
 
     /** Columnas internas (incluye costo y ganancia). Sólo con permiso. */
@@ -63,7 +61,6 @@ class Product extends Model
         m.weight_kg, m.length_mm, m.width_mm, m.turn_radius_mm, m.closed_height_mm,
         m.battery, m.mast_type, m.tire_type, m.serial_number, m.warranty,
         sp.oem_code, sp.manufacturer_code, sp.manufacturer, sp.origin, sp.unit,
-        sp.warehouse_id, sp.sector, sp.shelf, sp.position, sp.lead_time_days,
         (SELECT pi.path  FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.is_main DESC, pi.sort_order ASC, pi.id ASC LIMIT 1) AS image,
         (SELECT COALESCE(pi.thumb_path, pi.path) FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.is_main DESC, pi.sort_order ASC, pi.id ASC LIMIT 1) AS thumb";
 
@@ -76,7 +73,6 @@ class Product extends Model
         'vistos'      => 'p.views DESC',
         'az'          => 'p.name ASC',
         'za'          => 'p.name DESC',
-        'stock'       => 'p.stock DESC',
         'codigo'      => 'p.code ASC',
     ];
 
@@ -253,12 +249,6 @@ class Product extends Model
         }
         if (!empty($filters['ofertas'])) {
             $conditions[] = 'p.is_offer = 1';
-        }
-        if (!empty($filters['con_stock'])) {
-            $conditions[] = '(p.track_stock = 0 OR (p.stock - p.stock_reserved) > 0)';
-        }
-        if (!empty($filters['stock_bajo'])) {
-            $conditions[] = 'p.track_stock = 1 AND (p.stock - p.stock_reserved) <= GREATEST(p.stock_min, 0)';
         }
         if (!empty($filters['sin_precio'])) {
             $conditions[] = 'p.final_price <= 0';

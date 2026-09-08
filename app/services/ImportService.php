@@ -29,8 +29,7 @@ final class ImportService
     /** Columnas de la plantilla de repuestos. */
     public const PART_COLUMNS = [
         'codigo', 'nombre', 'marca', 'categoria', 'codigo_oem', 'codigo_fabricante',
-        'fabricante', 'costo', 'ganancia', 'precio', 'stock', 'stock_minimo',
-        'ubicacion', 'compatibilidad', 'descripcion',
+        'fabricante', 'costo', 'ganancia', 'precio', 'compatibilidad', 'descripcion',
     ];
 
     private const FUELS      = ['electrico', 'diesel', 'nafta', 'gas', 'glp', 'hibrido', 'manual'];
@@ -61,9 +60,22 @@ final class ImportService
         // Detección del separador a partir de la primera línea
         $firstLine = (string) fgets($handle);
         $firstLine = preg_replace('/^\xEF\xBB\xBF/', '', $firstLine) ?? $firstLine;
-        $separator = substr_count($firstLine, ';') > substr_count($firstLine, ',') ? ';' : ',';
+
+        // La plantilla arranca con una línea "sep=;" para que Excel abra
+        // bien las columnas. Si está, se usa ese separador y se saltea.
+        $skipSepLine = false;
+        if (preg_match('/^sep=(.)\s*$/i', rtrim($firstLine, "\r\n"), $m)) {
+            $separator   = $m[1];
+            $skipSepLine = true;
+        } else {
+            $separator = substr_count($firstLine, ';') > substr_count($firstLine, ',') ? ';' : ',';
+        }
 
         rewind($handle);
+
+        if ($skipSepLine) {
+            fgets($handle); // descartar la línea "sep=;"
+        }
 
         $header = fgetcsv($handle, 0, $separator);
         if ($header === false) {
@@ -219,13 +231,9 @@ final class ImportService
 
         $cost  = normalize_decimal($data['costo'] ?? '0');
         $price = normalize_decimal($data['precio'] ?? '0');
-        $stock = (int) normalize_decimal($data['stock'] ?? '0');
 
         if ($cost < 0 || $price < 0) {
             $errors[] = 'Los importes no pueden ser negativos.';
-        }
-        if ($stock < 0) {
-            $errors[] = 'El stock no puede ser negativo.';
         }
 
         return [
@@ -241,9 +249,6 @@ final class ImportService
                 'cost'              => $cost,
                 'profit'            => normalize_decimal($data['ganancia'] ?? '0'),
                 'price'             => $price,
-                'stock'             => $stock,
-                'stock_min'         => (int) normalize_decimal($data['stock_minimo'] ?? '0'),
-                'location'          => trim($data['ubicacion'] ?? ''),
                 'compatibility'     => trim($data['compatibilidad'] ?? ''),
                 'description'       => trim($data['descripcion'] ?? ''),
             ],
@@ -311,10 +316,7 @@ final class ImportService
                 if ($type === 'machine') {
                     $payload['availability'] = $data['state'];
                 } else {
-                    $payload['stock']       = (int) $data['stock'];
-                    $payload['stock_min']   = (int) $data['stock_min'];
-                    $payload['track_stock'] = 1;
-                    $payload['availability']= (int) $data['stock'] > 0 ? 'disponible' : 'consultar';
+                    $payload['availability'] = 'disponible';
                 }
 
                 if ($existing !== null) {
@@ -345,7 +347,6 @@ final class ImportService
                         'oem_code'          => $data['oem_code'] !== '' ? $data['oem_code'] : null,
                         'manufacturer_code' => $data['manufacturer_code'] !== '' ? $data['manufacturer_code'] : null,
                         'manufacturer'      => $data['manufacturer'] !== '' ? $data['manufacturer'] : null,
-                        'shelf'             => $data['location'] !== '' ? $data['location'] : null,
                     ]);
 
                     // "Toyota 8FG25|Hyster H2.5" → compatibilidades
@@ -431,10 +432,14 @@ final class ImportService
                'gas', '2500', '4700', 'usado', 'Depósito Central', '16000000', '25', '20000000', 'disponible',
                'Equipo revisado con garantía de 6 meses.']
             : ['FIL-100', 'Filtro de aceite Toyota serie 8', 'Toyota', 'Filtros', '15601-U2100-71', 'W68/3',
-               'Toyota', '12000', '60', '19200', '24', '5', 'Estantería A · Fila 3', 'Toyota 8FG25|Toyota 8FD30',
+               'Toyota', '12000', '60', '19200', 'Toyota 8FG25|Toyota 8FD30',
                'Filtro de flujo total con válvula antirretorno.'];
 
-        $csv = "\xEF\xBB\xBF" . implode(';', $columns) . "\r\n" . implode(';', $example) . "\r\n";
+        // "sep=;" en la primera línea: Excel la usa para separar en columnas
+        // (sin esto, según la configuración regional, mete todo en la columna A).
+        $csv = "\xEF\xBB\xBF" . "sep=;\r\n"
+            . implode(';', $columns) . "\r\n"
+            . implode(';', $example) . "\r\n";
 
         return $csv;
     }

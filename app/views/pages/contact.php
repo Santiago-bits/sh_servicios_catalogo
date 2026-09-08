@@ -14,7 +14,7 @@ use App\Services\WhatsAppService;
     </div>
 </section>
 
-<section class="section">
+<section class="section contact-page">
     <div class="container">
         <?php if (isset($_GET['enviado'])): ?>
             <div class="alert d-flex align-items-center gap-3 mb-4"

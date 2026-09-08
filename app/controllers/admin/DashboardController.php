@@ -3,7 +3,7 @@
  * ARCHIVO: app/controllers/admin/DashboardController.php
  * ---------------------------------------------------------------------
  * Panel de inicio: resumen general del catálogo, cosas para revisar
- * (sin foto, sin precio, stock bajo…) y últimas consultas.
+ * (sin foto, sin precio…) y últimas consultas.
  */
 
 declare(strict_types=1);
@@ -39,21 +39,6 @@ class DashboardController extends AdminController
 
         // Cosas para revisar (cada una enlaza al listado filtrado)
         $review = [
-            'low_stock' => [
-                'label' => 'Repuestos con stock bajo',
-                'count' => $n("SELECT COUNT(*) FROM products
-                                WHERE type='spare_part' AND $activeProduct AND track_stock = 1
-                                  AND (stock - stock_reserved) <= GREATEST(stock_min, 0)"),
-                'url'   => admin_url('repuestos?stock_bajo=1'),
-                'icon'  => 'bi-battery-low',
-            ],
-            'out_stock' => [
-                'label' => 'Repuestos sin stock',
-                'count' => $n("SELECT COUNT(*) FROM products
-                                WHERE type='spare_part' AND $activeProduct AND track_stock = 1 AND stock <= 0"),
-                'url'   => admin_url('repuestos'),
-                'icon'  => 'bi-x-octagon',
-            ],
             'no_price' => [
                 'label' => 'Productos sin precio',
                 'count' => $n("SELECT COUNT(*) FROM products WHERE final_price <= 0 AND $activeProduct"),

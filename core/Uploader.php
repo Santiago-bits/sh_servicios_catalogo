@@ -82,10 +82,13 @@ final class Uploader
             ];
         }
 
-        $name     = self::uniqueName('jpg');
-        $fullPath = $directory . '/' . $name;
+        // PNG/WEBP se conservan como PNG con su transparencia real (logos,
+        // iconos): sólo las fotos (JPEG) se re-comprimen sobre fondo blanco.
+        $preserveAlpha = in_array($info[2], [IMAGETYPE_PNG, IMAGETYPE_WEBP], true);
+        $name          = self::uniqueName($preserveAlpha ? 'png' : 'jpg');
+        $fullPath      = $directory . '/' . $name;
 
-        if (!self::processImage($file['tmp_name'], $fullPath, $maxWidth, 82)) {
+        if (!self::processImage($file['tmp_name'], $fullPath, $maxWidth, 82, $preserveAlpha)) {
             /* GD no pudo con este formato (típico: WebP sin soporte compilado
                en el hosting). La imagen YA pasó la validación de tipo real,
                así que se guarda tal cual: el navegador la muestra igual. */
@@ -110,7 +113,7 @@ final class Uploader
 
         if ($thumbnail) {
             $thumbName = 'thumb_' . $name;
-            if (self::processImage($file['tmp_name'], $directory . '/' . $thumbName, 480, 78)) {
+            if (self::processImage($file['tmp_name'], $directory . '/' . $thumbName, 480, 78, $preserveAlpha)) {
                 $result['thumb'] = 'uploads/' . trim($folder, '/') . '/' . $thumbName;
             }
         }
@@ -204,8 +207,13 @@ final class Uploader
         return ['ok' => true, 'mime' => $mime];
     }
 
-    private static function processImage(string $source, string $destination, int $maxWidth, int $quality): bool
-    {
+    private static function processImage(
+        string $source,
+        string $destination,
+        int $maxWidth,
+        int $quality,
+        bool $preserveAlpha = false
+    ): bool {
         $info = @getimagesize($source);
         if ($info === false) {
             return false;
@@ -230,12 +238,27 @@ final class Uploader
         $newHeight = max(1, (int) round($height * $ratio));
 
         $canvas = imagecreatetruecolor($newWidth, $newHeight);
-        // Fondo blanco: evita transparencias negras al pasar a JPG
-        $white = imagecolorallocate($canvas, 255, 255, 255);
-        imagefilledrectangle($canvas, 0, 0, $newWidth, $newHeight, $white);
+
+        if ($preserveAlpha) {
+            // Mantiene la transparencia real del PNG/WEBP de origen (logos,
+            // iconos): sin canvas blanco de fondo, que era lo que tapaba
+            // cualquier transparencia al re-guardar la imagen.
+            imagealphablending($canvas, false);
+            imagesavealpha($canvas, true);
+            $transparent = imagecolorallocatealpha($canvas, 0, 0, 0, 127);
+            imagefilledrectangle($canvas, 0, 0, $newWidth, $newHeight, $transparent);
+            imagealphablending($canvas, true);
+        } else {
+            // Fondo blanco: evita transparencias negras al pasar a JPG
+            $white = imagecolorallocate($canvas, 255, 255, 255);
+            imagefilledrectangle($canvas, 0, 0, $newWidth, $newHeight, $white);
+        }
+
         imagecopyresampled($canvas, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
 
-        $saved = imagejpeg($canvas, $destination, $quality);
+        $saved = $preserveAlpha
+            ? imagepng($canvas, $destination, 8)
+            : imagejpeg($canvas, $destination, $quality);
 
         imagedestroy($canvas);
         imagedestroy($image);

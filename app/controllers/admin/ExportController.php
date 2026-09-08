@@ -22,13 +22,18 @@ class ExportController extends AdminController
 {
     public function index(): void
     {
-        // Sección en desarrollo: se muestra un cartel en vez del exportador.
-        $this->view('admin/wip', [
+        // Sólo los conjuntos de datos que tienen sentido en este panel
+        // (catálogo + consultas + auditoría). Los de cotizaciones/movimientos,
+        // que dependen de secciones que no están activas, se omiten.
+        $visible  = ['maquinaria', 'repuestos', 'precios', 'consultas', 'auditoria'];
+        $datasets = array_intersect_key(ExportService::DATASETS, array_flip($visible));
+
+        $this->view('admin/exports/index', [
             'pageTitle'  => 'Exportar · Panel',
             'adminTitle' => 'Exportar',
             'robots'     => 'noindex, nofollow',
-            'wipTitle'   => 'Exportar productos',
-            'wipText'    => 'Estamos trabajando en la exportacion a Excel/CSV y el catalogo en PDF. Va a estar disponible proximamente.',
+            'datasets'   => $datasets,
+            'canSeeCost' => Auth::canSeeCost(),
         ]);
     }
 
@@ -37,7 +42,7 @@ class ExportController extends AdminController
         if (!isset(ExportService::DATASETS[$dataset])) {
             $this->abort(404, 'Conjunto de datos inexistente.');
         }
-        if (!in_array($format, ['csv', 'xlsx'], true)) {
+        if (!in_array($format, ['csv', 'xlsx', 'pdf'], true)) {
             $this->abort(404, 'Formato no soportado.');
         }
 
@@ -45,6 +50,11 @@ class ExportController extends AdminController
         $filename = $dataset . '-' . date('Ymd-Hi');
 
         AuditService::log('export', 'data', null, null, 'Exportación de ' . $dataset . ' (' . $format . ')');
+
+        if ($format === 'pdf') {
+            PdfService::table($data['title'], $data['headers'], $data['rows'])
+                ->stream($filename . '.pdf', true);
+        }
 
         if ($format === 'xlsx') {
             ExportService::toXlsx($data, $filename);
@@ -76,7 +86,6 @@ class ExportController extends AdminController
             'categoria'  => Request::int('categoria') ?: null,
             'marca'      => Request::int('marca') ?: null,
             'destacados' => Request::bool('solo_destacados') ? 1 : null,
-            'con_stock'  => Request::bool('solo_con_stock') ? 1 : null,
             'orden'      => (string) Request::post('orden', 'az'),
         ];
 

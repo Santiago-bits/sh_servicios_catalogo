@@ -154,7 +154,7 @@ class AuthController extends Controller
 
         $data = $this->validate(Request::all(), [
             'current_password' => 'required|string',
-            'password'         => 'required|string|min:12|max:200|confirmed',
+            'password'         => 'required|string|min:8|max:200|confirmed',
         ], [
             'current_password' => 'contraseña actual',
             'password'         => 'contraseña nueva',

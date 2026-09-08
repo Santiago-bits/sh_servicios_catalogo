@@ -19,7 +19,7 @@
                     <?= csrf_field() ?>
 
                     <div class="col-12">
-                        <label class="form-label" for="imp-tipo">Tipo de datos</label>
+                        <label class="form-label" for="imp-tipo">¿Qué querés importar?</label>
                         <select class="form-select" id="imp-tipo" name="tipo">
                             <option value="maquinaria">Maquinaria</option>
                             <option value="repuestos">Repuestos</option>
@@ -55,6 +55,10 @@
         <div class="card-admin">
             <div class="card-admin__head"><h2><i class="bi bi-list-columns"></i> Columnas de las plantillas</h2></div>
             <div class="card-admin__body">
+                <p class="text-muted-2 small mb-3">
+                    Estas son las columnas de cada plantilla. No cambies los nombres de la primera
+                    fila del archivo. Las que no apliquen podés dejarlas vacías.
+                </p>
                 <h3 class="form-section__title">Maquinaria</h3>
                 <div class="d-flex flex-wrap gap-1 mb-4">
                     <?php foreach ($machineColumns as $column): ?>

@@ -40,7 +40,6 @@ class Role extends Model
         'financing.manage',                                             // Financiación (oculta)
         'quotes.view', 'quotes.create', 'quotes.edit', 'quotes.delete', // Cotizaciones (oculta)
         'stats.view',                                                   // Estadísticas (oculta)
-        'stock.view', 'stock.move',                                     // Stock (oculto)
     ];
 
     /** Todos los permisos agrupados por módulo. @return array<string,array<int,array<string,mixed>>> */

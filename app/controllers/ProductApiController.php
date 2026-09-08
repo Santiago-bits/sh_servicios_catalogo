@@ -12,7 +12,6 @@ namespace App\Controllers;
 
 use App\Models\Product;
 use App\Services\PriceService;
-use App\Services\StockService;
 use App\Services\WhatsAppService;
 use Core\Controller;
 
@@ -46,7 +45,6 @@ class ProductApiController extends Controller
                 'model'         => $safe['model'] ?? null,
                 'year'          => $safe['year'] ?? null,
                 'availability'  => availability_badge((string) $safe['availability']),
-                'stock'         => (int) $safe['track_stock'] === 1 ? StockService::available($safe) : null,
                 'price'         => PriceService::isPublicPriceVisible($safe) ? PriceService::effectivePrice($safe) : null,
                 'price_label'   => PriceService::displayPrice($safe),
                 'currency'      => $safe['currency'],

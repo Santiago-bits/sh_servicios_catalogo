@@ -6,32 +6,31 @@
 $icons = [
     'maquinaria'   => 'bi-truck-front-fill',
     'repuestos'    => 'bi-nut-fill',
-    'stock'        => 'bi-box-seam-fill',
     'precios'      => 'bi-cash-stack',
     'consultas'    => 'bi-chat-dots-fill',
     'cotizaciones' => 'bi-file-earmark-text',
-    'movimientos'  => 'bi-arrow-left-right',
     'auditoria'    => 'bi-shield-check',
+];
+
+$descriptions = [
+    'maquinaria'   => 'Todas las máquinas del catálogo con sus datos y precios.',
+    'repuestos'    => 'Todos los repuestos con códigos, compatibilidad y precios.',
+    'precios'      => 'Lista de precios de todo el catálogo (costo, ganancia y precio final).',
+    'consultas'    => 'Consultas recibidas desde el sitio, con datos de contacto y estado.',
+    'cotizaciones' => 'Cotizaciones generadas, con cliente, total y estado.',
+    'auditoria'    => 'Registro de quién hizo cada cambio en el panel.',
 ];
 ?>
 <div class="card-admin">
     <div class="card-admin__body">
         <p class="mb-0 text-muted-2">
             <i class="bi bi-info-circle text-accent"></i>
-            Los archivos se generan en el momento con los datos actuales.
+            Cada botón descarga un archivo con los datos de ese momento: <strong>Excel</strong> y
+            <strong>CSV</strong> para trabajarlo en una planilla, <strong>PDF</strong> para imprimir o mandar.
             <?php if (!$canSeeCost): ?>
-                <strong>Tu rol no incluye costos ni ganancias</strong>, así que esas columnas no se exportan.
+                <br><strong>Tu rol no incluye costos ni ganancias</strong>, así que esas columnas no se exportan.
             <?php endif; ?>
         </p>
-
-        <?php if (!App\Services\ExportService::canExportXlsx()): ?>
-            <p class="mb-0 mt-2 text-muted-2">
-                <i class="bi bi-exclamation-triangle text-accent"></i>
-                Este servidor no tiene la extensión <code>zip</code> de PHP, así que los botones de
-                <strong>Excel</strong> descargan un <strong>CSV</strong> (se abre igual con Excel,
-                elegí "delimitado por punto y coma").
-            </p>
-        <?php endif; ?>
     </div>
 </div>
 
@@ -39,23 +38,24 @@ $icons = [
     <?php foreach ($datasets as $key => $label): ?>
         <div class="col-md-6 col-xl-4">
             <div class="card-admin h-100">
-                <div class="card-admin__body">
-                    <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="card-admin__body d-flex flex-column">
+                    <div class="d-flex align-items-center gap-3 mb-2">
                         <span class="admin-user__avatar" style="width:46px;height:46px;font-size:1.2rem">
                             <i class="bi <?= e($icons[$key] ?? 'bi-table') ?>"></i>
                         </span>
-                        <div>
-                            <strong class="d-block"><?= e($label) ?></strong>
-                            <small class="text-muted-2 text-mono"><?= e($key) ?></small>
-                        </div>
+                        <strong class="d-block"><?= e($label) ?></strong>
                     </div>
+                    <p class="text-muted-2 small flex-grow-1"><?= e($descriptions[$key] ?? '') ?></p>
 
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 mt-2">
                         <a href="<?= admin_url('exportar/' . $key . '/xlsx') ?>" class="btn btn-accent btn-sm flex-grow-1">
                             <i class="bi bi-file-earmark-excel"></i> Excel
                         </a>
                         <a href="<?= admin_url('exportar/' . $key . '/csv') ?>" class="btn btn-ghost btn-sm flex-grow-1">
                             <i class="bi bi-filetype-csv"></i> CSV
+                        </a>
+                        <a href="<?= admin_url('exportar/' . $key . '/pdf') ?>" class="btn btn-ghost btn-sm flex-grow-1">
+                            <i class="bi bi-file-earmark-pdf"></i> PDF
                         </a>
                     </div>
                 </div>

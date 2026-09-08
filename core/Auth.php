@@ -93,16 +93,29 @@ final class Auth
         return ['ok' => true, 'message' => '¡Bienvenido/a, ' . $user['name'] . '!'];
     }
 
+    /**
+     * Cada tanda de intentos fallidos (por defecto 5) bloquea la cuenta un
+     * rato, y el bloqueo se va alargando si se sigue insistiendo:
+     * 1ª tanda → 5 min, 2ª → 15 min, 3ª → 1 h, 4ª y siguientes → 6 h.
+     * El contador `failed_logins` NO se resetea al bloquear (así escala);
+     * vuelve a 0 recién cuando el usuario entra bien.
+     */
+    private const LOCK_LADDER_MINUTES = [5, 15, 60, 360];
+
     private static function registerFailedAttempt(array $user): void
     {
-        $max      = Env::int('LOGIN_MAX_ATTEMPTS', 5);
-        $minutes  = Env::int('LOGIN_LOCK_MINUTES', 15);
+        $max      = max(1, Env::int('LOGIN_MAX_ATTEMPTS', 5));
         $attempts = (int) $user['failed_logins'] + 1;
 
         $data = ['failed_logins' => $attempts];
-        if ($attempts >= $max) {
-            $data['locked_until']  = date('Y-m-d H:i:s', time() + ($minutes * 60));
-            $data['failed_logins'] = 0;
+
+        // Bloqueo cada vez que se completa una tanda de $max fallos.
+        if ($attempts % $max === 0) {
+            $tier    = (int) ($attempts / $max);                       // 1, 2, 3, ...
+            $ladder  = self::LOCK_LADDER_MINUTES;
+            $minutes = $ladder[min($tier, count($ladder)) - 1];
+
+            $data['locked_until'] = date('Y-m-d H:i:s', time() + $minutes * 60);
         }
 
         Database::update('users', $data, 'id = :id', ['id' => (int) $user['id']]);

@@ -32,3 +32,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Config local de Claude Code (no versionar)
+.claude/settings.local.json

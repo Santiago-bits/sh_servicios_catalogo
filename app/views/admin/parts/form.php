@@ -6,7 +6,7 @@
  * Pestañas: General · Precio · Fotos
  * Barra lateral fija: Publicación + Etiquetas
  *
- * Los datos técnicos (códigos OEM, compatibilidad, stock, SEO) no se
+ * Los datos técnicos (códigos OEM, compatibilidad, SEO) no se
  * editan desde acá.
  */
 

@@ -580,4 +580,144 @@ final class PdfService
 
         return $pdf;
     }
+
+    // =================================================================
+    // Tabla genérica (exportaciones del panel a PDF)
+    // =================================================================
+
+    /**
+     * PDF de una tabla simple (encabezados + filas). Se usa para el botón
+     * "PDF" de cada conjunto de datos en la página de Exportar.
+     *
+     * @param array<int,string>           $headers
+     * @param array<int,array<int,mixed>> $rows
+     */
+    public static function table(string $title, array $headers, array $rows): Pdf
+    {
+        $pdf = new Pdf('L');
+        $pdf->setMargins(12, 16, 12, 16);
+        $pdf->setMeta($title, SettingService::companyName());
+
+        $company   = SettingService::companyName();
+        $generated = date('d/m/Y H:i');
+
+        $pdf->setFooter(static function (Pdf $pdf) use ($company, $generated): void {
+            $y = $pdf->pageHeight() - 10;
+            $pdf->setDrawColor('#DDDDDD');
+            $pdf->line(12, $y - 4, $pdf->pageWidth() - 12, $y - 4);
+            $pdf->setFont('', 7);
+            $pdf->setTextColor(self::GRAY);
+            $pdf->text(12, $y, $company . '  ·  Generado ' . $generated);
+            $page = 'Página ' . $pdf->pageNumber();
+            $pdf->text($pdf->pageWidth() - 12 - $pdf->textWidth($page, 7), $y, $page);
+        });
+
+        $pdf->addPage();
+
+        // Título
+        $pdf->setFont('B', 13);
+        $pdf->setTextColor(self::BLACK);
+        $pdf->text(12, $pdf->getY() + 2, mb_strtoupper($title));
+        $pdf->moveY(8);
+
+        $headers   = array_values($headers);
+        $colCount  = max(1, count($headers));
+        $available = $pdf->contentWidth();
+
+        // Fuente según cantidad de columnas
+        $fontSize = $colCount <= 6 ? 8.0 : ($colCount <= 10 ? 7.0 : 6.0);
+        $headFont = $fontSize + 0.5;
+        $lineH    = $fontSize * 0.42 + 2.4;
+        $pad      = 1.4;
+
+        // Ancho de columna proporcional al contenido (con un mínimo)
+        $pdf->setFont('', $fontSize);
+        $weights = [];
+        foreach ($headers as $i => $label) {
+            $max = $pdf->textWidth((string) $label, $headFont, 'B') + 4;
+            foreach (array_slice($rows, 0, 80) as $r) {
+                $sample = mb_substr(self::cellText($r[$i] ?? ''), 0, 45);
+                $max    = max($max, $pdf->textWidth($sample, $fontSize) + 4);
+            }
+            $weights[$i] = max($max, 12.0);
+        }
+        $sum    = array_sum($weights) ?: 1.0;
+        $widths = array_map(static fn (float $w): float => $w / $sum * $available, $weights);
+        $totalW = array_sum($widths);
+        $x0     = 12.0;
+
+        $drawHead = static function (Pdf $pdf) use ($headers, $widths, $totalW, $x0, $headFont): void {
+            $y = $pdf->getY();
+            $h = $headFont * 0.42 + 3.0;
+            $pdf->filledRect($x0, $y, $totalW, $h, self::BLACK);
+            $pdf->setFont('B', $headFont);
+            $pdf->setTextColor('#FFFFFF');
+            $x = $x0;
+            foreach ($headers as $i => $label) {
+                $pdf->cell($x, $y, $widths[$i], $h, $pdf->truncate((string) $label, $widths[$i] - 3), 'L', null, false, 1.4);
+                $x += $widths[$i];
+            }
+            $pdf->setY($y + $h);
+        };
+
+        $drawHead($pdf);
+
+        $alt = false;
+        foreach ($rows as $row) {
+            $pdf->setFont('', $fontSize);
+
+            $wrapped  = [];
+            $maxLines = 1;
+            foreach ($headers as $i => $_) {
+                $lines        = array_slice($pdf->wrap(self::cellText($row[$i] ?? ''), $widths[$i] - 2 * $pad), 0, 4);
+                $wrapped[$i]  = $lines === [] ? [''] : $lines;
+                $maxLines     = max($maxLines, count($wrapped[$i]));
+            }
+            $h = $maxLines * $lineH + 1.6;
+
+            if ($pdf->getY() + $h > $pdf->pageHeight() - 16) {
+                $pdf->addPage();
+                $drawHead($pdf);
+            }
+
+            $y = $pdf->getY();
+            if ($alt) {
+                $pdf->filledRect($x0, $y, $totalW, $h, self::LIGHT);
+            }
+            $alt = !$alt;
+
+            $pdf->setFont('', $fontSize);
+            $pdf->setTextColor(self::BLACK);
+            $x = $x0;
+            foreach ($headers as $i => $_) {
+                $ly = $y + $lineH - 0.5;
+                foreach ($wrapped[$i] as $line) {
+                    $pdf->text($x + $pad, $ly, $line);
+                    $ly += $lineH;
+                }
+                $x += $widths[$i];
+            }
+            $pdf->setY($y + $h);
+        }
+
+        if ($rows === []) {
+            $pdf->setFont('', 9);
+            $pdf->setTextColor(self::GRAY);
+            $pdf->text($x0, $pdf->getY() + 8, 'No hay datos para exportar.');
+        }
+
+        return $pdf;
+    }
+
+    /** Valor de celda a texto legible para el PDF. */
+    private static function cellText(mixed $value): string
+    {
+        if (is_bool($value)) {
+            return $value ? 'Sí' : 'No';
+        }
+        if (is_float($value)) {
+            return rtrim(rtrim(number_format($value, 2, ',', '.'), '0'), ',');
+        }
+        return trim((string) $value);
+    }
 }

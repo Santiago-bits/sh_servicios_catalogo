@@ -93,4 +93,31 @@ class Inquiry extends Model
         );
         return $count >= $max;
     }
+
+    /**
+     * Anti-spam progresivo: después de mandar una consulta hay que esperar
+     * para mandar otra, y la espera crece si se insiste desde la misma IP:
+     *   1ª → 5 min · 2ª → 15 min · 3ª → 30 min · 4ª y siguientes → 1 h.
+     * El contador se reinicia tras 6 h sin actividad.
+     * Devuelve los segundos que faltan para poder enviar (0 = se puede).
+     */
+    public function cooldownRemaining(string $ip): int
+    {
+        $row = Database::selectOne(
+            'SELECT COUNT(*) AS n, MAX(created_at) AS last_at
+               FROM inquiries
+              WHERE ip = :ip AND created_at > DATE_SUB(NOW(), INTERVAL 6 HOUR)',
+            ['ip' => $ip]
+        );
+
+        $sent = (int) ($row['n'] ?? 0);
+        if ($sent === 0 || empty($row['last_at'])) {
+            return 0;
+        }
+
+        $ladder = [1 => 300, 2 => 900, 3 => 1800]; // segundos
+        $wait   = $ladder[$sent] ?? 3600;
+
+        return max(0, $wait - (time() - strtotime((string) $row['last_at'])));
+    }
 }

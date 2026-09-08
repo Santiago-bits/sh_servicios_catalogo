@@ -67,19 +67,6 @@ $nav  = [
     <!-- Barra lateral -->
     <aside class="admin-sidebar" id="adminSidebar">
         <div class="admin-sidebar__head">
-            <?php $adminLogo = (string) SettingService::get('company_logo', ''); ?>
-            <a href="<?= admin_url() ?>" class="admin-logo">
-                <?php if ($adminLogo !== ''): ?>
-                    <img src="<?= e(upload_url($adminLogo)) ?>" alt="<?= e(SettingService::companyName()) ?>" class="admin-logo__img"
-                         style="height:34px;width:auto;max-width:170px;object-fit:contain;background:#fff;padding:3px 6px;border-radius:6px;display:block">
-                <?php else: ?>
-                    <span class="brand__mark"><i class="bi bi-truck-front-fill"></i></span>
-                    <span class="admin-logo__text">
-                        <strong><?= e(SettingService::companyName()) ?></strong>
-                        <small>Panel de gestión</small>
-                    </span>
-                <?php endif; ?>
-            </a>
             <button type="button" class="admin-sidebar__close" id="sidebarClose" aria-label="Cerrar menú">
                 <i class="bi bi-x-lg"></i>
             </button>

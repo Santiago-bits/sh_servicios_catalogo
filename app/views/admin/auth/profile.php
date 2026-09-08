@@ -67,15 +67,15 @@
                     <div class="col-md-6">
                         <label class="form-label" for="p-new">Contraseña nueva</label>
                         <input type="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>"
-                               id="p-new" name="password" required minlength="12" autocomplete="new-password">
-                        <p class="form-hint">Mínimo 12 caracteres, combinando al menos 3 de: mayúsculas, minúsculas, números y símbolos. Evitá palabras obvias.</p>
+                               id="p-new" name="password" required minlength="8" autocomplete="new-password">
+                        <p class="form-hint">Mínimo 8 caracteres, combinando al menos 3 de: mayúsculas, minúsculas, números y símbolos. Evitá palabras obvias.</p>
                         <span class="form-error"><?= e($errors['password'] ?? '') ?></span>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label" for="p-confirm">Repetir contraseña</label>
                         <input type="password" class="form-control" id="p-confirm" name="password_confirmation"
-                               required minlength="12" autocomplete="new-password">
+                               required minlength="8" autocomplete="new-password">
                     </div>
 
                     <div class="col-12">

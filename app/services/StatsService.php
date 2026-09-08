@@ -56,9 +56,6 @@ final class StatsService
                 (SELECT COUNT(*) FROM quotes)                                                        AS cotizaciones,
                 (SELECT COUNT(*) FROM quotes WHERE status = 'enviada')                               AS cotizaciones_enviadas,
                 (SELECT COALESCE(SUM(total),0) FROM quotes WHERE status = 'aceptada')                AS monto_aceptado,
-                (SELECT COUNT(*) FROM products
-                  WHERE type = 'spare_part' AND track_stock = 1 AND active = 1 AND deleted_at IS NULL
-                    AND (stock - stock_reserved) <= GREATEST(stock_min,0))                           AS stock_bajo,
                 (SELECT COALESCE(SUM(views),0) FROM products)                                        AS visitas_totales,
                 (SELECT COUNT(*) FROM product_views WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)) AS visitas_mes,
                 (SELECT COUNT(*) FROM search_logs WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY))   AS busquedas_mes,

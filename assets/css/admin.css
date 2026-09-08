@@ -28,7 +28,7 @@
     position: sticky; top: 0; background: var(--black); z-index: 3;
 }
 .admin-logo { display: flex; align-items: center; gap: 11px; }
-.admin-logo__img { max-height: 32px; max-width: 150px; width: auto; background: #fff; padding: 3px 6px; border-radius: 6px; }
+.admin-logo__img { max-height: 32px; max-width: 150px; width: auto; }
 .admin-logo__text { display: flex; flex-direction: column; line-height: 1.2; }
 .admin-logo__text strong { color: var(--white); font-size: .98rem; text-transform: uppercase; letter-spacing: .05em; }
 .admin-logo__text small { color: var(--yellow); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; }
@@ -475,6 +475,32 @@ details.card-admin[open] > summary .card-admin__chevron { transform: rotate(180d
     padding: 14px 16px; margin-bottom: 18px;
 }
 .admin-filters .form-control, .admin-filters .form-select { min-width: 150px; }
+
+/* Variante para Auditoría: los filtros en una grilla pareja y la fila de
+   botones separada abajo (Filtrar/Limpiar a la izquierda, Exportar a la
+   derecha). */
+.admin-filters--audit { display: block; }
+.admin-filters--audit .admin-filters__fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+    gap: 12px;
+    align-items: end;
+}
+.admin-filters--audit .admin-filters__fields .form-control,
+.admin-filters--audit .admin-filters__fields .form-select {
+    width: 100%;
+    min-width: 0;
+}
+.admin-filters--audit .admin-filters__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #E2E4E8;
+}
 
 /* Chips de estado */
 .chip {

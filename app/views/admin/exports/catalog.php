@@ -65,7 +65,6 @@
                     <div class="col-12">
                         <label class="filter-check"><input type="checkbox" name="con_precios" value="1" checked> Incluir precios</label>
                         <label class="filter-check"><input type="checkbox" name="solo_destacados" value="1"> Sólo productos destacados</label>
-                        <label class="filter-check"><input type="checkbox" name="solo_con_stock" value="1"> Sólo con stock disponible</label>
                     </div>
 
                     <div class="col-12">

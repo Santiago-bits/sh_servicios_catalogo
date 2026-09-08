@@ -563,26 +563,6 @@
     })();
 
     /* -----------------------------------------------------------------
-       Movimientos de stock desde la tabla
-       ----------------------------------------------------------------- */
-    (function stockModal() {
-        const modal = $('#stockModal');
-        if (!modal) { return; }
-
-        document.addEventListener('click', e => {
-            const btn = e.target.closest('[data-stock-move]');
-            if (!btn) { return; }
-
-            $('#stockProductId', modal).value    = btn.dataset.stockMove;
-            $('#stockProductName', modal).textContent = btn.dataset.productName || '';
-            $('#stockCurrent', modal).textContent = btn.dataset.currentStock || '0';
-
-            const type = $('#stockType', modal);
-            if (type && btn.dataset.defaultType) { type.value = btn.dataset.defaultType; }
-        });
-    })();
-
-    /* -----------------------------------------------------------------
        Selección múltiple en tablas
        ----------------------------------------------------------------- */
     $$('[data-check-all]').forEach(master => {

@@ -2,7 +2,7 @@
 /**
  * ARCHIVO: app/controllers/admin/PartController.php
  * ---------------------------------------------------------------------
- * ABM de repuestos: datos propios, códigos OEM/alternativos, stock y
+ * ABM de repuestos: datos propios, códigos OEM/alternativos y
  * compatibilidad con modelos de máquina.
  */
 
@@ -14,7 +14,6 @@ use App\Models\Brand;
 use App\Models\Product;
 use App\Models\SparePart;
 use App\Services\AuditService;
-use App\Services\StockService;
 use Core\Database;
 use Core\Request;
 
@@ -38,8 +37,8 @@ class PartController extends ProductAdminController
 
     /**
      * Guarda los datos propios del repuesto. Sólo toca lo que venga en
-     * el formulario: el ABM simplificado no manda códigos, stock ni
-     * ubicación, así que esos valores se conservan.
+     * el formulario: el ABM simplificado no manda códigos, así que esos
+     * valores se conservan.
      *
      * @param array<string,mixed> $input
      */
@@ -53,11 +52,6 @@ class PartController extends ProductAdminController
             'origin'            => fn () => in_array($input['origin'] ?? '', $origins, true) ? $input['origin'] : 'alternativo',
             'unit'             => fn () => $this->text($input, 'unit', 20) ?? 'unidad',
             'weight_kg'        => fn () => $this->decimal($input, 'weight_kg'),
-            'warehouse_id'     => fn () => !empty($input['warehouse_id']) ? (int) $input['warehouse_id'] : null,
-            'sector'           => fn () => $this->text($input, 'sector', 60),
-            'shelf'            => fn () => $this->text($input, 'shelf', 60),
-            'position'         => fn () => $this->text($input, 'position', 60),
-            'lead_time_days'   => fn () => $this->int($input, 'lead_time_days'),
         ];
 
         $data = [];
@@ -76,27 +70,6 @@ class PartController extends ProductAdminController
                 ['id' => $productId]
             );
         }
-
-        // Stock: sólo si el formulario lo maneja.
-        if (array_key_exists('stock_min', $input) || array_key_exists('track_stock', $input)) {
-            Database::update('products', [
-                'stock_min'   => (int) normalize_decimal((string) ($input['stock_min'] ?? '0')),
-                'track_stock' => Request::flag('track_stock', true),
-            ], 'id = :id', ['id' => $productId]);
-        }
-
-        if (array_key_exists('stock', $input)) {
-            $current  = (new Product())->find($productId);
-            $newStock = (int) normalize_decimal((string) $input['stock']);
-            if ($current !== null && (int) $current['stock'] !== $newStock) {
-                StockService::move(
-                    $productId,
-                    'ajuste',
-                    $newStock,
-                    (string) (Request::post('stock_reason') ?: 'Ajuste desde la ficha del repuesto')
-                );
-            }
-        }
     }
 
     /** @return array<string,mixed> */
@@ -106,7 +79,6 @@ class PartController extends ProductAdminController
         $model     = new Product();
 
         return [
-            'warehouses'      => (new SparePart())->warehouses(),
             'codes'           => $productId > 0 ? $model->codes($productId) : [],
             'compatibility'   => $productId > 0 ? $model->compatibilityList($productId) : [],
             'availableMachines' => Database::select(

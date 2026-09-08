@@ -19,13 +19,21 @@ class ImportController extends AdminController
 {
     public function index(): void
     {
-        // Sección en desarrollo: se muestra un cartel en vez del importador.
-        $this->view('admin/wip', [
-            'pageTitle'  => 'Importar · Panel',
-            'adminTitle' => 'Importar',
-            'robots'     => 'noindex, nofollow',
-            'wipTitle'   => 'Importar productos',
-            'wipText'    => 'Estamos trabajando en la importacion masiva desde Excel/CSV. Va a estar disponible proximamente.',
+        // Previsualización pendiente de confirmar (la deja preview()).
+        // Caduca a los 30 minutos, igual que en run().
+        $preview = Session::get('_import_preview');
+        if (is_array($preview) && (time() - (int) ($preview['created'] ?? 0)) > 1800) {
+            Session::forget('_import_preview');
+            $preview = null;
+        }
+
+        $this->view('admin/imports/index', [
+            'pageTitle'      => 'Importar · Panel',
+            'adminTitle'     => 'Importar',
+            'robots'         => 'noindex, nofollow',
+            'preview'        => is_array($preview) ? $preview : null,
+            'machineColumns' => ImportService::MACHINE_COLUMNS,
+            'partColumns'    => ImportService::PART_COLUMNS,
         ]);
     }
 

@@ -66,7 +66,6 @@ abstract class ProductAdminController extends AdminController
             'activo'     => Request::get('activo'),
             'sin_precio' => Request::get('sin_precio'),
             'sin_imagen' => Request::get('sin_imagen'),
-            'stock_bajo' => Request::get('stock_bajo'),
             'orden'      => Request::get('orden', 'nuevos'),
         ];
 

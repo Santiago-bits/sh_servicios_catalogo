@@ -9,18 +9,14 @@
    0. Transición suave entre páginas
    Cada acción (guardar, hacer clic en un link del menú) recarga la
    página entera —no es una app de una sola página—, así que el
-   navegador reemplaza todo de golpe. Esto suaviza ese cambio en dos
-   capas, sin JavaScript:
-     a) navegador moderno (Chrome/Edge): "@view-transition" hace que el
-        propio navegador difumine la página vieja hacia la nueva.
-     b) resto de navegadores: la página nueva aparece con un fundido
-        breve en vez de aparecer de golpe.
-   Se respeta "menos movimiento" para quien lo tenga activado en el SO.
-   --------------------------------------------------------------------- */
-@view-transition {
-    navigation: auto;
-}
+   navegador reemplaza todo de golpe. La página nueva aparece con un
+   fundido breve en vez de aparecer de golpe. Se respeta "menos
+   movimiento" para quien lo tenga activado en el SO.
 
+   Nota: se sacó "@view-transition { navigation: auto }" porque, al
+   navegar rápido o al volver atrás, Chrome cancela la transición y
+   deja un error "AbortError: Transition was skipped" en la consola.
+   --------------------------------------------------------------------- */
 @media (prefers-reduced-motion: no-preference) {
     body {
         animation: page-fade-in .18s ease-out;
@@ -1135,8 +1131,8 @@ img { max-width: 100%; height: auto; }
 .footer-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
 .footer-brand strong { display: block; color: var(--white); font-size: 1.12rem; text-transform: uppercase; letter-spacing: .05em; }
 .footer-brand span { font-size: .78rem; color: var(--yellow); }
-/* El pie es oscuro: el logo va sobre un recuadro claro para que se vea siempre. */
-.footer-brand__logo { max-height: 56px; width: auto; max-width: 100%; background: #fff; padding: 8px 12px; border-radius: 8px; }
+/* El logo ya trae su propio fondo oscuro, se mezcla bien con el pie sin recuadro. */
+.footer-brand__logo { max-height: 56px; width: auto; max-width: 100%; }
 .footer-about { font-size: .9rem; line-height: 1.7; }
 .footer-social { display: flex; gap: 8px; margin-top: 16px; }
 .footer-social a {
@@ -1306,7 +1302,11 @@ mark { background: rgba(245,196,0,.42); color: inherit; padding: 0 2px; border-r
     .pcard__title { font-size: .92rem; }
     .pcard__price strong { font-size: 1.05rem; }
     .pcard__cta .btn span { display: none; }
-    .cta-band { padding: 24px; }
+    .cta-band {
+        padding: 24px;
+        flex-direction: column; align-items: center; text-align: center;
+    }
+    .cta-band > .d-flex { justify-content: center; }
 
     /* En teléfono la tarjeta no muestra las características de abajo;
        las etiquetas ocupan ese lugar (y se sacan de la imagen). */
@@ -1361,13 +1361,75 @@ mark { background: rgba(245,196,0,.42); color: inherit; padding: 0 2px; border-r
 
     .cat-card { align-items: center; text-align: center; }
 
+    /* Una sola columna en el celular: si no, el 3er ítem queda solo con
+       una celda amarilla vacía al lado. */
+    .trustbar__inner { grid-template-columns: 1fr; }
     .trustbar__item { flex-direction: column; text-align: center; gap: 6px; }
 
     .service-card { text-align: center; }
     .service-card__icon { margin-left: auto; margin-right: auto; }
     /* La lista de características queda centrada como bloque, pero cada
-       ítem sigue alineado a la izquierda entre sí para que se lea bien. */
-    .service-card__list { display: inline-block; text-align: left; }
+       ítem sigue alineado a la izquierda entre sí. Va como bloque (no
+       inline-block) para que el botón "Más información" caiga siempre
+       debajo y nunca al costado. */
+    .service-card__list {
+        width: -webkit-fit-content;
+        width: fit-content;
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        text-align: left;
+    }
+    /* Botonera de la tarjeta de servicio (página /servicios: "Ver detalle"
+       + "Consultar"): centrada, igual que el resto de la tarjeta. */
+    .service-card .d-flex { justify-content: center; }
+
+    /* Buscador de repuestos y formulario de contacto: la volanta, el título
+       y la bajada se centran; el formulario/buscador queda alineado a la
+       izquierda para que se lea bien. */
+    .section--search .col-lg-5,
+    .section--contact .col-lg-7 { text-align: center; }
+    .section--search .col-lg-5 > form,
+    .section--contact .col-lg-7 > form { text-align: left; }
+    .section--search .col-lg-5 > .d-flex,
+    .section--search .col-lg-7 > .d-flex { justify-content: center; }
+
+    /* Formulario de contacto: el botón "Enviar consulta" y la nota de
+       abajo van centrados (los campos siguen a la izquierda). */
+    .section--contact .col-lg-7 > form .col-12.d-flex {
+        justify-content: center;
+        text-align: center;
+    }
+
+    /* Página de contacto en el celular: todo centrado (títulos, datos de
+       contacto e íconos apilados). El formulario mantiene los campos a la
+       izquierda y sólo centra el botón de enviar. */
+    .contact-page { text-align: center; }
+    .contact-page .contact-card > form { text-align: left; }
+    .contact-page .contact-card > form .col-12.d-flex {
+        justify-content: center;
+        text-align: center;
+    }
+    .contact-page .contact-info-item {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 8px;
+    }
+
+    /* Catálogo (maquinaria / repuestos) en el celular: encabezado
+       centrado y la barra de herramientas en filas prolijas y centradas
+       en vez de amontonada a la izquierda. */
+    .page-hero { text-align: center; padding: 30px 0 32px; }
+    .page-hero p { margin-left: auto; margin-right: auto; }
+    .breadcrumbs { justify-content: center; }
+
+    .catalog-toolbar { justify-content: center; text-align: center; gap: 10px; }
+    .filters-mobile-btn { width: 100%; justify-content: center; }
+    .catalog-toolbar__count { width: 100%; }
+    .catalog-toolbar__right { margin-left: 0; width: 100%; justify-content: center; }
+    .catalog-toolbar__right .form-select { max-width: 60vw; }
+    .active-filters { justify-content: center; }
 }
 
 @media (max-width: 575px) {

@@ -20,7 +20,7 @@ class SparePart extends Model
 
     protected array $fillable = [
         'product_id', 'oem_code', 'manufacturer_code', 'manufacturer', 'origin',
-        'unit', 'weight_kg', 'warehouse_id', 'sector', 'shelf', 'position', 'lead_time_days',
+        'unit', 'weight_kg',
     ];
 
     /** @param array<string,mixed> $data */
@@ -123,11 +123,5 @@ class SparePart extends Model
                 AND NOT EXISTS (SELECT 1 FROM machine_spare_parts m WHERE m.spare_part_id = p.id)
               ORDER BY p.updated_at DESC LIMIT ' . max(1, $limit)
         );
-    }
-
-    /** @return array<int,array<string,mixed>> */
-    public function warehouses(): array
-    {
-        return Database::select('SELECT * FROM warehouses WHERE active = 1 ORDER BY name ASC');
     }
 }

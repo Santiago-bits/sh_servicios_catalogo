@@ -21,11 +21,9 @@ final class ExportService
     public const DATASETS = [
         'maquinaria'   => 'Maquinaria',
         'repuestos'    => 'Repuestos',
-        'stock'        => 'Stock de repuestos',
         'precios'      => 'Lista de precios',
         'consultas'    => 'Consultas',
         'cotizaciones' => 'Cotizaciones',
-        'movimientos'  => 'Movimientos de stock',
         'auditoria'    => 'Auditoría',
     ];
 
@@ -39,11 +37,9 @@ final class ExportService
         return match ($dataset) {
             'maquinaria'   => self::machines($withCost),
             'repuestos'    => self::parts($withCost),
-            'stock'        => self::stock(),
             'precios'      => self::prices($withCost),
             'consultas'    => self::inquiries(),
             'cotizaciones' => self::quotes(),
-            'movimientos'  => self::movements(),
             'auditoria'    => self::audit(),
             default        => ['title' => 'Datos', 'headers' => [], 'rows' => []],
         };
@@ -109,8 +105,7 @@ final class ExportService
     {
         $rows = Database::select(
             'SELECT p.code, p.name, b.name AS brand, c.name AS category, sp.oem_code, sp.manufacturer_code,
-                    sp.manufacturer, sp.origin, p.cost_price, p.profit_percent, p.final_price, p.currency,
-                    p.stock, p.stock_reserved, p.stock_min, sp.shelf, sp.position, p.active,
+                    sp.manufacturer, sp.origin, p.cost_price, p.profit_percent, p.final_price, p.currency, p.active,
                     (SELECT COUNT(*) FROM spare_part_compatibility s WHERE s.spare_part_id = p.id) AS compatibilidades
                FROM products p
                LEFT JOIN brands b       ON b.id = p.brand_id
@@ -127,8 +122,7 @@ final class ExportService
             $headers[] = 'Ganancia %';
         }
 
-        $headers = array_merge($headers, ['Precio final', 'Moneda', 'Stock', 'Reservado', 'Stock mínimo',
-                                          'Estantería', 'Posición', 'Compatibilidades', 'Activo']);
+        $headers = array_merge($headers, ['Precio final', 'Moneda', 'Compatibilidades', 'Activo']);
 
         $data = [];
         foreach ($rows as $row) {
@@ -144,8 +138,7 @@ final class ExportService
 
             $line = array_merge($line, [
                 (float) $row['final_price'], $row['currency'],
-                (int) $row['stock'], (int) $row['stock_reserved'], (int) $row['stock_min'],
-                $row['shelf'], $row['position'], (int) $row['compatibilidades'],
+                (int) $row['compatibilidades'],
                 (int) $row['active'] === 1 ? 'Sí' : 'No',
             ]);
 
@@ -153,34 +146,6 @@ final class ExportService
         }
 
         return ['title' => 'Repuestos', 'headers' => $headers, 'rows' => $data];
-    }
-
-    private static function stock(): array
-    {
-        $rows = Database::select(
-            'SELECT p.code, p.name, c.name AS category, p.stock, p.stock_reserved,
-                    (p.stock - p.stock_reserved) AS disponible, p.stock_min,
-                    w.name AS deposito, sp.sector, sp.shelf, sp.position
-               FROM products p
-               LEFT JOIN categories c   ON c.id = p.category_id
-               LEFT JOIN spare_parts sp ON sp.product_id = p.id
-               LEFT JOIN warehouses w   ON w.id = sp.warehouse_id
-              WHERE p.type = \'spare_part\' AND p.deleted_at IS NULL
-              ORDER BY (p.stock - p.stock_reserved) ASC'
-        );
-
-        $data = array_map(static fn (array $r): array => [
-            $r['code'], $r['name'], $r['category'],
-            (int) $r['stock'], (int) $r['stock_reserved'], (int) $r['disponible'], (int) $r['stock_min'],
-            $r['deposito'], $r['sector'], $r['shelf'], $r['position'],
-        ], $rows);
-
-        return [
-            'title'   => 'Stock',
-            'headers' => ['Código', 'Nombre', 'Categoría', 'Stock', 'Reservado', 'Disponible', 'Mínimo',
-                          'Depósito', 'Sector', 'Estantería', 'Posición'],
-            'rows'    => $data,
-        ];
     }
 
     private static function prices(bool $withCost): array
@@ -266,32 +231,6 @@ final class ExportService
         ];
     }
 
-    private static function movements(): array
-    {
-        $rows = Database::select(
-            'SELECT sm.created_at, p.code, p.name, sm.type, sm.quantity, sm.stock_before, sm.stock_after,
-                    sm.reason, sm.reference, u.name AS usuario
-               FROM stock_movements sm
-               INNER JOIN products p ON p.id = sm.product_id
-               LEFT JOIN users u ON u.id = sm.user_id
-              ORDER BY sm.created_at DESC LIMIT 5000'
-        );
-
-        $data = array_map(static fn (array $r): array => [
-            date_es((string) $r['created_at'], true), $r['code'], $r['name'],
-            StockService::TYPES[$r['type']] ?? $r['type'],
-            (int) $r['quantity'], (int) $r['stock_before'], (int) $r['stock_after'],
-            $r['reason'], $r['reference'], $r['usuario'],
-        ], $rows);
-
-        return [
-            'title'   => 'Movimientos de stock',
-            'headers' => ['Fecha', 'Código', 'Producto', 'Tipo', 'Cantidad', 'Stock anterior', 'Stock posterior',
-                          'Motivo', 'Referencia', 'Usuario'],
-            'rows'    => $data,
-        ];
-    }
-
     private static function audit(): array
     {
         $rows = Database::select(
@@ -326,8 +265,10 @@ final class ExportService
 
         $output = fopen('php://output', 'wb');
 
-        // BOM para que Excel reconozca UTF-8
+        // BOM para que Excel reconozca UTF-8; "sep=;" para que separe en
+        // columnas (sin esto Excel mete todo en la columna A en muchas PC).
         fwrite($output, "\xEF\xBB\xBF");
+        fwrite($output, "sep=;\r\n");
 
         fputcsv($output, $data['headers'], ';', '"', '\\');
         foreach ($data['rows'] as $row) {

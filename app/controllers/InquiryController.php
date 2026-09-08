@@ -76,8 +76,13 @@ class InquiryController extends Controller
 
         $inquiryModel = new Inquiry();
 
-        if ($inquiryModel->tooManyFrom(Request::ip())) {
-            return ['ok' => false, 'message' => 'Recibimos varias consultas desde esta conexión. Probá de nuevo más tarde o escribinos por WhatsApp.'];
+        // Anti-spam progresivo: hay que esperar entre una consulta y otra,
+        // y la espera crece si se insiste (5 min → 15 min → 30 min → 1 h).
+        $cooldown = $inquiryModel->cooldownRemaining(Request::ip());
+        if ($cooldown > 0) {
+            $minutes = (int) ceil($cooldown / 60);
+            return ['ok' => false, 'message' => 'Ya nos enviaste una consulta hace poco. Podés mandar otra en '
+                . $minutes . ' minuto(s), o escribinos por WhatsApp.'];
         }
 
         $data      = $validator->validated();

@@ -477,24 +477,6 @@ function availability_badge(string $availability): array
     };
 }
 
-/** Semáforo de stock: 🟢 🟡 🔴 ⚫ @return array{label:string,class:string,dot:string} */
-function stock_badge(array $product): array
-{
-    $available = (int) $product['stock'] - (int) ($product['stock_reserved'] ?? 0);
-    $min       = (int) ($product['stock_min'] ?? 0) ?: (int) setting('low_stock_threshold', 3);
-
-    if (!(int) ($product['track_stock'] ?? 0)) {
-        return ['label' => 'Consultar disponibilidad', 'class' => 'neutral', 'dot' => '⚫'];
-    }
-    if ($available <= 0) {
-        return ['label' => 'Sin stock', 'class' => 'off', 'dot' => '🔴'];
-    }
-    if ($available <= $min) {
-        return ['label' => 'Últimas unidades', 'class' => 'warn', 'dot' => '🟡'];
-    }
-    return ['label' => 'Disponible', 'class' => 'ok', 'dot' => '🟢'];
-}
-
 function quote_status_badge(string $status): array
 {
     return match ($status) {

@@ -26,17 +26,6 @@ $totalReview = array_sum(array_column($review, 'count'));
         <i class="bi bi-nut stat-card__icon"></i>
     </div>
 
-    <div class="stat-card <?= $review['low_stock']['count'] > 0 ? 'stat-card--warn' : '' ?>">
-        <div class="stat-card__label"><i class="bi bi-battery-low"></i> Stock bajo</div>
-        <div class="stat-card__value"><?= number_es($review['low_stock']['count']) ?></div>
-        <div class="stat-card__hint">
-            <?php if ($review['low_stock']['count'] > 0): ?>
-                <a href="<?= e($review['low_stock']['url']) ?>">Revisar repuestos</a>
-            <?php else: ?>Todo con stock<?php endif; ?>
-        </div>
-        <i class="bi bi-battery-low stat-card__icon"></i>
-    </div>
-
     <div class="stat-card <?= $stats['inquiries_new'] > 0 ? 'stat-card--warn' : '' ?>">
         <div class="stat-card__label"><i class="bi bi-chat-dots"></i> Consultas</div>
         <div class="stat-card__value"><?= number_es($stats['inquiries_total']) ?></div>
