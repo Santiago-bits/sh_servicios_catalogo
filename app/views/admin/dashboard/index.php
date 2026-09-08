@@ -6,34 +6,20 @@
  * @var array<string,int> $stats
  * @var array<string,array{label:string,count:int,url:string,icon:string}> $review
  * @var array<int,array<string,mixed>> $inquiries
- * @var string $news         HTML ya saneado con las notas de las actualizaciones
- * @var bool   $canEditNews  ¿el usuario actual puede editar las novedades?
+ * @var string $news  HTML de content/novedades.html (notas de las actualizaciones)
  */
 $totalReview = array_sum(array_column($review, 'count'));
 ?>
 
 <!-- ================= NOVEDADES ================= -->
-<?php if ($news !== '' || $canEditNews): ?>
+<?php if ($news !== ''): ?>
 <div class="card-admin card-admin--news mb-3">
     <div class="card-admin__head">
         <h2><i class="bi bi-megaphone-fill"></i> Novedades</h2>
-        <?php if ($canEditNews): ?>
-            <a href="<?= admin_url('novedades') ?>" class="btn btn-ghost btn-sm">
-                <i class="bi bi-pencil"></i> Editar
-            </a>
-        <?php endif; ?>
+        <a href="<?= admin_url('novedades') ?>" class="text-muted-2 small">Ver todas</a>
     </div>
     <div class="card-admin__body">
-        <?php if ($news !== ''): ?>
-            <div class="news-body"><?= $news ?></div>
-        <?php else: ?>
-            <p class="text-muted-2 mb-0">
-                Todavía no hay novedades cargadas.
-                <?php if ($canEditNews): ?>
-                    <a href="<?= admin_url('novedades') ?>">Cargá la primera</a>.
-                <?php endif; ?>
-            </p>
-        <?php endif; ?>
+        <div class="news-body"><?= $news ?></div>
     </div>
 </div>
 <?php endif; ?>
