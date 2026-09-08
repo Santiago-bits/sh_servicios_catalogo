@@ -34,6 +34,7 @@ $nav  = [
 
     ['section' => 'Gestión'],
     ['label' => 'Consultas',      'icon' => 'bi-chat-dots-fill',    'path' => 'consultas',       'perm' => 'inquiries.view', 'badge' => $pendingInquiries ?? 0],
+    ['label' => 'Novedades',      'icon' => 'bi-megaphone-fill',    'path' => 'novedades',       'perm' => 'settings.manage'],
     ['label' => 'Importar',       'icon' => 'bi-upload',            'path' => 'importar',        'perm' => 'data.import'],
     ['label' => 'Exportar',       'icon' => 'bi-download',          'path' => 'exportar',        'perm' => 'data.export'],
     ['label' => 'Configuración',  'icon' => 'bi-gear-fill',         'path' => 'configuracion',   'perm' => 'settings.manage'],

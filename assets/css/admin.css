@@ -202,14 +202,7 @@ details.card-admin[open] > summary .card-admin__chevron { transform: rotate(180d
 .news-body a { color: var(--yellow-dark); text-decoration: underline; }
 .news-body table { border-collapse: collapse; width: 100%; margin: 8px 0; }
 .news-body th, .news-body td { border: 1px solid #E2E4E8; padding: 6px 9px; text-align: left; font-size: .86rem; }
-.news-editor > summary {
-    cursor: pointer; user-select: none; display: inline-flex; align-items: center; gap: 7px;
-    font-size: .8rem; font-weight: 700; color: var(--gray); padding: 4px 0;
-}
-.news-editor > summary:hover { color: var(--black); }
-.news-editor > summary i { color: var(--yellow-dark); }
-.news-editor[open] > summary { margin-bottom: 4px; }
-.news-editor textarea { min-height: 220px; }
+#news-html { min-height: 320px; }
 
 /* Tarjetas de métricas */
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 22px; }

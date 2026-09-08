@@ -81,6 +81,20 @@ class DashboardController extends AdminController
     }
 
     /**
+     * Página dedicada (menú Gestión → Novedades): editor del HTML +
+     * vista previa de cómo se ve en el inicio.
+     */
+    public function news(): void
+    {
+        $this->view('admin/dashboard/novedades', [
+            'pageTitle'  => 'Novedades · Panel',
+            'adminTitle' => 'Novedades',
+            'robots'     => 'noindex, nofollow',
+            'news'       => (string) SettingService::get(self::NEWS_KEY, ''),
+        ]);
+    }
+
+    /**
      * Guarda el HTML de "Novedades" (notas de las actualizaciones que ve
      * el cliente en el inicio del panel). Se escribe en HTML directo y se
      * pasa por clean_html() para no dejar entrar scripts ni estilos raros.
@@ -103,6 +117,8 @@ class DashboardController extends AdminController
         AuditService::log('settings', 'settings', null, null, 'Novedades del panel actualizadas', [self::NEWS_KEY]);
 
         $this->success('Novedades actualizadas.');
-        $this->redirect('admin');
+
+        $return = Request::post('_return') === 'novedades' ? 'admin/novedades' : 'admin';
+        $this->redirect($return);
     }
 }
