@@ -7,12 +7,14 @@
  * @var array<string,mixed> $product
  */
 
+use App\Services\CurrencyService;
 use App\Services\PriceService;
 
-$showPrice = PriceService::isPublicPriceVisible($product);
-$price     = PriceService::effectivePrice($product);
-$hasOffer  = (int) $product['is_offer'] === 1 && (float) ($product['offer_price'] ?? 0) > 0;
-$mainImage = $images[0]['path'] ?? $product['image'] ?? null;
+$availability = availability_badge((string) $product['availability']);
+$showPrice    = PriceService::isPublicPriceVisible($product);
+$price        = PriceService::effectivePrice($product);
+$hasOffer     = (int) $product['is_offer'] === 1 && (float) ($product['offer_price'] ?? 0) > 0;
+$mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
 
 $codeTypes = [
     'interno'     => 'Código interno',
@@ -122,6 +124,7 @@ $codeTypes = [
                         <a href="<?= e(url('repuestos?marca=' . urlencode((string) $product['brand_name']))) ?>" class="tag tag--dark"><?= e($product['brand_name']) ?></a>
                     <?php endif; ?>
                     <span class="product-code"><?= e($product['code']) ?></span>
+                    <span class="status status--<?= e($availability['class']) ?>"><?= e($availability['label']) ?></span>
                 </div>
 
                 <h1><?= e($product['name']) ?></h1>
@@ -145,8 +148,18 @@ $codeTypes = [
                             <del><?= e(money((float) $product['final_price'], (string) $product['currency'])) ?></del>
                         <?php endif; ?>
                         <div class="price-box__value"><?= e(money($price, (string) $product['currency'])) ?></div>
+                        <?php if (setting('show_dual_currency', '0') === '1'): ?>
+                            <div class="price-box__alt">
+                                Equivalente aprox.
+                                <?= e(money(
+                                    CurrencyService::convert($price, (string) $product['currency'], $product['currency'] === 'ARS' ? 'USD' : 'ARS'),
+                                    $product['currency'] === 'ARS' ? 'USD' : 'ARS',
+                                    0
+                                )) ?>
+                            </div>
+                        <?php endif; ?>
                         <p class="price-box__note">
-                            Precio + IVA por <?= e($product['unit'] ?? 'unidad') ?>.
+                            Precio + IVA por <?= e($product['unit'] ?? 'unidad') ?>. Sujeto a modificación sin previo aviso.
                         </p>
                     <?php else: ?>
                         <div class="price-box__value">Consultar</div>
