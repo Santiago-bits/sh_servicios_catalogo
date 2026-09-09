@@ -113,28 +113,6 @@ use App\Services\WhatsAppService;
                         <?php endif; ?>
                     <?php endif; ?>
 
-                    <?php
-                    $socials = array_filter([
-                        'social_instagram' => ['bi-instagram', 'Instagram'],
-                        'social_facebook'  => ['bi-facebook', 'Facebook'],
-                        'social_linkedin'  => ['bi-linkedin', 'LinkedIn'],
-                        'social_youtube'   => ['bi-youtube', 'YouTube'],
-                    ], static fn ($v, $k) => setting($k) !== '', ARRAY_FILTER_USE_BOTH);
-                    ?>
-                    <?php if ($socials !== []): ?>
-                        <div class="contact-info-item">
-                            <span class="contact-info-item__icon"><i class="bi bi-share-fill"></i></span>
-                            <div>
-                                <strong>Redes</strong>
-                                <div class="footer-social mt-1" style="filter:invert(0)">
-                                    <?php foreach ($socials as $key => [$icon, $label]): ?>
-                                        <a href="<?= e(setting($key)) ?>" target="_blank" rel="noopener"
-                                           aria-label="<?= e($label) ?>" style="background:#111"><i class="bi <?= $icon ?>"></i></a>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endif; ?>
                 </div>
 
                 <?php if (WhatsAppService::isConfigured()): ?>
