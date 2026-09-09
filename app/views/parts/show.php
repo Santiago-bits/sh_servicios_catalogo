@@ -222,6 +222,13 @@ $codeTypes = [
                     <?php endforeach; ?>
                 </div>
 
+                <?php if (!empty($product['description'])): ?>
+                    <div class="product-description">
+                        <h2 class="product-description__title"><i class="bi bi-card-text"></i> Descripción</h2>
+                        <?= clean_html(text_to_html((string) $product['description'])) ?>
+                    </div>
+                <?php endif; ?>
+
                 <!-- Compatibilidad -->
                 <?php if (!empty($compatibility) || !empty($compatibleMachines)): ?>
                     <div class="panel">
@@ -295,18 +302,6 @@ $codeTypes = [
         </div>
     </div>
 </section>
-
-<!-- ============ DESCRIPCIÓN ============ -->
-<?php if (!empty($product['description'])): ?>
-<section class="section section--gray" style="padding-top:0">
-    <div class="container">
-        <div class="panel">
-            <div class="panel__head"><h2><i class="bi bi-card-text"></i> Descripción</h2></div>
-            <div class="panel__body"><?= clean_html(text_to_html((string) $product['description'])) ?></div>
-        </div>
-    </div>
-</section>
-<?php endif; ?>
 
 <!-- ============ MÁQUINAS COMPATIBLES DEL CATÁLOGO ============ -->
 <?php if (!empty($compatibleMachines)): ?>
