@@ -67,20 +67,26 @@ final class ExchangeRateService
 
             $ttl = max(1, SettingService::int('usd_rate_ttl_hours', 12)) * 3600;
 
-            // ¿La última actualización exitosa sigue vigente?
+            $currentSource = (string) SettingService::get('usd_rate_source', 'blue');
+            $cached        = self::cached();
+            $sourceChanged = $cached !== null && (string) ($cached['source'] ?? '') !== $currentSource;
+
+            // ¿La última actualización exitosa sigue vigente? (salvo que se
+            // haya cambiado la fuente: ahí se vuelve a bajar aunque no venza)
             $lastOk = is_file(self::CACHE_FILE) ? (int) @filemtime(self::CACHE_FILE) : 0;
-            if ($lastOk > 0 && (time() - $lastOk) < $ttl) {
+            if (!$sourceChanged && $lastOk > 0 && (time() - $lastOk) < $ttl) {
                 return;
             }
 
-            // ¿Hubo un intento (fallido) hace muy poco? No insistir.
+            // ¿Hubo un intento (fallido) hace muy poco? No insistir
+            // (salvo que se haya cambiado la fuente).
             $lastTry = is_file(self::ATTEMPT_FILE) ? (int) @filemtime(self::ATTEMPT_FILE) : 0;
-            if ($lastTry > 0 && (time() - $lastTry) < self::RETRY_AFTER) {
+            if (!$sourceChanged && $lastTry > 0 && (time() - $lastTry) < self::RETRY_AFTER) {
                 return;
             }
 
             self::touchAttempt();
-            self::refresh(SettingService::get('usd_rate_source', 'blue'));
+            self::refresh($currentSource);
         } catch (Throwable $e) {
             error_log('[USD] refreshIfStale: ' . $e->getMessage());
         }
