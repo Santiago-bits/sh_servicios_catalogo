@@ -491,21 +491,77 @@
 
         const image  = main.querySelector('img');
         const thumbs = $$('.gallery__thumb');
-        const sources = thumbs.map(t => t.dataset.full || t.querySelector('img').src);
+
+        // Cada miniatura es una "diapositiva": foto o video.
+        const slides = thumbs.map(t => {
+            if (t.classList.contains('gallery__thumb--video')) {
+                return { video: true, provider: t.dataset.videoProvider, ref: t.dataset.videoRef };
+            }
+            return { video: false, src: t.dataset.full || (t.querySelector('img') || {}).src };
+        });
+
         let current = 0;
 
+        const clearVideo = () => {
+            const v = main.querySelector('.gallery__video');
+            if (v) { v.remove(); }
+            main.classList.remove('is-video');
+        };
+
+        const buildVideo = (slide) => {
+            const box = document.createElement('div');
+            box.className = 'gallery__video';
+
+            if (slide.provider === 'file') {
+                const vid = document.createElement('video');
+                vid.src = slide.ref;
+                vid.controls = true;
+                vid.autoplay = true;
+                vid.setAttribute('playsinline', '');
+                box.appendChild(vid);
+            } else {
+                const src = slide.provider === 'vimeo'
+                    ? 'https://player.vimeo.com/video/' + encodeURIComponent(slide.ref) + '?autoplay=1'
+                    : 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(slide.ref) + '?autoplay=1&rel=0';
+                const frame = document.createElement('iframe');
+                frame.src = src;
+                frame.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+                frame.setAttribute('allowfullscreen', '');
+                frame.setAttribute('loading', 'lazy');
+                box.appendChild(frame);
+            }
+            main.appendChild(box);
+        };
+
         const show = (i) => {
-            current = (i + sources.length) % sources.length;
-            image.src = sources[current];
+            current = (i + slides.length) % slides.length;
+            const slide = slides[current];
+
+            clearVideo();
+
+            if (slide.video) {
+                image.hidden = true;
+                main.classList.add('is-video');
+                buildVideo(slide);
+            } else {
+                image.hidden = false;
+                image.src = slide.src;
+            }
+
             thumbs.forEach((t, idx) => t.classList.toggle('is-active', idx === current));
         };
 
         thumbs.forEach((thumb, i) => {
             thumb.addEventListener('click', () => show(i));
-            thumb.addEventListener('mouseenter', () => show(i));
+            // El hover sólo cambia de foto, nunca arranca un video sin querer.
+            if (!slides[i].video) {
+                thumb.addEventListener('mouseenter', () => { if (!main.classList.contains('is-video')) { show(i); } });
+            }
         });
 
-        // Lightbox
+        // ---- Lightbox (sólo para fotos) ----
+        const imageIndexes = slides.map((s, idx) => (s.video ? -1 : idx)).filter(idx => idx !== -1);
+
         const lightbox = document.createElement('div');
         lightbox.className = 'lightbox';
         lightbox.innerHTML =
@@ -518,7 +574,8 @@
         const lightboxImg = lightbox.querySelector('img');
 
         const openLightbox = () => {
-            lightboxImg.src = sources[current];
+            if (main.classList.contains('is-video')) { return; }
+            lightboxImg.src = slides[current].src;
             lightbox.classList.add('is-open');
             document.body.style.overflow = 'hidden';
         };
@@ -526,27 +583,31 @@
             lightbox.classList.remove('is-open');
             document.body.style.overflow = '';
         };
+        const stepLightbox = (dir) => {
+            if (imageIndexes.length === 0) { return; }
+            let pos = imageIndexes.indexOf(current);
+            if (pos === -1) { pos = 0; }
+            pos = (pos + dir + imageIndexes.length) % imageIndexes.length;
+            show(imageIndexes[pos]);
+            lightboxImg.src = slides[current].src;
+        };
 
         main.addEventListener('click', openLightbox);
         lightbox.querySelector('.lightbox__close').addEventListener('click', closeLightbox);
         lightbox.addEventListener('click', e => { if (e.target === lightbox) { closeLightbox(); } });
-
-        lightbox.querySelector('.lightbox__nav--prev').addEventListener('click', e => {
-            e.stopPropagation(); show(current - 1); lightboxImg.src = sources[current];
-        });
-        lightbox.querySelector('.lightbox__nav--next').addEventListener('click', e => {
-            e.stopPropagation(); show(current + 1); lightboxImg.src = sources[current];
-        });
+        lightbox.querySelector('.lightbox__nav--prev').addEventListener('click', e => { e.stopPropagation(); stepLightbox(-1); });
+        lightbox.querySelector('.lightbox__nav--next').addEventListener('click', e => { e.stopPropagation(); stepLightbox(1); });
 
         document.addEventListener('keydown', e => {
             if (!lightbox.classList.contains('is-open')) { return; }
             if (e.key === 'Escape')     { closeLightbox(); }
-            if (e.key === 'ArrowLeft')  { show(current - 1); lightboxImg.src = sources[current]; }
-            if (e.key === 'ArrowRight') { show(current + 1); lightboxImg.src = sources[current]; }
+            if (e.key === 'ArrowLeft')  { stepLightbox(-1); }
+            if (e.key === 'ArrowRight') { stepLightbox(1); }
         });
 
-        // Zoom con el mouse sobre la imagen principal
+        // Zoom con el mouse sobre la foto principal (no sobre un video)
         main.addEventListener('mousemove', e => {
+            if (main.classList.contains('is-video')) { return; }
             const rect = main.getBoundingClientRect();
             const x = ((e.clientX - rect.left) / rect.width) * 100;
             const y = ((e.clientY - rect.top) / rect.height) * 100;

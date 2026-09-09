@@ -50,12 +50,26 @@ $codeTypes = [
                     <span class="gallery__zoom-hint"><i class="bi bi-zoom-in"></i> Pasá el mouse para ampliar</span>
                 </div>
 
-                <?php if (count($images) > 1): ?>
+                <?php if (count($images) > 1 || !empty($videos)): ?>
                     <div class="gallery__thumbs">
                         <?php foreach ($images as $i => $image): ?>
                             <div class="gallery__thumb <?= $i === 0 ? 'is-active' : '' ?>" data-full="<?= e(upload_url($image['path'])) ?>">
                                 <img src="<?= e(upload_url($image['thumb_path'] ?? $image['path'])) ?>"
                                      alt="<?= e($image['alt'] ?: $product['name']) ?>" loading="lazy">
+                            </div>
+                        <?php endforeach; ?>
+                        <?php foreach ($videos as $video): ?>
+                            <div class="gallery__thumb gallery__thumb--video"
+                                 data-video-provider="<?= e($video['provider']) ?>"
+                                 data-video-ref="<?= e($video['provider'] === 'file' ? upload_url($video['video_ref']) : $video['video_ref']) ?>"
+                                 title="<?= e($video['title'] ?: 'Video') ?>">
+                                <?php if ($video['provider'] === 'youtube'): ?>
+                                    <img src="https://i.ytimg.com/vi/<?= e($video['video_ref']) ?>/hqdefault.jpg"
+                                         alt="Video" loading="lazy">
+                                <?php else: ?>
+                                    <span class="gallery__thumb-poster"><i class="bi bi-camera-video-fill"></i></span>
+                                <?php endif; ?>
+                                <span class="gallery__thumb-play"><i class="bi bi-play-fill"></i></span>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -236,28 +250,6 @@ $codeTypes = [
                             <?php else: ?>
                                 <p class="text-muted-2 mb-0">Consultanos la compatibilidad con tu equipo.</p>
                             <?php endif; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
-
-                <!-- Video -->
-                <?php if (!empty($videos)): ?>
-                    <div class="panel">
-                        <div class="panel__head"><h2><i class="bi bi-play-btn-fill"></i> Video</h2></div>
-                        <div class="panel__body">
-                            <?php foreach (array_slice($videos, 0, 2) as $video): ?>
-                                <div class="video-embed mb-3">
-                                    <?php if ($video['provider'] === 'youtube'): ?>
-                                        <iframe src="https://www.youtube-nocookie.com/embed/<?= e($video['video_ref']) ?>"
-                                                title="<?= e($video['title']) ?>" allowfullscreen loading="lazy"></iframe>
-                                    <?php elseif ($video['provider'] === 'vimeo'): ?>
-                                        <iframe src="https://player.vimeo.com/video/<?= e($video['video_ref']) ?>"
-                                                title="<?= e($video['title']) ?>" allowfullscreen loading="lazy"></iframe>
-                                    <?php else: ?>
-                                        <video controls preload="metadata" src="<?= e(upload_url($video['video_ref'])) ?>"></video>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endforeach; ?>
                         </div>
                     </div>
                 <?php endif; ?>

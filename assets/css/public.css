@@ -771,6 +771,26 @@ img { max-width: 100%; height: auto; }
 .gallery__thumb.is-active { border-color: var(--yellow); }
 .gallery__thumb:hover { border-color: var(--gray); }
 
+/* Miniatura de video dentro de la galería */
+.gallery__thumb--video { position: relative; }
+.gallery__thumb-poster {
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    background: #1c1c1c; color: #fff; font-size: 1.4rem;
+}
+.gallery__thumb-play {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 1.6rem; pointer-events: none;
+    text-shadow: 0 2px 8px rgba(0,0,0,.6); background: rgba(0,0,0,.18);
+}
+.gallery__thumb--video:hover .gallery__thumb-play { background: rgba(0,0,0,.32); }
+
+/* Video reproduciéndose en el visor principal */
+.gallery__main.is-video { cursor: default; }
+.gallery__main.is-video .gallery__zoom-hint { display: none; }
+.gallery__video { position: absolute; inset: 0; background: #000; }
+.gallery__video iframe,
+.gallery__video video { width: 100%; height: 100%; border: 0; object-fit: contain; background: #000; }
+
 .lightbox {
     position: fixed; inset: 0; background: rgba(10,10,10,.94); z-index: 2000;
     display: none; align-items: center; justify-content: center; padding: 24px;
