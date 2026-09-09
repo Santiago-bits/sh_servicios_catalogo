@@ -121,7 +121,7 @@ $linkVideos = array_values(array_filter($videos ?? [], static fn ($v) => ($v['pr
                                 <strong><?= e($altCurrency === 'ARS' ? 'ARS' . $altAmount : $altAmount) ?></strong>
                             </div>
                             <?php if ($altCurrency === 'ARS'): ?>
-                                <p class="price-box__note price-box__note--fine">El importe en pesos es el <strong>precio final</strong>. Sujeto a modificaciones sin previo aviso.</p>
+                                <p class="price-box__note">El importe en pesos es el <strong>precio final</strong>. Sujeto a modificaciones sin previo aviso.</p>
                             <?php endif; ?>
                         <?php endif; ?>
                     <?php else: ?>

@@ -185,7 +185,7 @@ $codeTypes = [
                                 <span class="price-box__alt-label">Precio final en pesos (aprox.)</span>
                                 <strong>ARS<?= e(money($arsAmt, 'ARS', 0)) ?></strong>
                             </div>
-                            <p class="price-box__note price-box__note--fine">El importe en pesos es el <strong>precio final</strong>. Sujeto a modificaciones sin previo aviso.</p>
+                            <p class="price-box__note">El importe en pesos es el <strong>precio final</strong>. Sujeto a modificaciones sin previo aviso.</p>
                         <?php endif; ?>
                     <?php else: ?>
                         <div class="price-box__value">Consultar</div>
