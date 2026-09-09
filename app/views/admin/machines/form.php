@@ -49,9 +49,7 @@ $ab = $isEdit ? availability_badge((string) $product['availability']) : null;
             <button type="button" class="form-tab" data-tab="precio"  role="tab">Precio</button>
             <button type="button" class="form-tab" data-tab="ficha"   role="tab">Ficha técnica</button>
             <button type="button" class="form-tab" data-tab="fotos"   role="tab">Fotos y video</button>
-            <?php if ($isEdit): ?>
-                <button type="button" class="form-tab" data-tab="docs" role="tab">Documentos</button>
-            <?php endif; ?>
+            <button type="button" class="form-tab" data-tab="docs" role="tab">Documentos</button>
         </nav>
 
         <div class="pform-body">
@@ -493,11 +491,17 @@ $ab = $isEdit ? availability_badge((string) $product['availability']) : null;
                 </section>
 
                 <!-- ========== DOCUMENTOS ========== -->
-                <?php if ($isEdit): ?>
                     <section class="form-tabpanel" data-panel="docs" role="tabpanel" hidden>
                         <div class="pform-card">
                             <h2 class="pform-card__title">Documentación</h2>
 
+                            <?php if (!$isEdit): ?>
+                                <p class="form-hint mb-0">
+                                    <i class="bi bi-info-circle"></i>
+                                    Primero creá la máquina con el botón <strong>“Crear máquina”</strong>. Después vas a poder
+                                    subir acá los manuales, fichas técnicas y certificados (PDF, Word, Excel).
+                                </p>
+                            <?php else: ?>
                             <div class="row g-3 align-items-end">
                                 <div class="col-md-4">
                                     <label class="form-label" for="doc-titulo">Título</label>
@@ -553,9 +557,9 @@ $ab = $isEdit ? availability_badge((string) $product['availability']) : null;
                                     <p class="form-hint mb-0">Todavía no hay documentos cargados.</p>
                                 <?php endif; ?>
                             </div>
+                            <?php endif; ?>
                         </div>
                     </section>
-                <?php endif; ?>
 
             </div><!-- /.pform-main -->
 
