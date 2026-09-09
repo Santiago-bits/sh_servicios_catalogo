@@ -114,7 +114,11 @@ foreach (array_slice($tags, 0, 2) as $tag) {
             <div class="pcard__price">
                 <?php if ($showPrice): ?>
                     <?php if ($hasOffer): ?>
-                        <del><?= e(money((float) $product['final_price'], (string) $product['currency'])) ?></del>
+                        <?php $offPct = (int) round((1 - $price / (float) $product['final_price']) * 100); ?>
+                        <span class="pcard__was">
+                            <del><?= e(money((float) $product['final_price'], (string) $product['currency'])) ?></del>
+                            <?php if ($offPct > 0): ?><span class="price-off"><?= $offPct ?>% OFF</span><?php endif; ?>
+                        </span>
                     <?php endif; ?>
                     <strong><?= e(money($price, (string) $product['currency'])) ?></strong>
                     <?php if (setting('show_dual_currency', '0') === '1' && ($product['currency'] ?? 'ARS') === 'ARS'): ?>

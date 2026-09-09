@@ -807,6 +807,16 @@ img { max-width: 100%; height: auto; }
 .price-box__alt strong { display: block; font-size: clamp(1.7rem, 4vw, 2.4rem); font-weight: 800; color: var(--black); line-height: 1.1; }
 .price-box__note { font-size: .92rem; font-weight: 700; color: var(--dark); margin-top: 8px; }
 .price-box del { color: var(--gray); font-size: 1.1rem; font-weight: 600; }
+.price-box__was { display: flex; align-items: center; gap: 8px; }
+
+/* Píldora de descuento junto al precio tachado (ficha y tarjetas) */
+.price-off {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    background: #16a34a; color: #fff; font-size: .72rem; font-weight: 800;
+    letter-spacing: .02em; line-height: 1.5; white-space: nowrap;
+}
+.pcard__was { display: inline-flex; align-items: center; gap: 6px; }
+.pcard__was .price-off { font-size: .62rem; padding: 1px 6px; }
 
 .product-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 18px 0 6px; }
 

@@ -145,7 +145,11 @@ $codeTypes = [
                     <span class="price-box__label">Precio</span>
                     <?php if ($showPrice): ?>
                         <?php if ($hasOffer): ?>
-                            <del><?= e(money((float) $product['final_price'], (string) $product['currency'])) ?></del>
+                            <?php $offPct = (int) round((1 - $price / (float) $product['final_price']) * 100); ?>
+                            <div class="price-box__was">
+                                <del><?= e(money((float) $product['final_price'], (string) $product['currency'])) ?></del>
+                                <?php if ($offPct > 0): ?><span class="price-off"><?= $offPct ?>% OFF</span><?php endif; ?>
+                            </div>
                         <?php endif; ?>
                         <div class="price-box__value"><?= e(money($price, (string) $product['currency'])) ?></div>
                         <?php if (setting('show_dual_currency', '0') === '1'): ?>
