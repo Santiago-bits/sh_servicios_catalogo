@@ -57,6 +57,16 @@ use App\Services\PriceService;
         </div>
 
         <div>
+            <label class="form-label" for="f-condicion">Condición</label>
+            <select class="form-select" id="f-condicion" name="condicion">
+                <option value="">Todas</option>
+                <?php foreach (['nuevo' => 'Nueva', 'usado' => 'Usada', 'reacondicionado' => 'Reacondicionada'] as $val => $label): ?>
+                    <option value="<?= $val ?>" <?= ($filters['condicion'] ?? '') === $val ? 'selected' : '' ?>><?= $label ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div>
             <label class="form-label" for="f-activo">Publicación</label>
             <select class="form-select" id="f-activo" name="activo">
                 <option value="">Todas</option>

@@ -26,6 +26,7 @@ $nav  = [
 
     ['section' => 'Catálogo'],
     ['label' => 'Maquinaria',     'icon' => 'bi-truck-front-fill',  'path' => 'maquinaria',      'perm' => 'machines.view'],
+    ['label' => 'Máquinas usadas','icon' => 'bi-recycle',           'path' => 'maquinaria?condicion=usado', 'perm' => 'machines.view'],
     ['label' => 'Repuestos',      'icon' => 'bi-nut-fill',          'path' => 'repuestos',       'perm' => 'parts.view'],
     ['label' => 'Categorías',     'icon' => 'bi-diagram-3-fill',    'path' => 'categorias',      'perm' => 'categories.manage'],
     ['label' => 'Marcas',         'icon' => 'bi-award-fill',        'path' => 'marcas',          'perm' => 'brands.manage'],
@@ -81,11 +82,23 @@ $nav  = [
                     <p class="admin-nav__section"><?= e($item['section']) ?></p>
                 <?php elseif (can($item['perm'])): ?>
                     <?php
-                    $current  = \Core\Request::uri();
-                    $target   = '/admin' . ($item['path'] === '' ? '' : '/' . $item['path']);
-                    $isActive = $item['path'] === ''
-                        ? $current === '/admin'
-                        : str_starts_with($current, $target);
+                    $current = \Core\Request::uri();
+                    [$pathOnly, $query] = array_pad(explode('?', (string) $item['path'], 2), 2, '');
+                    $target = '/admin' . ($pathOnly === '' ? '' : '/' . $pathOnly);
+
+                    if ((string) $item['path'] === '') {
+                        $isActive = $current === '/admin';
+                    } elseif ($query !== '') {
+                        parse_str($query, $qArr);
+                        $isActive = str_starts_with($current, $target);
+                        foreach ($qArr as $qk => $qv) {
+                            if ((string) ($_GET[$qk] ?? '') !== (string) $qv) { $isActive = false; }
+                        }
+                    } else {
+                        // "Maquinaria" cede el resaltado a "Máquinas usadas" cuando hay ?condicion
+                        $isActive = str_starts_with($current, $target)
+                            && !($pathOnly === 'maquinaria' && isset($_GET['condicion']));
+                    }
                     ?>
                     <a class="admin-nav__link <?= $isActive ? 'is-active' : '' ?>" href="<?= e(admin_url($item['path'])) ?>">
                         <i class="bi <?= e($item['icon']) ?>"></i>

@@ -63,6 +63,7 @@ abstract class ProductAdminController extends AdminController
             'categoria'  => Request::get('categoria'),
             'marca'      => Request::get('marca'),
             'estado'     => Request::get('estado'),
+            'condicion'  => Request::get('condicion'),
             'activo'     => Request::get('activo'),
             'sin_precio'    => Request::get('sin_precio'),
             'sin_imagen'    => Request::get('sin_imagen'),
@@ -86,9 +87,14 @@ abstract class ProductAdminController extends AdminController
             );
         }
 
+        $condLabels = ['usado' => 'Máquinas usadas', 'nuevo' => 'Máquinas nuevas', 'reacondicionado' => 'Máquinas reacondicionadas'];
+        $title      = ($this->type === 'machine' && isset($condLabels[$filters['condicion'] ?? '']))
+            ? $condLabels[$filters['condicion']]
+            : $this->labelPlural;
+
         $this->view('admin/' . ($this->type === 'machine' ? 'machines' : 'parts') . '/index', [
-            'pageTitle'  => $this->labelPlural . ' · Panel',
-            'adminTitle' => $this->labelPlural,
+            'pageTitle'  => $title . ' · Panel',
+            'adminTitle' => $title,
             'robots'     => 'noindex, nofollow',
             'result'     => $result,
             'products'   => $result['data'],
