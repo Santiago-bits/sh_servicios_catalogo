@@ -172,7 +172,7 @@ $codeTypes = [
                             $altAmount   = money(CurrencyService::convert($price, (string) $product['currency'], $altCurrency), $altCurrency, 0);
                             ?>
                             <div class="price-box__alt">
-                                <span class="price-box__alt-label">Equivalente aprox.</span>
+                                <span class="price-box__alt-label"><?= $altCurrency === 'ARS' ? 'Precio final en pesos (aprox.)' : 'Equivalente aprox.' ?></span>
                                 <strong><?= e($altCurrency === 'ARS' ? 'ARS' . $altAmount : $altAmount) ?></strong>
                             </div>
                         <?php endif; ?>
