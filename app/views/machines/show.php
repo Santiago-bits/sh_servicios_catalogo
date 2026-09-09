@@ -162,6 +162,7 @@ $linkVideos = array_values(array_filter($videos ?? [], static fn ($v) => ($v['pr
                     ['Horas',        !empty($product['hours']) ? number_es((float) $product['hours']) . ' hs' : null],
                     ['Peso',         !empty($product['weight_kg']) ? kg_to_human((float) $product['weight_kg']) : null],
                     ['Ruedas',       $product['tire_type'] ?? null],
+                    ['Uñas',         $product['fork_size'] ?? null],
                     ['Condición',    !empty($product['condition_type']) ? ucfirst((string) $product['condition_type']) : null],
                     ['Garantía',     $product['warranty'] ?? null],
                     ['Ubicación',    $product['location'] ?? null],
@@ -179,6 +180,13 @@ $linkVideos = array_values(array_filter($videos ?? [], static fn ($v) => ($v['pr
                         <?php for ($f = (4 - count($quick) % 4) % 4; $f > 0; $f--): ?>
                             <div class="quick-spec quick-spec--filler" aria-hidden="true"></div>
                         <?php endfor; ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($product['tech_notes'])): ?>
+                    <div class="product-description">
+                        <h2 class="product-description__title"><i class="bi bi-list-check"></i> Detalle técnico</h2>
+                        <?= clean_html(text_to_html((string) $product['tech_notes'])) ?>
                     </div>
                 <?php endif; ?>
 

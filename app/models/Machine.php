@@ -21,7 +21,8 @@ class Machine extends Model
         'product_id', 'model', 'year', 'serial_number', 'condition_type', 'hours',
         'fuel', 'engine', 'power_hp', 'transmission', 'capacity_kg', 'lift_height_mm',
         'closed_height_mm', 'weight_kg', 'length_mm', 'width_mm', 'turn_radius_mm',
-        'battery', 'voltage', 'mast_type', 'tire_type', 'location', 'warranty',
+        'battery', 'voltage', 'mast_type', 'tire_type', 'fork_size', 'tech_notes',
+        'location', 'warranty',
     ];
 
     /** Crea o actualiza la ficha técnica de la máquina. @param array<string,mixed> $data */

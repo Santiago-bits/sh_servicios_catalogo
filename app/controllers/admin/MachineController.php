@@ -59,6 +59,8 @@ class MachineController extends ProductAdminController
             'voltage'          => $this->text($input, 'voltage', 40),
             'mast_type'        => $this->text($input, 'mast_type', 80),
             'tire_type'        => $this->text($input, 'tire_type', 80),
+            'fork_size'        => $this->text($input, 'fork_size', 120),
+            'tech_notes'       => $this->text($input, 'tech_notes', 5000),
             'location'         => $this->text($input, 'location', 160),
             'warranty'         => $this->text($input, 'warranty', 160),
         ]);

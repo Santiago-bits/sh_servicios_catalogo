@@ -59,7 +59,7 @@ class Product extends Model
         m.model, m.year, m.hours, m.fuel, m.condition_type, m.capacity_kg,
         m.lift_height_mm, m.power_hp, m.location, m.voltage, m.engine, m.transmission,
         m.weight_kg, m.length_mm, m.width_mm, m.turn_radius_mm, m.closed_height_mm,
-        m.battery, m.mast_type, m.tire_type, m.serial_number, m.warranty,
+        m.battery, m.mast_type, m.tire_type, m.fork_size, m.tech_notes, m.serial_number, m.warranty,
         sp.oem_code, sp.manufacturer_code, sp.manufacturer, sp.origin, sp.unit,
         (SELECT pi.path  FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.is_main DESC, pi.sort_order ASC, pi.id ASC LIMIT 1) AS image,
         (SELECT COALESCE(pi.thumb_path, pi.path) FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.is_main DESC, pi.sort_order ASC, pi.id ASC LIMIT 1) AS thumb";
