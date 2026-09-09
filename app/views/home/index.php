@@ -61,8 +61,8 @@ $heroBg    = $heroImage !== '' ? upload_url($heroImage) : asset('img/hero-forkli
                     <a href="<?= url('repuestos') ?>" class="btn btn-outline-light-2 btn-lg" title="Buscar repuestos">
                         <i class="bi bi-search"></i><span class="btn__label">Buscar repuestos</span>
                     </a>
-                    <a href="<?= url('cotizador') ?>" class="btn btn-outline-light-2 btn-lg" title="Solicitar cotización">
-                        <i class="bi bi-file-earmark-text"></i><span class="btn__label">Solicitar cotización</span>
+                    <a href="<?= url('cotizador') ?>" class="btn btn-outline-light-2 btn-lg" title="Ver cotización">
+                        <i class="bi bi-file-earmark-text"></i><span class="btn__label">Ver cotización</span>
                     </a>
                 </div>
 

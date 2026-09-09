@@ -41,7 +41,7 @@ $navLinks = [
                     <?php endforeach; ?>
                 </ul>
                 <a href="<?= url('cotizador') ?>" class="btn btn-accent btn-sm navmenu__cta">
-                    <i class="bi bi-file-earmark-text"></i> Solicitar cotización
+                    <i class="bi bi-file-earmark-text"></i> Ver cotización
                 </a>
             </div>
 
@@ -62,7 +62,7 @@ $navLinks = [
                 </div>
 
                 <a href="<?= url('cotizador') ?>" class="btn btn-accent btn-sm mainbar__cta">
-                    <i class="bi bi-file-earmark-text"></i> Solicitar cotización
+                    <i class="bi bi-file-earmark-text"></i> Ver cotización
                 </a>
 
                 <button class="mainbar__toggle" type="button" id="navToggle"

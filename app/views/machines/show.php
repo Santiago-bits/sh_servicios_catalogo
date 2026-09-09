@@ -123,7 +123,7 @@ $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
                         <input type="text" inputmode="numeric" value="1" data-qty-input aria-label="Cantidad">
                         <button type="button" data-qty-plus aria-label="Sumar uno">+</button>
                     </div>
-                    <button type="button" class="btn btn-accent btn-lg" data-quote-add="<?= (int) $product['id'] ?>">
+                    <button type="button" class="btn btn-accent btn-lg" data-quote-add="<?= (int) $product['id'] ?>" data-quote-go>
                         <i class="bi bi-file-earmark-plus"></i> Agregar a mi cotización
                     </button>
                     <button type="button" class="btn btn-outline-accent" data-bs-toggle="modal" data-bs-target="#inquiryModal">

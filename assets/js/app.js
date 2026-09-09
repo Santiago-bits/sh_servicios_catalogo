@@ -389,6 +389,12 @@
 
             toast(data.message, data.ok ? 'success' : 'warning');
             $$('[data-quote-count]').forEach(el => { el.textContent = data.count; });
+
+            // Desde la ficha del producto: llevar directo a la cotización.
+            if (data.ok && btn.hasAttribute('data-quote-go')) {
+                window.location.href = SHS.baseUrl + '/cotizador';
+                return;
+            }
         } catch (err) {
             toast('No se pudo agregar el producto.', 'danger');
         } finally {
