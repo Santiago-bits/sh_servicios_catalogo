@@ -58,7 +58,7 @@ foreach (array_slice($tags, 0, 2) as $tag) {
                 <i class="bi bi-bar-chart-steps"></i>
             </button>
         <?php endif; ?>
-        <button type="button" class="icon-action" data-quote-add="<?= (int) $product['id'] ?>"
+        <button type="button" class="icon-action" data-quote-add="<?= (int) $product['id'] ?>" data-quote-go
                 title="Agregar a mi cotización">
             <i class="bi bi-file-earmark-plus"></i>
         </button>
