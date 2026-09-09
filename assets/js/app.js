@@ -651,6 +651,9 @@
                 const data = await request(apiUrl + '?' + params.toString());
                 if (data && data.ok) {
                     results.innerHTML = data.html;
+                    // Las tarjetas nuevas traen .reveal (aparecen al scrollear) pero
+                    // el observer ya corrió: se muestran de una.
+                    $$('.reveal', results).forEach(el => el.classList.add('is-visible'));
 
                     $$('.catalog-layout .pagination-wrap').forEach(n => n.remove());
                     if (data.pagination && data.pagination.trim() !== '') {
