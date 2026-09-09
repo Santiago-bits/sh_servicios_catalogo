@@ -64,24 +64,36 @@ function ejs(mixed $value): string
  * clásicos de XSS almacenado (on*=, javascript:, data:, style, etc.).
  */
 /**
- * Convierte texto plano (el que se escribe en un <textarea> con Enter y
- * líneas en blanco) a HTML: líneas en blanco → párrafos <p>, saltos
- * simples → <br>, y una lista de renglones que empiezan con "-", "*" o
- * "•" → <ul><li>. Si el texto ya trae HTML de bloque, se deja igual.
+ * HTML simple (o texto ya plano) → texto plano con renglones.
+ * Se usa para GUARDAR la descripción: el usuario escribe en un <textarea>
+ * como si fuera un mensaje (Enter, líneas en blanco, viñetas con "-").
+ */
+function html_to_text(?string $html): string
+{
+    $t = str_replace(["\r\n", "\r"], "\n", (string) $html);
+    $t = preg_replace('~<li\b[^>]*>~i', "\n- ", $t) ?? $t;
+    $t = preg_replace('~</p\s*>|<br\s*/?>|</?div\b[^>]*>|</?ul\b[^>]*>|</?ol\b[^>]*>|</li\s*>|<p\b[^>]*>~i', "\n", $t) ?? $t;
+    $t = html_entity_decode(strip_tags($t), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    return trim(preg_replace('/\n{3,}/', "\n\n", $t) ?? $t);
+}
+
+/**
+ * Texto plano → HTML para MOSTRAR: cada línea en blanco separa un párrafo
+ * <p>, los saltos simples van con <br>, y los renglones que empiezan con
+ * "-", "*" o "•" (con o sin espacio) se agrupan en una lista <ul><li>.
+ * Primero aplana cualquier HTML viejo (<p>/<br>/<li>) para que descripciones
+ * ya guardadas también salgan bien.
  */
 function text_to_html(?string $text): string
 {
-    $text = trim(str_replace(["\r\n", "\r"], "\n", (string) $text));
+    $text = html_to_text($text);
     if ($text === '') {
         return '';
     }
-    if (preg_match('~<(p|br|ul|ol|li|h[1-6]|table|div)\b~i', $text)) {
-        return $text; // ya es HTML
-    }
 
     $out  = '';
-    $para = [];   // renglones de un párrafo en curso
-    $list = [];   // <li> de una lista en curso
+    $para = [];
+    $list = [];
 
     $flush = static function () use (&$out, &$para, &$list): void {
         if ($para !== []) {
@@ -100,7 +112,7 @@ function text_to_html(?string $text): string
             $flush();
             continue;
         }
-        if (preg_match('/^[-*•–]\s+(\S.*)$/u', $line, $m)) {
+        if (preg_match('/^[-*•–]\s*(\S.*)$/u', $line, $m)) {
             if ($para !== []) {
                 $out .= '<p>' . implode('<br>', array_map('e', $para)) . '</p>';
                 $para = [];

@@ -123,8 +123,8 @@ $ab = $isEdit ? availability_badge((string) $product['availability']) : null;
                             <textarea class="form-control" id="description" name="description" rows="5"
                                       data-autogrow maxlength="20000"><?= e($val('description')) ?></textarea>
                             <p class="form-hint">
-                                Se admiten etiquetas básicas de formato (negrita, listas, párrafos).
-                                El resto se limpia automáticamente por seguridad.
+                                Escribí normal. Dejá una <strong>línea en blanco</strong> para separar párrafos y empezá
+                                el renglón con <strong>«- »</strong> para armar una lista con viñetas.
                             </p>
                         </div>
                     </div>
