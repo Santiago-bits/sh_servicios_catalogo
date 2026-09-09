@@ -826,7 +826,6 @@ img { max-width: 100%; height: auto; }
 .price-box__alt-label { display: block; font-size: .76rem; text-transform: uppercase; letter-spacing: .1em; color: var(--gray); }
 .price-box__alt strong { display: block; font-size: clamp(1.7rem, 4vw, 2.4rem); font-weight: 800; color: var(--black); line-height: 1.1; }
 .price-box__note { font-size: .92rem; font-weight: 700; color: var(--dark); margin-top: 8px; }
-.price-box__note--fine { font-size: .82rem; font-weight: 500; color: var(--gray); margin-top: 4px; }
 .price-box del { color: var(--gray); font-size: 1.1rem; font-weight: 600; }
 .price-box__was { display: flex; align-items: center; gap: 8px; }
 

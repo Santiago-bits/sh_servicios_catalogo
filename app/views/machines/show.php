@@ -102,36 +102,25 @@ $linkVideos = array_values(array_filter($videos ?? [], static fn ($v) => ($v['pr
                 <div class="price-box">
                     <span class="price-box__label">Precio</span>
                     <?php if ($showPrice): ?>
-                        <?php
-                        // Los dólares van arriba (valor grande) y los pesos abajo
-                        // (equivalente), sin importar en qué moneda esté cargado el
-                        // precio. En USD se muestra exacto; si es conversión, redondeado.
-                        $curr    = (string) $product['currency'];
-                        $usdDec  = $curr === 'USD' ? 2 : 0;
-                        $mainUsd = $curr === 'USD' ? $price : CurrencyService::convert($price, $curr, 'USD');
-                        $altArs  = $curr === 'ARS' ? $price : CurrencyService::convert($price, $curr, 'ARS');
-                        ?>
                         <?php if ($hasOffer): ?>
-                            <?php
-                            $offPct = (int) round((1 - $price / (float) $product['final_price']) * 100);
-                            $wasUsd = $curr === 'USD'
-                                ? (float) $product['final_price']
-                                : CurrencyService::convert((float) $product['final_price'], $curr, 'USD');
-                            ?>
+                            <?php $offPct = (int) round((1 - $price / (float) $product['final_price']) * 100); ?>
                             <div class="price-box__was">
-                                <del><?= e(money($wasUsd, 'USD', $usdDec)) ?></del>
+                                <del><?= e(money((float) $product['final_price'], (string) $product['currency'])) ?></del>
                                 <?php if ($offPct > 0): ?><span class="price-off"><?= $offPct ?>% OFF</span><?php endif; ?>
                             </div>
                         <?php endif; ?>
-                        <div class="price-box__value"><?= e(money($mainUsd, 'USD', $usdDec)) ?></div>
-                        <p class="price-box__note">Precio + IVA</p>
-                        <p class="price-box__note price-box__note--fine">El importe en pesos es el <strong>precio final</strong>. Sujeto a modificación sin previo aviso.</p>
+                        <div class="price-box__value"><?= e(money($price, (string) $product['currency'])) ?></div>
                         <?php if (setting('show_dual_currency', '0') === '1'): ?>
+                            <?php
+                            $altCurrency = $product['currency'] === 'ARS' ? 'USD' : 'ARS';
+                            $altAmount   = money(CurrencyService::convert($price, (string) $product['currency'], $altCurrency), $altCurrency, 0);
+                            ?>
                             <div class="price-box__alt">
-                                <span class="price-box__alt-label">Precio final en pesos (aprox.)</span>
-                                <strong>ARS<?= e(money($altArs, 'ARS', 0)) ?></strong>
+                                <span class="price-box__alt-label">Equivalente aprox.</span>
+                                <strong><?= e($altCurrency === 'ARS' ? 'ARS' . $altAmount : $altAmount) ?></strong>
                             </div>
                         <?php endif; ?>
+                        <p class="price-box__note">Precio + IVA. Sujeto a modificación sin previo aviso.</p>
                     <?php else: ?>
                         <div class="price-box__value">Consultar</div>
                         <p class="price-box__note">Escribinos y te pasamos el precio actualizado.</p>
