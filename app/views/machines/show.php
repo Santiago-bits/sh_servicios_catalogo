@@ -183,13 +183,6 @@ $linkVideos = array_values(array_filter($videos ?? [], static fn ($v) => ($v['pr
                     </div>
                 <?php endif; ?>
 
-                <?php if (!empty($product['tech_notes'])): ?>
-                    <div class="product-description">
-                        <h2 class="product-description__title"><i class="bi bi-list-check"></i> Detalle técnico</h2>
-                        <?= clean_html(text_to_html((string) $product['tech_notes'])) ?>
-                    </div>
-                <?php endif; ?>
-
                 <?php if (!empty($product['description'])): ?>
                     <div class="product-description">
                         <h2 class="product-description__title"><i class="bi bi-card-text"></i> Descripción</h2>

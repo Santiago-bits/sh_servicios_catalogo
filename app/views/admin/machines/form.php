@@ -351,20 +351,13 @@ $ab = $isEdit ? availability_badge((string) $product['availability']) : null;
                     </div>
 
                     <div class="pform-card">
-                        <h2 class="pform-card__title">Uñas y detalle técnico</h2>
+                        <h2 class="pform-card__title">Uñas</h2>
                         <div class="row g-3">
                             <div class="col-md-5">
                                 <label class="form-label" for="fork_size">Tamaño de la uña</label>
                                 <input type="text" class="form-control" id="fork_size" name="fork_size" maxlength="120"
                                        placeholder="Ej: 1070 × 122 × 40 mm" value="<?= e($val('fork_size')) ?>">
                                 <p class="form-hint">Largo × ancho × espesor, o la medida como se la das al cliente.</p>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label" for="tech_notes">Detalle técnico adicional</label>
-                                <textarea class="form-control" id="tech_notes" name="tech_notes" rows="4"
-                                          data-autogrow maxlength="5000"
-                                          placeholder="Cualquier dato extra: desplazador lateral, terceras funciones hidráulicas, cabina, tipo de horquillas, accesorios, historial, etc."><?= e($val('tech_notes')) ?></textarea>
-                                <p class="form-hint">Se muestra en la ficha pública, debajo de los datos rápidos. Se respetan los renglones y las líneas en blanco.</p>
                             </div>
                         </div>
                     </div>
