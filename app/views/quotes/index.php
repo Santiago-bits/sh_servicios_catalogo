@@ -86,7 +86,7 @@ use App\Services\PriceService;
 
                     <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
                         <a href="<?= url('maquinaria') ?>" class="btn btn-ghost btn-sm">
-                            <i class="bi bi-truck-front-fill"></i> Ver maquinarias
+                            <i class="bi bi-truck-front-fill"></i> Seguir agregando máquinas
                         </a>
                         <a href="<?= url('repuestos') ?>" class="btn btn-ghost btn-sm">
                             <i class="bi bi-plus-lg"></i> Seguir agregando repuestos
