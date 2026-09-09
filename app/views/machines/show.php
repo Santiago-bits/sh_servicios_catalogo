@@ -110,6 +110,7 @@ $linkVideos = array_values(array_filter($videos ?? [], static fn ($v) => ($v['pr
                             </div>
                         <?php endif; ?>
                         <div class="price-box__value"><?= e(money($price, (string) $product['currency'])) ?></div>
+                        <p class="price-box__note"><?= $product['currency'] === 'USD' ? 'Dólares' : 'Pesos' ?>: Precio + IVA. Sujeto a modificación sin previo aviso.</p>
                         <?php if (setting('show_dual_currency', '0') === '1'): ?>
                             <?php
                             $altCurrency = $product['currency'] === 'ARS' ? 'USD' : 'ARS';
@@ -120,7 +121,6 @@ $linkVideos = array_values(array_filter($videos ?? [], static fn ($v) => ($v['pr
                                 <strong><?= e($altCurrency === 'ARS' ? 'ARS' . $altAmount : $altAmount) ?></strong>
                             </div>
                         <?php endif; ?>
-                        <p class="price-box__note">Precio + IVA. Sujeto a modificación sin previo aviso.</p>
                     <?php else: ?>
                         <div class="price-box__value">Consultar</div>
                         <p class="price-box__note">Escribinos y te pasamos el precio actualizado.</p>
