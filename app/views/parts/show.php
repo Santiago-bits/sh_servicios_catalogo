@@ -157,27 +157,35 @@ $codeTypes = [
                 <div class="price-box">
                     <span class="price-box__label">Precio</span>
                     <?php if ($showPrice): ?>
+                        <?php
+                        // Igual que en la ficha de máquina: los dólares arriba (valor
+                        // grande) y los pesos abajo. Si el repuesto está cargado en USD
+                        // se muestra exacto; si es una conversión, redondeado (aprox.).
+                        $curr    = (string) $product['currency'];
+                        $usdDec  = $curr === 'USD' ? 2 : 0;
+                        $mainUsd = $curr === 'USD' ? $price : CurrencyService::convert($price, $curr, 'USD');
+                        $arsAmt  = $curr === 'ARS' ? $price : CurrencyService::convert($price, $curr, 'ARS');
+                        ?>
                         <?php if ($hasOffer): ?>
-                            <?php $offPct = (int) round((1 - $price / (float) $product['final_price']) * 100); ?>
+                            <?php
+                            $offPct = (int) round((1 - $price / (float) $product['final_price']) * 100);
+                            $wasUsd = $curr === 'USD'
+                                ? (float) $product['final_price']
+                                : CurrencyService::convert((float) $product['final_price'], $curr, 'USD');
+                            ?>
                             <div class="price-box__was">
-                                <del><?= e(money((float) $product['final_price'], (string) $product['currency'])) ?></del>
+                                <del><?= e(money($wasUsd, 'USD', $usdDec)) ?></del>
                                 <?php if ($offPct > 0): ?><span class="price-off"><?= $offPct ?>% OFF</span><?php endif; ?>
                             </div>
                         <?php endif; ?>
-                        <div class="price-box__value"><?= e(money($price, (string) $product['currency'])) ?></div>
-                        <p class="price-box__note"><?= $product['currency'] === 'USD' ? 'Dólares' : 'Pesos' ?>: Precio + IVA. Sujeto a modificación sin previo aviso.</p>
+                        <div class="price-box__value"><?= e(money($mainUsd, 'USD', $usdDec)) ?></div>
+                        <p class="price-box__note">Dólares: Precio + IVA. Sujeto a modificación sin previo aviso.</p>
                         <?php if (setting('show_dual_currency', '0') === '1'): ?>
-                            <?php
-                            $altCurrency = $product['currency'] === 'ARS' ? 'USD' : 'ARS';
-                            $altAmount   = money(CurrencyService::convert($price, (string) $product['currency'], $altCurrency), $altCurrency, 0);
-                            ?>
                             <div class="price-box__alt">
-                                <span class="price-box__alt-label"><?= $altCurrency === 'ARS' ? 'Precio final en pesos (aprox.)' : 'Equivalente aprox.' ?></span>
-                                <strong><?= e($altCurrency === 'ARS' ? 'ARS' . $altAmount : $altAmount) ?></strong>
+                                <span class="price-box__alt-label">Precio final en pesos (aprox.)</span>
+                                <strong>ARS<?= e(money($arsAmt, 'ARS', 0)) ?></strong>
                             </div>
-                            <?php if ($altCurrency === 'ARS'): ?>
-                                <p class="price-box__note price-box__note--fine">El importe en pesos es el <strong>precio final</strong>. Sujeto a modificaciones sin previo aviso.</p>
-                            <?php endif; ?>
+                            <p class="price-box__note price-box__note--fine">El importe en pesos es el <strong>precio final</strong>. Sujeto a modificaciones sin previo aviso.</p>
                         <?php endif; ?>
                     <?php else: ?>
                         <div class="price-box__value">Consultar</div>
