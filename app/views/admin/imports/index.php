@@ -73,10 +73,23 @@
                     <?php endforeach; ?>
                 </div>
 
+                <h3 class="form-section__title mt-4">Valores que acepta cada columna</h3>
+                <ul class="small text-muted-2 mb-0" style="line-height:1.9">
+                    <li><code>condicion</code>: <strong>nuevo</strong>, <strong>usado</strong> o <strong>reacondicionado</strong> (si la dejás vacía queda "usado").</li>
+                    <li><code>estado</code>: <strong>disponible</strong>, <strong>reservada</strong>, <strong>vendida</strong>, <strong>mantenimiento</strong> o <strong>consultar</strong>.</li>
+                    <li><code>combustible</code>: <strong>electrico</strong>, <strong>diesel</strong>, <strong>nafta</strong>, <strong>gas</strong>, <strong>glp</strong>, <strong>hibrido</strong> o <strong>manual</strong>.</li>
+                    <li><code>moneda</code>: <strong>ARS</strong> (pesos) o <strong>USD</strong> (dólares). Vacía = pesos.</li>
+                    <li><code>origen</code> (repuestos): <strong>original</strong>, <strong>alternativo</strong> o <strong>remanufacturado</strong>.</li>
+                    <li><code>mostrar_precio</code>, <code>destacado</code>, <code>es_nuevo</code>: poné <strong>si</strong> o <strong>no</strong> (vacío = no se cambia).</li>
+                    <li><code>costo</code>, <code>ganancia</code>, <code>precio</code>, <code>precio_oferta</code>: números sin símbolos. Cargá <em>costo + ganancia</em> <u>o</u> <em>costo + precio</em>, no las tres cosas.</li>
+                    <li>Medidas (<code>altura_mm</code>, <code>peso_kg</code>, <code>potencia_hp</code>, etc.): sólo el número.</li>
+                </ul>
+
                 <p class="form-hint mt-3 mb-0">
                     En <code>compatibilidad</code> podés poner varias máquinas separadas por <code>|</code>,
                     por ejemplo: <code>Toyota 8FG25|Hyster H2.5</code>. Las marcas y categorías que no existan
-                    se crean automáticamente.
+                    se crean automáticamente. <strong>Las columnas que dejes vacías no se tocan</strong> si el
+                    código ya existía: sirve para actualizar sólo algunos datos.
                 </p>
             </div>
         </div>

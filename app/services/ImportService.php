@@ -21,20 +21,32 @@ final class ImportService
 {
     /** Columnas de la plantilla de maquinaria. */
     public const MACHINE_COLUMNS = [
-        'codigo', 'nombre', 'marca', 'modelo', 'categoria', 'anio', 'horas',
-        'combustible', 'capacidad_kg', 'altura_mm', 'condicion', 'ubicacion',
-        'costo', 'ganancia', 'precio', 'estado', 'descripcion',
+        // Identificación y clasificación
+        'codigo', 'nombre', 'marca', 'modelo', 'categoria', 'numero_serie',
+        'condicion', 'estado', 'ubicacion',
+        // Precio
+        'moneda', 'costo', 'ganancia', 'precio', 'precio_oferta', 'mostrar_precio',
+        // Ficha técnica
+        'anio', 'horas', 'combustible', 'capacidad_kg', 'altura_mm', 'altura_plegada_mm',
+        'motor', 'potencia_hp', 'transmision', 'peso_kg', 'largo_mm', 'ancho_mm',
+        'radio_giro_mm', 'bateria', 'voltaje', 'tipo_mastil', 'tipo_rueda',
+        'tamano_una', 'garantia',
+        // Contenido y etiquetas
+        'resumen', 'descripcion', 'destacado', 'es_nuevo',
     ];
 
     /** Columnas de la plantilla de repuestos. */
     public const PART_COLUMNS = [
-        'codigo', 'nombre', 'marca', 'categoria', 'codigo_oem', 'codigo_fabricante',
-        'fabricante', 'costo', 'ganancia', 'precio', 'compatibilidad', 'descripcion',
+        'codigo', 'nombre', 'marca', 'categoria', 'fabricante',
+        'codigo_oem', 'codigo_fabricante', 'origen', 'unidad', 'peso_kg',
+        'moneda', 'costo', 'ganancia', 'precio', 'precio_oferta', 'mostrar_precio',
+        'estado', 'destacado', 'es_nuevo', 'compatibilidad', 'resumen', 'descripcion',
     ];
 
     private const FUELS      = ['electrico', 'diesel', 'nafta', 'gas', 'glp', 'hibrido', 'manual'];
     private const CONDITIONS = ['nuevo', 'usado', 'reacondicionado'];
     private const STATES     = ['disponible', 'reservada', 'vendida', 'mantenimiento', 'consultar'];
+    private const ORIGINS    = ['original', 'alternativo', 'remanufacturado'];
 
     /**
      * Lee y valida un CSV. No escribe nada en la base.
@@ -133,6 +145,57 @@ final class ImportService
         ];
     }
 
+    /** "si"/"no"/"x"/"1"/"0"/"" → 1 | 0 | null (null = la columna vino vacía, no se toca). */
+    private static function parseBool(?string $value): ?int
+    {
+        $v = mb_strtolower(trim((string) $value));
+        if ($v === '') {
+            return null;
+        }
+        if (in_array($v, ['si', 'sí', 'x', '1', 'true', 'verdadero', 'yes', 'y'], true)) {
+            return 1;
+        }
+        if (in_array($v, ['no', '0', 'false', 'falso', 'n'], true)) {
+            return 0;
+        }
+        return null;
+    }
+
+    /** Texto de moneda → 'ARS' | 'USD' | null (vacío) | '' (inválido). */
+    private static function parseCurrency(string $value): ?string
+    {
+        $raw = trim($value);
+        if ($raw === '') {
+            return null;
+        }
+        if ($raw === '$') {
+            return 'ARS';
+        }
+        $v = slugify($raw);
+        if ($v === 'ars' || str_starts_with($v, 'peso')) {
+            return 'ARS';
+        }
+        if ($v === 'usd' || $v === 'us' || str_starts_with($v, 'dolar') || str_starts_with($v, 'u-s')) {
+            return 'USD';
+        }
+        return '';
+    }
+
+    /** Texto de origen del repuesto → enum de spare_parts | null (vacío) | '' (inválido). */
+    private static function parseOrigin(string $value): ?string
+    {
+        $v = slugify($value);
+        if ($v === '') {
+            return null;
+        }
+        $map = [
+            'original' => 'original', 'oem' => 'original', 'genuino' => 'original', 'genuina' => 'original',
+            'alternativo' => 'alternativo', 'alternativa' => 'alternativo', 'aftermarket' => 'alternativo', 'generico' => 'alternativo',
+            'remanufacturado' => 'remanufacturado', 'reman' => 'remanufacturado', 'reacondicionado' => 'remanufacturado',
+        ];
+        return $map[$v] ?? '';
+    }
+
     /**
      * @param array<string,string> $data
      * @param array<int,string>    $seen
@@ -142,6 +205,23 @@ final class ImportService
     {
         $errors = [];
 
+        $txt = static function (string $k, int $max = 160) use ($data): ?string {
+            $t = trim($data[$k] ?? '');
+            return $t !== '' ? mb_substr($t, 0, $max) : null;
+        };
+        $dec = static function (string $k) use ($data): ?float {
+            $t = trim($data[$k] ?? '');
+            if ($t === '') {
+                return null;
+            }
+            $n = normalize_decimal($t);
+            return $n > 0 ? round($n, 3) : null;
+        };
+        $int = static function (string $k) use ($dec): ?int {
+            $n = $dec($k);
+            return $n === null ? null : (int) round($n);
+        };
+
         $code = strtoupper(trim($data['codigo'] ?? ''));
         $name = trim($data['nombre'] ?? '');
 
@@ -150,13 +230,11 @@ final class ImportService
         } elseif (in_array($code, $seen, true)) {
             $errors[] = 'El código está repetido dentro del archivo.';
         }
-
         if ($name === '') {
             $errors[] = 'Falta el nombre.';
         }
 
         $fuel = slugify($data['combustible'] ?? '');
-        $fuel = str_replace(['diesel', 'electrico'], ['diesel', 'electrico'], $fuel);
         if ($fuel !== '' && !in_array($fuel, self::FUELS, true)) {
             $errors[] = 'Combustible inválido (' . $data['combustible'] . '). Válidos: ' . implode(', ', self::FUELS);
         }
@@ -171,12 +249,22 @@ final class ImportService
             $errors[] = 'Estado inválido. Válidos: ' . implode(', ', self::STATES);
         }
 
+        $currency = self::parseCurrency($data['moneda'] ?? '');
+        if ($currency === '') {
+            $errors[] = 'Moneda inválida (' . $data['moneda'] . '). Poné ARS o USD.';
+            $currency = null;
+        }
+
         $cost   = normalize_decimal($data['costo'] ?? '0');
         $profit = normalize_decimal($data['ganancia'] ?? '0');
         $price  = normalize_decimal($data['precio'] ?? '0');
+        $offer  = trim($data['precio_oferta'] ?? '') !== '' ? normalize_decimal($data['precio_oferta']) : null;
 
-        if ($cost < 0 || $price < 0) {
+        if ($cost < 0 || $price < 0 || ($offer !== null && $offer < 0)) {
             $errors[] = 'Los importes no pueden ser negativos.';
+        }
+        if ($offer !== null && $offer > 0 && $price > 0 && $offer >= $price) {
+            $errors[] = 'El precio de oferta tiene que ser menor al precio.';
         }
 
         $year = (int) preg_replace('/\D/', '', $data['anio'] ?? '');
@@ -187,23 +275,44 @@ final class ImportService
         return [
             'errors' => $errors,
             'data'   => [
-                'code'        => $code,
-                'name'        => $name,
-                'brand'       => trim($data['marca'] ?? ''),
-                'model'       => trim($data['modelo'] ?? ''),
-                'category'    => trim($data['categoria'] ?? ''),
-                'year'        => $year ?: null,
-                'hours'       => (int) preg_replace('/\D/', '', $data['horas'] ?? '') ?: null,
-                'fuel'        => $fuel !== '' ? $fuel : null,
-                'capacity_kg' => normalize_decimal($data['capacidad_kg'] ?? '0') ?: null,
-                'lift_height_mm' => (int) normalize_decimal($data['altura_mm'] ?? '0') ?: null,
-                'condition'   => $condition,
-                'location'    => trim($data['ubicacion'] ?? ''),
-                'cost'        => $cost,
-                'profit'      => $profit,
-                'price'       => $price,
-                'state'       => $state,
-                'description' => trim($data['descripcion'] ?? ''),
+                'code'             => $code,
+                'name'             => $name,
+                'brand'            => trim($data['marca'] ?? ''),
+                'model'            => $txt('modelo', 120),
+                'category'         => trim($data['categoria'] ?? ''),
+                'serial_number'    => $txt('numero_serie', 80),
+                'year'             => $year ?: null,
+                'hours'            => (int) preg_replace('/\D/', '', $data['horas'] ?? '') ?: null,
+                'fuel'             => $fuel !== '' ? $fuel : null,
+                'capacity_kg'      => $dec('capacidad_kg'),
+                'lift_height_mm'   => $int('altura_mm'),
+                'closed_height_mm' => $int('altura_plegada_mm'),
+                'engine'           => $txt('motor', 120),
+                'power_hp'         => $dec('potencia_hp'),
+                'transmission'     => $txt('transmision', 120),
+                'weight_kg'        => $dec('peso_kg'),
+                'length_mm'        => $int('largo_mm'),
+                'width_mm'         => $int('ancho_mm'),
+                'turn_radius_mm'   => $int('radio_giro_mm'),
+                'battery'          => $txt('bateria', 120),
+                'voltage'          => $txt('voltaje', 40),
+                'mast_type'        => $txt('tipo_mastil', 80),
+                'tire_type'        => $txt('tipo_rueda', 80),
+                'fork_size'        => $txt('tamano_una', 120),
+                'warranty'         => $txt('garantia', 160),
+                'condition'        => $condition,
+                'location'         => $txt('ubicacion', 160),
+                'currency'         => $currency,
+                'cost'             => $cost,
+                'profit'           => $profit,
+                'price'            => $price,
+                'offer_price'      => $offer,
+                'price_visible'    => self::parseBool($data['mostrar_precio'] ?? ''),
+                'featured'         => self::parseBool($data['destacado'] ?? ''),
+                'is_new'           => self::parseBool($data['es_nuevo'] ?? ''),
+                'state'            => $state,
+                'summary'          => $txt('resumen', 200),
+                'description'      => trim($data['descripcion'] ?? ''),
             ],
         ];
     }
@@ -217,6 +326,11 @@ final class ImportService
     {
         $errors = [];
 
+        $txt = static function (string $k, int $max = 160) use ($data): ?string {
+            $t = trim($data[$k] ?? '');
+            return $t !== '' ? mb_substr($t, 0, $max) : null;
+        };
+
         $code = strtoupper(trim($data['codigo'] ?? ''));
         $name = trim($data['nombre'] ?? '');
 
@@ -229,12 +343,36 @@ final class ImportService
             $errors[] = 'Falta el nombre.';
         }
 
+        $currency = self::parseCurrency($data['moneda'] ?? '');
+        if ($currency === '') {
+            $errors[] = 'Moneda inválida (' . $data['moneda'] . '). Poné ARS o USD.';
+            $currency = null;
+        }
+
+        $origin = self::parseOrigin($data['origen'] ?? '');
+        if ($origin === '') {
+            $errors[] = 'Origen inválido (' . $data['origen'] . '). Válidos: ' . implode(', ', self::ORIGINS);
+            $origin = null;
+        }
+
+        $state = trim($data['estado'] ?? '') !== '' ? slugify($data['estado']) : null;
+        if ($state !== null && !in_array($state, self::STATES, true)) {
+            $errors[] = 'Estado inválido. Válidos: ' . implode(', ', self::STATES);
+            $state = null;
+        }
+
         $cost  = normalize_decimal($data['costo'] ?? '0');
         $price = normalize_decimal($data['precio'] ?? '0');
+        $offer = trim($data['precio_oferta'] ?? '') !== '' ? normalize_decimal($data['precio_oferta']) : null;
 
-        if ($cost < 0 || $price < 0) {
+        if ($cost < 0 || $price < 0 || ($offer !== null && $offer < 0)) {
             $errors[] = 'Los importes no pueden ser negativos.';
         }
+        if ($offer !== null && $offer > 0 && $price > 0 && $offer >= $price) {
+            $errors[] = 'El precio de oferta tiene que ser menor al precio.';
+        }
+
+        $weight = trim($data['peso_kg'] ?? '') !== '' ? normalize_decimal($data['peso_kg']) : null;
 
         return [
             'errors' => $errors,
@@ -246,10 +384,20 @@ final class ImportService
                 'oem_code'          => trim($data['codigo_oem'] ?? ''),
                 'manufacturer_code' => trim($data['codigo_fabricante'] ?? ''),
                 'manufacturer'      => trim($data['fabricante'] ?? ''),
+                'origin'            => $origin,
+                'unit'             => $txt('unidad', 20),
+                'weight_kg'        => $weight !== null && $weight > 0 ? round($weight, 3) : null,
+                'currency'          => $currency,
                 'cost'              => $cost,
                 'profit'            => normalize_decimal($data['ganancia'] ?? '0'),
                 'price'             => $price,
+                'offer_price'       => $offer,
+                'price_visible'     => self::parseBool($data['mostrar_precio'] ?? ''),
+                'featured'          => self::parseBool($data['destacado'] ?? ''),
+                'is_new'            => self::parseBool($data['es_nuevo'] ?? ''),
+                'state'             => $state,
                 'compatibility'     => trim($data['compatibilidad'] ?? ''),
+                'summary'           => $txt('resumen', 200),
                 'description'       => trim($data['descripcion'] ?? ''),
             ],
         ];
@@ -303,8 +451,6 @@ final class ImportService
                     'name'             => $data['name'],
                     'brand_id'         => $brandId,
                     'category_id'      => $categoryId,
-                    'description'      => $data['description'] !== '' ? $data['description'] : null,
-                    'short_description'=> $data['description'] !== '' ? str_limit($data['description'], 200) : null,
                     'cost_price'       => $prices['cost_price'],
                     'profit_percent'   => $prices['profit_percent'],
                     'profit_amount'    => $prices['profit_amount'],
@@ -313,9 +459,41 @@ final class ImportService
                     'updated_by'       => Auth::id(),
                 ];
 
+                // Texto: sólo se pisa si el archivo trae algo.
+                if ($data['description'] !== '') {
+                    $payload['description'] = $data['description'];
+                }
+                $summary = $data['summary'];
+                if ($summary === null && $data['description'] !== '') {
+                    $summary = str_limit($data['description'], 200);
+                }
+                if ($summary !== null) {
+                    $payload['short_description'] = $summary;
+                }
+
+                // Comercial: sólo se toca lo que venga con valor en la fila.
+                if ($data['currency'] !== null) {
+                    $payload['currency'] = $data['currency'];
+                }
+                if ($data['offer_price'] !== null) {
+                    $payload['offer_price'] = $data['offer_price'];
+                    $payload['is_offer']    = $data['offer_price'] > 0 ? 1 : 0;
+                }
+                if ($data['price_visible'] !== null) {
+                    $payload['price_visible'] = $data['price_visible'];
+                }
+                if ($data['featured'] !== null) {
+                    $payload['featured'] = $data['featured'];
+                }
+                if ($data['is_new'] !== null) {
+                    $payload['is_new'] = $data['is_new'];
+                }
+
                 if ($type === 'machine') {
                     $payload['availability'] = $data['state'];
-                } else {
+                } elseif ($data['state'] !== null) {
+                    $payload['availability'] = $data['state'];
+                } elseif ($existing === null) {
                     $payload['availability'] = 'disponible';
                 }
 
@@ -332,22 +510,51 @@ final class ImportService
                 }
 
                 if ($type === 'machine') {
-                    $machineModel->save($productId, [
-                        'model'          => $data['model'] !== '' ? $data['model'] : null,
-                        'year'           => $data['year'],
-                        'hours'          => $data['hours'],
-                        'fuel'           => $data['fuel'],
-                        'capacity_kg'    => $data['capacity_kg'],
-                        'lift_height_mm' => $data['lift_height_mm'],
-                        'condition_type' => $data['condition'],
-                        'location'       => $data['location'] !== '' ? $data['location'] : null,
-                    ]);
+                    $tech = [
+                        'model'            => $data['model'],
+                        'year'             => $data['year'],
+                        'hours'            => $data['hours'],
+                        'fuel'             => $data['fuel'],
+                        'engine'           => $data['engine'],
+                        'power_hp'         => $data['power_hp'],
+                        'transmission'     => $data['transmission'],
+                        'capacity_kg'      => $data['capacity_kg'],
+                        'lift_height_mm'   => $data['lift_height_mm'],
+                        'closed_height_mm' => $data['closed_height_mm'],
+                        'weight_kg'        => $data['weight_kg'],
+                        'length_mm'        => $data['length_mm'],
+                        'width_mm'         => $data['width_mm'],
+                        'turn_radius_mm'   => $data['turn_radius_mm'],
+                        'battery'          => $data['battery'],
+                        'voltage'          => $data['voltage'],
+                        'mast_type'        => $data['mast_type'],
+                        'tire_type'        => $data['tire_type'],
+                        'fork_size'        => $data['fork_size'],
+                        'serial_number'    => $data['serial_number'],
+                        'warranty'         => $data['warranty'],
+                        'location'         => $data['location'],
+                    ];
+                    // Sólo se guardan los campos técnicos que vinieron con valor
+                    // (así reimportar para tocar el precio no borra la ficha técnica).
+                    $tech = array_filter($tech, static fn ($v): bool => $v !== null && $v !== '');
+                    $tech['condition_type'] = $data['condition'];
+                    $machineModel->save($productId, $tech);
                 } else {
-                    $partModel->save($productId, [
+                    $sp = [
                         'oem_code'          => $data['oem_code'] !== '' ? $data['oem_code'] : null,
                         'manufacturer_code' => $data['manufacturer_code'] !== '' ? $data['manufacturer_code'] : null,
                         'manufacturer'      => $data['manufacturer'] !== '' ? $data['manufacturer'] : null,
-                    ]);
+                    ];
+                    if ($data['origin'] !== null) {
+                        $sp['origin'] = $data['origin'];
+                    }
+                    if ($data['unit'] !== null) {
+                        $sp['unit'] = $data['unit'];
+                    }
+                    if ($data['weight_kg'] !== null) {
+                        $sp['weight_kg'] = $data['weight_kg'];
+                    }
+                    $partModel->save($productId, $sp);
 
                     // "Toyota 8FG25|Hyster H2.5" → compatibilidades
                     if ($data['compatibility'] !== '') {
@@ -428,12 +635,26 @@ final class ImportService
         $columns = $type === 'machine' ? self::MACHINE_COLUMNS : self::PART_COLUMNS;
 
         $example = $type === 'machine'
-            ? ['AE-100', 'Autoelevador Toyota 8FG25 2.500 kg', 'Toyota', '8FG25', 'Autoelevadores', '2018', '6200',
-               'gas', '2500', '4700', 'usado', 'Depósito Central', '16000000', '25', '20000000', 'disponible',
-               'Equipo revisado con garantía de 6 meses.']
-            : ['FIL-100', 'Filtro de aceite Toyota serie 8', 'Toyota', 'Filtros', '15601-U2100-71', 'W68/3',
-               'Toyota', '12000', '60', '19200', 'Toyota 8FG25|Toyota 8FD30',
-               'Filtro de flujo total con válvula antirretorno.'];
+            ? [
+                'AE-100', 'Autoelevador Toyota 8FG25 2.500 kg', 'Toyota', '8FG25', 'Autoelevadores', 'SN-8FG25-001',
+                'usado', 'disponible', 'Depósito Central',
+                'USD', '16000', '25', '20000', '', 'si',
+                '2018', '6200', 'gas', '2500', '4700', '2100',
+                'Toyota 4Y 2.5L nafta/gas', '52', 'Automática (Powershift)', '3800', '3690', '1150',
+                '2200', 'Plomo-ácido', '48V', 'Triple / Full free', 'Neumática', '1070 x 122 x 40 mm', '6 meses',
+                'Autoelevador a gas 2.500 kg, torre triple, revisado.',
+                'Equipo revisado con garantía de 6 meses. Motor original, cubiertas nuevas.',
+                'no', 'no',
+            ]
+            : [
+                'FIL-100', 'Filtro de aceite Toyota serie 8', 'Toyota', 'Filtros', 'Toyota',
+                '15601-U2100-71', 'W68/3', 'original', 'unidad', '0.35',
+                'ARS', '12000', '60', '19200', '', 'si',
+                'disponible', 'no', 'no',
+                'Toyota 8FG25|Toyota 8FD30',
+                'Filtro de aceite original Toyota para la serie 8.',
+                'Filtro de flujo total con válvula antirretorno.',
+            ];
 
         // "sep=;" en la primera línea: Excel la usa para separar en columnas
         // (sin esto, según la configuración regional, mete todo en la columna A).
