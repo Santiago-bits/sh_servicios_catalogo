@@ -15,6 +15,11 @@ $showPrice    = PriceService::isPublicPriceVisible($product);
 $price        = PriceService::effectivePrice($product);
 $hasOffer     = (int) $product['is_offer'] === 1 && (float) ($product['offer_price'] ?? 0) > 0;
 $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
+
+// Videos subidos como archivo → van en la galería como una foto más.
+// Los de YouTube/Vimeo → en su panel aparte, abajo.
+$fileVideos = array_values(array_filter($videos ?? [], static fn ($v) => ($v['provider'] ?? '') === 'file'));
+$linkVideos = array_values(array_filter($videos ?? [], static fn ($v) => ($v['provider'] ?? '') !== 'file'));
 ?>
 
 <section class="page-hero" style="padding:26px 0 30px">
@@ -41,7 +46,7 @@ $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
                     <span class="gallery__zoom-hint"><i class="bi bi-zoom-in"></i> Pasá el mouse para ampliar</span>
                 </div>
 
-                <?php if (count($images) > 1 || !empty($videos)): ?>
+                <?php if (count($images) > 1 || $fileVideos !== []): ?>
                     <div class="gallery__thumbs">
                         <?php foreach ($images as $i => $image): ?>
                             <div class="gallery__thumb <?= $i === 0 ? 'is-active' : '' ?>"
@@ -51,17 +56,12 @@ $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
                                      alt="<?= e($image['alt'] ?: $product['name']) ?>" loading="lazy">
                             </div>
                         <?php endforeach; ?>
-                        <?php foreach ($videos as $video): ?>
+                        <?php foreach ($fileVideos as $video): ?>
                             <div class="gallery__thumb gallery__thumb--video"
-                                 data-video-provider="<?= e($video['provider']) ?>"
-                                 data-video-ref="<?= e($video['provider'] === 'file' ? upload_url($video['video_ref']) : $video['video_ref']) ?>"
+                                 data-video-provider="file"
+                                 data-video-ref="<?= e(upload_url($video['video_ref'])) ?>"
                                  title="<?= e($video['title'] ?: 'Video') ?>">
-                                <?php if ($video['provider'] === 'youtube'): ?>
-                                    <img src="https://i.ytimg.com/vi/<?= e($video['video_ref']) ?>/hqdefault.jpg"
-                                         alt="Video" loading="lazy">
-                                <?php else: ?>
-                                    <span class="gallery__thumb-poster"><i class="bi bi-camera-video-fill"></i></span>
-                                <?php endif; ?>
+                                <span class="gallery__thumb-poster"><i class="bi bi-camera-video-fill"></i></span>
                                 <span class="gallery__thumb-play"><i class="bi bi-play-fill"></i></span>
                             </div>
                         <?php endforeach; ?>
@@ -191,6 +191,30 @@ $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
 
 
             </div>
+
+            <!-- ============ VIDEO (YouTube / Vimeo) ============ -->
+            <?php if ($linkVideos !== []): ?>
+                <div class="product-video">
+                    <div class="panel">
+                        <div class="panel__head">
+                            <h2><i class="bi bi-play-btn-fill"></i> Ver la máquina trabajando</h2>
+                        </div>
+                        <div class="panel__body">
+                            <?php foreach (array_slice($linkVideos, 0, 2) as $video): ?>
+                                <div class="video-embed mb-3">
+                                    <?php if ($video['provider'] === 'vimeo'): ?>
+                                        <iframe src="https://player.vimeo.com/video/<?= e($video['video_ref']) ?>"
+                                                title="<?= e($video['title']) ?>" allowfullscreen loading="lazy"></iframe>
+                                    <?php else: ?>
+                                        <iframe src="https://www.youtube-nocookie.com/embed/<?= e($video['video_ref']) ?>"
+                                                title="<?= e($video['title']) ?>" allowfullscreen loading="lazy"></iframe>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
 
             <!-- ============ DOCUMENTACIÓN ============ -->
             <?php if (!empty($documents)): ?>
