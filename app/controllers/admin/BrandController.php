@@ -104,8 +104,8 @@ class BrandController extends AdminController
     }
 
     /**
-     * Versión simplificada: una marca es sólo nombre y logo.
-     * El orden se asigna solo (al final) y toda marca queda activa.
+     * Versión simplificada: nombre, logo y si está activa (se muestra en
+     * la web). El orden se asigna solo, al final.
      *
      * @return array<string,mixed>
      */
@@ -117,7 +117,7 @@ class BrandController extends AdminController
 
         return [
             'name'   => $data['name'],
-            'active' => 1,
+            'active' => Request::flag('active', true),
         ];
     }
 

@@ -35,6 +35,9 @@
                                             <span class="table-thumb d-grid" style="place-items:center;color:#B4B4B4"><i class="bi bi-award"></i></span>
                                         <?php endif; ?>
                                         <span class="table-product__name"><?= e($brand['name']) ?></span>
+                                        <?php if ((int) $brand['active'] !== 1): ?>
+                                            <span class="chip chip--danger">Inactiva</span>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                                 <td class="num"><?= (int) $brand['machines_count'] ?></td>
@@ -75,6 +78,13 @@
                         <p class="form-hint">Se muestra en la grilla de marcas de la home.</p>
                     </div>
                     <div class="col-12">
+                        <label class="filter-check m-0">
+                            <input type="hidden" name="active" value="0">
+                            <input type="checkbox" name="active" value="1" checked>
+                            Activa (se muestra en la web)
+                        </label>
+                    </div>
+                    <div class="col-12">
                         <button type="submit" class="btn btn-accent w-100"><i class="bi bi-plus-lg"></i> Crear marca</button>
                     </div>
                 </form>
@@ -108,6 +118,13 @@
                                 <?php endif; ?>
                                 <input type="file" class="form-control" name="logo" accept="image/png,image/jpeg,image/webp">
                                 <p class="form-hint">Dejalo vacío para conservar el actual.</p>
+                            </div>
+                            <div class="col-12">
+                                <label class="filter-check m-0">
+                                    <input type="hidden" name="active" value="0">
+                                    <input type="checkbox" name="active" value="1" <?= (int) $brand['active'] === 1 ? 'checked' : '' ?>>
+                                    Activa (se muestra en la web)
+                                </label>
                             </div>
                         </div>
                     </div>
