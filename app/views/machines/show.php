@@ -98,7 +98,8 @@ $mainImage    = $images[0]['path'] ?? $product['image'] ?? null;
                             $altAmount   = money(CurrencyService::convert($price, (string) $product['currency'], $altCurrency), $altCurrency, 0);
                             ?>
                             <div class="price-box__alt">
-                                Equivalente aprox. <strong><?= e($altCurrency === 'ARS' ? 'ARS' . $altAmount : $altAmount) ?></strong>
+                                <span class="price-box__alt-label">Equivalente aprox.</span>
+                                <strong><?= e($altCurrency === 'ARS' ? 'ARS' . $altAmount : $altAmount) ?></strong>
                             </div>
                         <?php endif; ?>
                         <p class="price-box__note">Precio + IVA. Sujeto a modificación sin previo aviso.</p>
