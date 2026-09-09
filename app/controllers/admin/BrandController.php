@@ -81,10 +81,16 @@ class BrandController extends AdminController
             $this->abort(404, 'La marca no existe.');
         }
 
-        $inUse = (int) Database::scalar('SELECT COUNT(*) FROM products WHERE brand_id = :id', ['id' => (int) $id]) > 0;
+        // Sólo bloquean los productos vivos: los borrados que todavía apuntan
+        // a la marca no cuentan (la FK products.brand_id es ON DELETE SET NULL,
+        // así que al borrar la marca esos quedan sin marca sin romper nada).
+        $inUse = (int) Database::scalar(
+            'SELECT COUNT(*) FROM products WHERE brand_id = :id AND deleted_at IS NULL',
+            ['id' => (int) $id]
+        );
 
-        if ($inUse) {
-            $this->error('No se puede eliminar: hay productos con esta marca. Desactivala en su lugar.');
+        if ($inUse > 0) {
+            $this->error('No se puede eliminar: ' . $inUse . ' producto(s) usan esta marca. Cambiáles la marca o eliminá esos productos primero.');
             $this->back();
         }
 
