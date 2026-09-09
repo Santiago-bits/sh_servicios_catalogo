@@ -63,6 +63,62 @@ function ejs(mixed $value): string
  * se limitan a http(s)/mailto/tel/rutas internas. Eso cierra los vectores
  * clásicos de XSS almacenado (on*=, javascript:, data:, style, etc.).
  */
+/**
+ * Convierte texto plano (el que se escribe en un <textarea> con Enter y
+ * líneas en blanco) a HTML: líneas en blanco → párrafos <p>, saltos
+ * simples → <br>, y una lista de renglones que empiezan con "-", "*" o
+ * "•" → <ul><li>. Si el texto ya trae HTML de bloque, se deja igual.
+ */
+function text_to_html(?string $text): string
+{
+    $text = trim(str_replace(["\r\n", "\r"], "\n", (string) $text));
+    if ($text === '') {
+        return '';
+    }
+    if (preg_match('~<(p|br|ul|ol|li|h[1-6]|table|div)\b~i', $text)) {
+        return $text; // ya es HTML
+    }
+
+    $out  = '';
+    $para = [];   // renglones de un párrafo en curso
+    $list = [];   // <li> de una lista en curso
+
+    $flush = static function () use (&$out, &$para, &$list): void {
+        if ($para !== []) {
+            $out .= '<p>' . implode('<br>', array_map('e', $para)) . '</p>';
+            $para = [];
+        }
+        if ($list !== []) {
+            $out .= '<ul>' . implode('', array_map(static fn ($li) => '<li>' . e($li) . '</li>', $list)) . '</ul>';
+            $list = [];
+        }
+    };
+
+    foreach (explode("\n", $text) as $line) {
+        $line = trim($line);
+        if ($line === '') {
+            $flush();
+            continue;
+        }
+        if (preg_match('/^[-*•–]\s+(\S.*)$/u', $line, $m)) {
+            if ($para !== []) {
+                $out .= '<p>' . implode('<br>', array_map('e', $para)) . '</p>';
+                $para = [];
+            }
+            $list[] = $m[1];
+        } else {
+            if ($list !== []) {
+                $out .= '<ul>' . implode('', array_map(static fn ($li) => '<li>' . e($li) . '</li>', $list)) . '</ul>';
+                $list = [];
+            }
+            $para[] = $line;
+        }
+    }
+    $flush();
+
+    return $out;
+}
+
 function clean_html(?string $html): string
 {
     if ($html === null || trim($html) === '') {

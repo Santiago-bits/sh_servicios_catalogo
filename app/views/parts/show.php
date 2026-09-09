@@ -302,7 +302,7 @@ $codeTypes = [
     <div class="container">
         <div class="panel">
             <div class="panel__head"><h2><i class="bi bi-card-text"></i> Descripción</h2></div>
-            <div class="panel__body"><?= clean_html((string) $product['description']) ?></div>
+            <div class="panel__body"><?= clean_html(text_to_html((string) $product['description'])) ?></div>
         </div>
     </div>
 </section>

@@ -578,7 +578,7 @@ abstract class ProductAdminController extends AdminController
             'category_id'       => !empty($data['category_id']) ? (int) $data['category_id'] : null,
             'brand_id'          => !empty($data['brand_id']) ? (int) $data['brand_id'] : null,
             'short_description' => $data['short_description'] ?? null,
-            'description'       => clean_html((string) ($data['description'] ?? '')) ?: null,
+            'description'       => clean_html(text_to_html((string) ($data['description'] ?? ''))) ?: null,
             'cost_price'        => $prices['cost_price'],
             'profit_percent'    => $prices['profit_percent'],
             'profit_amount'     => $prices['profit_amount'],

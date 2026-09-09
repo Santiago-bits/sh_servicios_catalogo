@@ -185,7 +185,7 @@ $linkVideos = array_values(array_filter($videos ?? [], static fn ($v) => ($v['pr
                 <?php if (!empty($product['description'])): ?>
                     <div class="product-description">
                         <h2 class="product-description__title"><i class="bi bi-card-text"></i> Descripción</h2>
-                        <?= clean_html((string) $product['description']) ?>
+                        <?= clean_html(text_to_html((string) $product['description'])) ?>
                     </div>
                 <?php endif; ?>
 
