@@ -79,9 +79,9 @@ function html_to_text(?string $html): string
 
 /**
  * Texto plano → HTML para MOSTRAR: cada línea en blanco separa un párrafo
- * <p>, los saltos simples van con <br>, y los renglones que empiezan con
- * "-", "*" o "•" (con o sin espacio) se agrupan en una lista <ul><li>.
- * Primero aplana cualquier HTML viejo (<p>/<br>/<li>) para que descripciones
+ * <p> y los saltos simples van con <br>. Se respeta lo que se escribe tal
+ * cual (un renglón "- uno" queda como "- uno", no como viñeta).
+ * Primero aplana cualquier HTML viejo (<p>/<br>) para que las descripciones
  * ya guardadas también salgan bien.
  */
 function text_to_html(?string $text): string
@@ -91,42 +91,17 @@ function text_to_html(?string $text): string
         return '';
     }
 
-    $out  = '';
-    $para = [];
-    $list = [];
-
-    $flush = static function () use (&$out, &$para, &$list): void {
-        if ($para !== []) {
-            $out .= '<p>' . implode('<br>', array_map('e', $para)) . '</p>';
-            $para = [];
-        }
-        if ($list !== []) {
-            $out .= '<ul>' . implode('', array_map(static fn ($li) => '<li>' . e($li) . '</li>', $list)) . '</ul>';
-            $list = [];
-        }
-    };
-
-    foreach (explode("\n", $text) as $line) {
-        $line = trim($line);
-        if ($line === '') {
-            $flush();
+    $out = '';
+    foreach (preg_split('/\n{2,}/', $text) as $block) {
+        $lines = array_values(array_filter(
+            array_map('trim', explode("\n", (string) $block)),
+            static fn (string $l): bool => $l !== ''
+        ));
+        if ($lines === []) {
             continue;
         }
-        if (preg_match('/^[-*•–]\s*(\S.*)$/u', $line, $m)) {
-            if ($para !== []) {
-                $out .= '<p>' . implode('<br>', array_map('e', $para)) . '</p>';
-                $para = [];
-            }
-            $list[] = $m[1];
-        } else {
-            if ($list !== []) {
-                $out .= '<ul>' . implode('', array_map(static fn ($li) => '<li>' . e($li) . '</li>', $list)) . '</ul>';
-                $list = [];
-            }
-            $para[] = $line;
-        }
+        $out .= '<p>' . implode('<br>', array_map('e', $lines)) . '</p>';
     }
-    $flush();
 
     return $out;
 }
