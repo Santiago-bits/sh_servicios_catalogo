@@ -124,13 +124,13 @@ $linkVideos = array_values(array_filter($videos ?? [], static fn ($v) => ($v['pr
                             </div>
                         <?php endif; ?>
                         <div class="price-box__value"><?= e(money($mainUsd, 'USD', $usdDec)) ?></div>
+                        <p class="price-box__note">Precio + IVA. El importe en pesos es el <strong>precio final</strong>. Sujeto a modificación sin previo aviso.</p>
                         <?php if (setting('show_dual_currency', '0') === '1'): ?>
                             <div class="price-box__alt">
                                 <span class="price-box__alt-label">Precio final en pesos (aprox.)</span>
                                 <strong>ARS<?= e(money($altArs, 'ARS', 0)) ?></strong>
                             </div>
                         <?php endif; ?>
-                        <p class="price-box__note">Precio + IVA. El importe en pesos es el <strong>precio final</strong>. Sujeto a modificación sin previo aviso.</p>
                     <?php else: ?>
                         <div class="price-box__value">Consultar</div>
                         <p class="price-box__note">Escribinos y te pasamos el precio actualizado.</p>
