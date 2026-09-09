@@ -27,14 +27,19 @@ final class ExchangeRateService
     /** Página de La Nación con las cotizaciones del día. */
     private const URL = 'https://www.lanacion.com.ar/dolar-hoy/';
 
-    /** clave interna => título tal cual aparece en el HTML de La Nación. */
+    /**
+     * clave interna => título tal cual aparece en el HTML de La Nación.
+     * Se dejan sólo Oficial y Blue: son las dos que usa el comercio.
+     * (El Oficial se sigue leyendo siempre, aunque la fuente elegida
+     * para los precios sea el Blue, para mostrarlo como referencia.)
+     */
     private const SOURCES = [
         'oficial' => 'Dólar oficial',
         'blue'    => 'Dólar blue',
-        'mep'     => 'Dólar MEP',
-        'ccl'     => 'Dólar CCL',
-        'tarjeta' => 'Dólar tarjeta',
     ];
+
+    /** Fila de referencia en la tabla `currencies` (solo para verla, no se usa para precios). */
+    private const REFERENCE_CODE = 'USO';
 
     private const CACHE_DIR   = STORAGE_PATH . '/cache';
     private const CACHE_FILE  = self::CACHE_DIR . '/usd-rate.json';
@@ -127,9 +132,6 @@ final class ExchangeRateService
         return [
             'oficial' => 'Oficial',
             'blue'    => 'Blue',
-            'mep'     => 'MEP',
-            'ccl'     => 'Contado con liqui (CCL)',
-            'tarjeta' => 'Tarjeta / turista',
         ];
     }
 
@@ -173,7 +175,17 @@ final class ExchangeRateService
 
         // Persistir: configuración + tabla currencies + caché en disco.
         SettingService::set('usd_rate', self::numberString($rate));
-        (new Setting())->updateRate('USD', $rate);
+        $setting = new Setting();
+        $setting->updateRate('USD', $rate);
+
+        // Fila de referencia: el dólar oficial se guarda SIEMPRE actualizado,
+        // aunque la fuente elegida para los precios sea el blue. No se usa para
+        // convertir precios; es solo para verlo en "Monedas configuradas".
+        $oficial = (float) ($all['oficial']['venta'] ?? $all['oficial']['compra'] ?? 0.0);
+        if ($oficial > 0) {
+            $setting->updateRate(self::REFERENCE_CODE, $oficial);
+        }
+
         CurrencyService::flush();
 
         self::writeCache([

@@ -121,6 +121,11 @@
                             <?php endforeach; ?>
                             </tbody>
                         </table>
+                        <p class="form-hint">
+                            La fila <strong>“Dólar oficial (ref.)”</strong> se actualiza sola junto con la cotización
+                            automática y está solo para tenerla a la vista. Los precios se siguen calculando con la
+                            fuente elegida arriba (Oficial o Blue).
+                        </p>
                         <hr class="my-4">
                         <h3 class="form-section__title"><i class="bi bi-arrow-repeat"></i> Cotización automática (lanacion.com.ar)</h3>
                         <?php $usd = \App\Services\ExchangeRateService::cached(); ?>
