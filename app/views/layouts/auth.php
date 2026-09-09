@@ -18,7 +18,9 @@ use App\Services\SettingService;
     <title><?= e($pageTitle ?? 'Acceso · ' . SettingService::companyName()) ?></title>
     <meta name="robots" content="noindex, nofollow">
     <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
-    <link rel="icon" href="<?= asset('img/favicon.svg') ?>" type="image/svg+xml">
+    <link rel="icon" type="image/svg+xml" href="<?= asset('img/favicon.svg') ?>">
+    <link rel="icon" type="image/png" sizes="96x96" href="<?= asset('img/favicon-sh.png') ?>">
+    <link rel="shortcut icon" href="<?= asset('img/favicon-sh.png') ?>">
     <link rel="stylesheet" href="<?= asset('vendor/bootstrap/css/bootstrap.min.css') ?>">
     <link rel="stylesheet" href="<?= asset('vendor/bootstrap-icons/font/bootstrap-icons.min.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/public.css') ?>">

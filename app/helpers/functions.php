@@ -155,10 +155,10 @@ function asset(string $path): string
     $path = ltrim($path, '/');
     $url  = ASSET_URL . '/' . $path;
 
-    // Cache-busting: para CSS/JS propios se agrega ?v=<hash del contenido>,
-    // así el navegador baja la versión nueva apenas cambia el archivo
-    // (el hash evita colisiones cuando dos ediciones caen en el mismo segundo).
-    if (preg_match('/\.(css|js)$/', $path)) {
+    // Cache-busting: para los assets propios (CSS/JS y también el favicon /
+    // logos) se agrega ?v=<hash del contenido>, así el navegador baja la
+    // versión nueva apenas cambia el archivo.
+    if (preg_match('/\.(css|js|svg|png|ico|webp)$/', $path)) {
         $file = PUBLIC_PATH . '/assets/' . $path;
         if (is_file($file)) {
             $url .= '?v=' . hash('crc32b', (string) file_get_contents($file));
