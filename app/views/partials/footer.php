@@ -43,7 +43,9 @@ $footerParts    = (new Category())->featuredWithProducts('spare_part', 6);
                         'social_youtube'   => ['bi-youtube', 'YouTube'],
                     ] as $key => [$icon, $label]): ?>
                         <?php if (setting($key)): ?>
-                            <a href="<?= e(setting($key)) ?>" target="_blank" rel="noopener" aria-label="<?= e($label) ?>">
+                            <?php $net = str_replace('social_', '', $key); ?>
+                            <a href="<?= e(setting($key)) ?>" target="_blank" rel="noopener"
+                               class="footer-social__link footer-social__link--<?= e($net) ?>" aria-label="<?= e($label) ?>">
                                 <i class="bi <?= $icon ?>"></i>
                             </a>
                         <?php endif; ?>

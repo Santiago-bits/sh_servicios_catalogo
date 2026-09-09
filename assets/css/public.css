@@ -1198,12 +1198,18 @@ img { max-width: 100%; height: auto; }
 /* El logo ya trae su propio fondo oscuro, se mezcla bien con el pie sin recuadro. */
 .footer-brand__logo { max-height: 56px; width: auto; max-width: 100%; }
 .footer-about { font-size: .9rem; line-height: 1.7; }
-.footer-social { display: flex; gap: 8px; margin-top: 16px; }
+.footer-social { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
 .footer-social a {
-    width: 38px; height: 38px; display: grid; place-items: center; border-radius: var(--radius);
-    background: #1E1E1E; color: #BEBEBE; transition: all var(--t-fast);
+    width: 48px; height: 48px; display: grid; place-items: center; border-radius: 12px;
+    color: #fff; font-size: 1.5rem; background: #333; transition: transform var(--t-fast), filter var(--t-fast);
 }
-.footer-social a:hover { background: var(--yellow); color: var(--black); }
+.footer-social a:hover { transform: translateY(-2px); filter: brightness(1.1); }
+.footer-social a.footer-social__link--instagram {
+    background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+}
+.footer-social a.footer-social__link--facebook { background: #1877F2; }
+.footer-social a.footer-social__link--linkedin { background: #0A66C2; }
+.footer-social a.footer-social__link--youtube  { background: #FF0000; }
 
 .footer-title {
     font-size: .84rem; text-transform: uppercase; letter-spacing: .12em;
