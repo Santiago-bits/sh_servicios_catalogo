@@ -10,7 +10,7 @@
             <div class="card-admin__body">
                 <ol class="text-muted-2 small mb-4" style="padding-left:18px">
                     <li>Descargá la plantilla del tipo de producto que querés importar.</li>
-                    <li>Completala en Excel y guardala como <strong>CSV (delimitado por punto y coma)</strong>.</li>
+                    <li>Completala en Excel o Google Sheets y guardala como <strong>CSV</strong>. No importa el tipo de CSV ni la codificación: si los acentos quedan raros, el sistema los acomoda solo.</li>
                     <li>Subila acá: primero vas a ver una previsualización con los errores detectados.</li>
                     <li>Recién después confirmás la importación.</li>
                 </ol>

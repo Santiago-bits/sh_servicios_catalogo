@@ -63,11 +63,19 @@ final class ImportService
             return $empty;
         }
 
-        $handle = fopen($filePath, 'rb');
-        if ($handle === false) {
+        // Se lee todo el archivo y se lleva a UTF-8 sí o sí: Excel en
+        // Windows en español suele guardar el CSV en ANSI y ahí los
+        // acentos salen mal. Así el usuario no tiene que preocuparse
+        // por el "tipo" al guardar.
+        $raw = file_get_contents($filePath);
+        if ($raw === false) {
             $empty['message'] = 'No se pudo abrir el archivo.';
             return $empty;
         }
+
+        $handle = fopen('php://temp', 'r+b');
+        fwrite($handle, self::toUtf8($raw));
+        rewind($handle);
 
         // Detección del separador a partir de la primera línea
         $firstLine = (string) fgets($handle);
@@ -143,6 +151,41 @@ final class ImportService
             'invalid' => $invalid,
             'headers' => $columns,
         ];
+    }
+
+    /**
+     * Deja el contenido del CSV en UTF-8, venga como venga:
+     *  - UTF-8 (con o sin BOM): se deja igual.
+     *  - ANSI / Windows-1252 (lo que guarda Excel en español): se convierte.
+     *  - "doble codificado" (el BOM aparece como "ï»¿"): se revierte una vuelta.
+     */
+    private static function toUtf8(string $content): string
+    {
+        // BOM real → se saca (los parsers de abajo también lo contemplan).
+        if (str_starts_with($content, "\xEF\xBB\xBF")) {
+            $content = substr($content, 3);
+        }
+
+        // "Doble codificado": es UTF-8 válido pero está lleno de "Ã", "Â",
+        // "ï»¿"… (pasó por UTF-8 dos veces al re-guardarlo). Se revierte
+        // una vuelta y sólo se queda si el resultado sigue siendo UTF-8.
+        $looksDoubleEncoded = str_starts_with($content, "\xC3\xAF\xC2\xBB\xC2\xBF")
+            || (mb_check_encoding($content, 'UTF-8') && preg_match('/\xC3[\x82-\x85\x87-\x9F]/', $content) === 1);
+
+        if ($looksDoubleEncoded) {
+            $reverted = @mb_convert_encoding($content, 'ISO-8859-1', 'UTF-8');
+            if (is_string($reverted) && $reverted !== '' && mb_check_encoding($reverted, 'UTF-8')) {
+                $content = str_starts_with($reverted, "\xEF\xBB\xBF") ? substr($reverted, 3) : $reverted;
+            }
+        }
+
+        // Si no es UTF-8 válido, casi seguro es ANSI (lo que guarda Excel
+        // en español: Windows-1252).
+        if (!mb_check_encoding($content, 'UTF-8')) {
+            $content = (string) mb_convert_encoding($content, 'UTF-8', 'Windows-1252');
+        }
+
+        return $content;
     }
 
     /** "si"/"no"/"x"/"1"/"0"/"" → 1 | 0 | null (null = la columna vino vacía, no se toca). */
