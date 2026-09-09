@@ -14,6 +14,9 @@ use App\Services\PriceService;
                 <input type="hidden" name="<?= $flag ?>" value="1">
             <?php endif; ?>
         <?php endforeach; ?>
+        <?php if (!empty($filters['condicion'])): ?>
+            <input type="hidden" name="condicion" value="<?= e($filters['condicion']) ?>">
+        <?php endif; ?>
         <div>
             <label class="form-label" for="f-q">Buscar</label>
             <input type="search" class="form-control" id="f-q" name="q" placeholder="Nombre, código, modelo"
@@ -52,16 +55,6 @@ use App\Services\PriceService;
                     <option value="<?= $status ?>" <?= ($filters['estado'] ?? '') === $status ? 'selected' : '' ?>>
                         <?= e(availability_badge($status)['label']) ?>
                     </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
-        <div>
-            <label class="form-label" for="f-condicion">Condición</label>
-            <select class="form-select" id="f-condicion" name="condicion">
-                <option value="">Todas</option>
-                <?php foreach (['nuevo' => 'Nueva', 'usado' => 'Usada', 'reacondicionado' => 'Reacondicionada'] as $val => $label): ?>
-                    <option value="<?= $val ?>" <?= ($filters['condicion'] ?? '') === $val ? 'selected' : '' ?>><?= $label ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
