@@ -43,6 +43,7 @@ class SettingController extends AdminController
     private const HIDDEN_KEYS = [
         'company_legal', 'company_taxid', 'company_founded',
         'contact_phone', 'contact_city', 'contact_map_embed',
+        'usd_rate_source', // el sistema trabaja siempre con el dólar oficial
     ];
 
     public function index(): void
@@ -137,22 +138,6 @@ class SettingController extends AdminController
 
         SettingService::flush();
         CurrencyService::flush();
-
-        // Si se cambió la fuente del dólar (Blue → Oficial, etc.) se vuelve
-        // a traer la cotización de esa fuente ahora mismo, no en la próxima
-        // actualización automática.
-        if (isset($changes['usd_rate_source'])) {
-            $res = ExchangeRateService::refreshNow((string) $changes['usd_rate_source']);
-            SettingService::flush();
-            CurrencyService::flush();
-
-            if ($res['ok']) {
-                $this->success('Dólar ' . $res['source'] . ' actualizado a $' . number_es($res['rate'], 2) . '.');
-            } else {
-                $this->error('Se guardó la fuente del dólar, pero no se pudo traer la cotización ahora ('
-                    . $res['message'] . '). Cargá el valor a mano en "Cotización del dólar" o usá "Actualizar ahora".');
-            }
-        }
 
         if ($changes !== []) {
             AuditService::log('settings', 'settings', null, null, count($changes) . ' opción(es) modificada(s)', array_keys($changes));

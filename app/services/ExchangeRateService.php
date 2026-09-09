@@ -28,18 +28,10 @@ final class ExchangeRateService
     private const URL = 'https://www.lanacion.com.ar/dolar-hoy/';
 
     /**
-     * clave interna => título tal cual aparece en el HTML de La Nación.
-     * Se dejan sólo Oficial y Blue: son las dos que usa el comercio.
-     * (El Oficial se sigue leyendo siempre, aunque la fuente elegida
-     * para los precios sea el Blue, para mostrarlo como referencia.)
+     * Título del dólar oficial tal cual aparece en el HTML de La Nación.
+     * El comercio trabaja siempre con el dólar oficial: no hay otra opción.
      */
-    private const SOURCES = [
-        'oficial' => 'Dólar oficial',
-        'blue'    => 'Dólar blue',
-    ];
-
-    /** Fila de referencia en la tabla `currencies` (solo para verla, no se usa para precios). */
-    private const REFERENCE_CODE = 'USO';
+    private const SOURCE_TITLE = 'Dólar oficial';
 
     private const CACHE_DIR   = STORAGE_PATH . '/cache';
     private const CACHE_FILE  = self::CACHE_DIR . '/usd-rate.json';
@@ -72,26 +64,20 @@ final class ExchangeRateService
 
             $ttl = max(1, SettingService::int('usd_rate_ttl_hours', 12)) * 3600;
 
-            $currentSource = (string) SettingService::get('usd_rate_source', 'blue');
-            $cached        = self::cached();
-            $sourceChanged = $cached !== null && (string) ($cached['source'] ?? '') !== $currentSource;
-
-            // ¿La última actualización exitosa sigue vigente? (salvo que se
-            // haya cambiado la fuente: ahí se vuelve a bajar aunque no venza)
+            // ¿La última actualización exitosa sigue vigente?
             $lastOk = is_file(self::CACHE_FILE) ? (int) @filemtime(self::CACHE_FILE) : 0;
-            if (!$sourceChanged && $lastOk > 0 && (time() - $lastOk) < $ttl) {
+            if ($lastOk > 0 && (time() - $lastOk) < $ttl) {
                 return;
             }
 
-            // ¿Hubo un intento (fallido) hace muy poco? No insistir
-            // (salvo que se haya cambiado la fuente).
+            // ¿Hubo un intento (fallido) hace muy poco? No insistir.
             $lastTry = is_file(self::ATTEMPT_FILE) ? (int) @filemtime(self::ATTEMPT_FILE) : 0;
-            if (!$sourceChanged && $lastTry > 0 && (time() - $lastTry) < self::RETRY_AFTER) {
+            if ($lastTry > 0 && (time() - $lastTry) < self::RETRY_AFTER) {
                 return;
             }
 
             self::touchAttempt();
-            self::refresh($currentSource);
+            self::refresh();
         } catch (Throwable $e) {
             error_log('[USD] refreshIfStale: ' . $e->getMessage());
         }
@@ -103,16 +89,14 @@ final class ExchangeRateService
      *
      * @return array{ok:bool,rate:float,source:string,message:string}
      */
-    public static function refreshNow(?string $source = null): array
+    public static function refreshNow(): array
     {
-        $source = $source ?: (string) SettingService::get('usd_rate_source', 'blue');
-
         try {
             self::touchAttempt();
-            return self::refresh($source);
+            return self::refresh();
         } catch (Throwable $e) {
             error_log('[USD] refreshNow: ' . $e->getMessage());
-            return ['ok' => false, 'rate' => 0.0, 'source' => $source, 'message' => $e->getMessage()];
+            return ['ok' => false, 'rate' => 0.0, 'source' => 'oficial', 'message' => $e->getMessage()];
         }
     }
 
@@ -126,15 +110,6 @@ final class ExchangeRateService
         return is_array($data) ? $data : null;
     }
 
-    /** @return array<string,string> clave => etiqueta legible */
-    public static function sourceLabels(): array
-    {
-        return [
-            'oficial' => 'Oficial',
-            'blue'    => 'Blue',
-        ];
-    }
-
     // -----------------------------------------------------------------
     //  Interno
     // -----------------------------------------------------------------
@@ -145,17 +120,13 @@ final class ExchangeRateService
      *
      * @return array{ok:bool,rate:float,source:string,message:string}
      */
-    private static function refresh(string $source): array
+    private static function refresh(): array
     {
-        if (!isset(self::SOURCES[$source])) {
-            $source = 'blue';
-        }
-
         [$status, $html] = self::httpGet(self::URL);
 
         if ($status !== 200 || $html === '') {
             return [
-                'ok' => false, 'rate' => 0.0, 'source' => $source,
+                'ok' => false, 'rate' => 0.0, 'source' => 'oficial',
                 'message' => $status === 0
                     ? 'No se pudo conectar con lanacion.com.ar (puede estar bloqueado por el hosting).'
                     : 'lanacion.com.ar respondió con el código ' . $status . '.',
@@ -163,77 +134,59 @@ final class ExchangeRateService
         }
 
         $all  = self::parse($html);
-        $rate = $all[$source]['venta'] ?? $all[$source]['compra'] ?? 0.0;
+        $rate = $all['oficial']['venta'] ?? $all['oficial']['compra'] ?? 0.0;
 
         if ($rate <= 0) {
             return [
-                'ok' => false, 'rate' => 0.0, 'source' => $source,
-                'message' => 'Se bajó la página pero no se pudo leer el valor del dólar ' . $source
+                'ok' => false, 'rate' => 0.0, 'source' => 'oficial',
+                'message' => 'Se bajó la página pero no se pudo leer el valor del dólar oficial'
                     . ' (puede haber cambiado el formato de La Nación).',
             ];
         }
 
         // Persistir: configuración + tabla currencies + caché en disco.
         SettingService::set('usd_rate', self::numberString($rate));
-        $setting = new Setting();
-        $setting->updateRate('USD', $rate);
-
-        // Fila de referencia: el dólar oficial se guarda SIEMPRE actualizado,
-        // aunque la fuente elegida para los precios sea el blue. No se usa para
-        // convertir precios; es solo para verlo en "Monedas configuradas".
-        $oficial = (float) ($all['oficial']['venta'] ?? $all['oficial']['compra'] ?? 0.0);
-        if ($oficial > 0) {
-            $setting->updateRate(self::REFERENCE_CODE, $oficial);
-        }
-
+        (new Setting())->updateRate('USD', $rate);
         CurrencyService::flush();
 
         self::writeCache([
             'rate'    => $rate,
-            'source'  => $source,
+            'source'  => 'oficial',
             'at'      => date('c'),
             'all'     => $all,
         ]);
 
         return [
-            'ok' => true, 'rate' => $rate, 'source' => $source,
-            'message' => 'Dólar ' . $source . ' actualizado: $' . self::numberString($rate) . '.',
+            'ok' => true, 'rate' => $rate, 'source' => 'oficial',
+            'message' => 'Dólar oficial actualizado: $' . self::numberString($rate) . '.',
         ];
     }
 
     /**
-     * Extrae todas las cotizaciones del HTML de La Nación.
+     * Extrae la cotización del dólar oficial del HTML de La Nación.
      *
      * @return array<string,array{compra?:float,venta?:float}>
      */
     public static function parse(string $html): array
     {
-        $out = [];
+        // Bloque de datos: <a title="Dólar oficial" class="... link-container-currency-data"> ... <p>...</p>
+        $re = '#title="' . preg_quote(self::SOURCE_TITLE, '#')
+            . '"\s+class="com-link link-container-currency-data".*?<p\b[^>]*>(.*?)</p>#su';
 
-        foreach (self::SOURCES as $key => $title) {
-            // Bloque de datos de esa moneda: <a title="Dólar X" class="... link-container-currency-data"> ... <p>...</p>
-            $re = '#title="' . preg_quote($title, '#')
-                . '"\s+class="com-link link-container-currency-data".*?<p\b[^>]*>(.*?)</p>#su';
+        if (!preg_match($re, $html, $m)) {
+            return [];
+        }
+        $block = $m[1];
 
-            if (!preg_match($re, $html, $m)) {
-                continue;
-            }
-            $block = $m[1];
-
-            $values = [];
-            if (preg_match('#Compra</span>\s*<strong[^>]*>\$(?:<!--\s*-->)?\s*([\d.]+,\d{2})#u', $block, $c)) {
-                $values['compra'] = self::toFloat($c[1]);
-            }
-            if (preg_match('#Venta</span>\s*<strong[^>]*>\$(?:<!--\s*-->)?\s*([\d.]+,\d{2})#u', $block, $v)) {
-                $values['venta'] = self::toFloat($v[1]);
-            }
-
-            if ($values !== []) {
-                $out[$key] = $values;
-            }
+        $values = [];
+        if (preg_match('#Compra</span>\s*<strong[^>]*>\$(?:<!--\s*-->)?\s*([\d.]+,\d{2})#u', $block, $c)) {
+            $values['compra'] = self::toFloat($c[1]);
+        }
+        if (preg_match('#Venta</span>\s*<strong[^>]*>\$(?:<!--\s*-->)?\s*([\d.]+,\d{2})#u', $block, $v)) {
+            $values['venta'] = self::toFloat($v[1]);
         }
 
-        return $out;
+        return $values !== [] ? ['oficial' => $values] : [];
     }
 
     /** "1.555,00" (formato argentino) => 1555.00 */
