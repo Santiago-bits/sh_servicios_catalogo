@@ -175,12 +175,10 @@ $codeTypes = [
                                 <strong><?= e($altCurrency === 'ARS' ? 'ARS' . $altAmount : $altAmount) ?></strong>
                             </div>
                         <?php endif; ?>
-                        <p class="price-box__note">
-                            Precio + IVA por <?= e($product['unit'] ?? 'unidad') ?>. Sujeto a modificación sin previo aviso.
-                        </p>
+                        <p class="price-box__note">Precio + IVA. Sujeto a modificación sin previo aviso.</p>
                     <?php else: ?>
                         <div class="price-box__value">Consultar</div>
-                        <p class="price-box__note">Escribinos y te pasamos precio y disponibilidad.</p>
+                        <p class="price-box__note">Escribinos y te pasamos el precio actualizado.</p>
                     <?php endif; ?>
                 </div>
 
