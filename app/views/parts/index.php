@@ -19,17 +19,6 @@
 
         <h1><?= e($currentCategory['name'] ?? 'Repuestos') ?></h1>
         <p><?= e($currentCategory['description'] ?? 'Buscá por código interno, código OEM, código de fabricante o directamente por el modelo de tu máquina.') ?></p>
-
-        <!-- Buscador destacado de repuestos -->
-        <form class="mt-4" method="get" action="<?= url('repuestos' . ($currentCategory ? '/' . $currentCategory['slug'] : '')) ?>">
-            <div class="input-group input-group-lg" style="max-width:660px">
-                <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
-                <input type="search" name="q" class="form-control border-0"
-                       placeholder="Ej: 8FG25 · FIL-00125 · 15601-U2100-71 · filtro de aceite"
-                       value="<?= e($filters['q'] ?? '') ?>" aria-label="Buscar repuesto">
-                <button class="btn btn-accent" type="submit">Buscar</button>
-            </div>
-        </form>
     </div>
 </section>
 

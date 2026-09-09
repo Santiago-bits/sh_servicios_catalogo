@@ -624,12 +624,67 @@
         const form = $('#catalogFilters');
         if (!form) { return; }
 
-        // Autoenvío al cambiar cualquier control (salvo campos de texto)
-        form.addEventListener('change', e => {
-            if (e.target.type !== 'text' && e.target.type !== 'number') {
-                form.submit();
+        // ---- Filtrado del catálogo en vivo, sin recargar ----
+        const results = $('#catalogResults');
+        const countEl = $('.catalog-toolbar__count');
+        const seg     = (form.getAttribute('action') || '')
+            .replace(SHS.baseUrl, '').replace(/^\/+/, '').split('/')[0];
+        const apiUrl  = SHS.baseUrl + '/api/' + (seg === 'maquinaria' ? 'maquinaria' : 'repuestos');
+        const noun    = seg === 'maquinaria' ? 'máquina(s)' : 'repuesto(s)';
+
+        const applyFilters = debounce(async () => {
+            if (!results) { form.submit(); return; }
+
+            const params = new URLSearchParams();
+            new FormData(form).forEach((v, k) => {
+                if (String(v).trim() !== '') { params.append(k, v); }
+            });
+            const orden = $('select[name="orden"]');
+            if (orden && orden.value) { params.set('orden', orden.value); }
+            const vista = new URL(window.location.href).searchParams.get('vista');
+            if (vista) { params.set('vista', vista); }
+
+            results.style.opacity = '.4';
+            results.style.pointerEvents = 'none';
+
+            try {
+                const data = await request(apiUrl + '?' + params.toString());
+                if (data && data.ok) {
+                    results.innerHTML = data.html;
+
+                    $$('.catalog-layout .pagination-wrap').forEach(n => n.remove());
+                    if (data.pagination && data.pagination.trim() !== '') {
+                        results.insertAdjacentHTML('afterend', data.pagination);
+                    }
+
+                    if (countEl) {
+                        const q = (params.get('q') || '').trim();
+                        countEl.innerHTML = '<strong>' + Number(data.total).toLocaleString('es-AR') + '</strong> ' + noun +
+                            (q ? ' para “<strong>' + escapeHtml(q) + '</strong>”' : '');
+                    }
+
+                    const url = new URL(window.location.href);
+                    url.search = params.toString();
+                    window.history.replaceState(null, '', url);
+                }
+            } catch (e) {
+                /* si falla, se dejan los resultados que ya estaban */
+            } finally {
+                results.style.opacity = '';
+                results.style.pointerEvents = '';
             }
-        });
+        }, 300);
+
+        form.addEventListener('input', () => applyFilters());
+        form.addEventListener('change', () => applyFilters());
+        form.addEventListener('submit', e => { e.preventDefault(); applyFilters(); });
+
+        // El "Ordenar por" también actualiza en vivo (evita el submit propio)
+        const ordenSel = $('select[name="orden"]');
+        if (ordenSel && results) {
+            ordenSel.removeAttribute('data-autosubmit');
+            ordenSel.addEventListener('change', () => applyFilters());
+        }
 
         // Filtros en móvil
         const openBtn  = $('#filtersOpen');
