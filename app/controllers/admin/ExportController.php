@@ -54,12 +54,15 @@ class ExportController extends AdminController
         if ($format === 'pdf') {
             // El PDF sólo muestra las primeras columnas (las clave): con 40+
             // columnas quedaría ilegible. Para el detalle completo, Excel/CSV.
-            $cols     = $data['pdf_cols'] ?? count($data['headers']);
-            $headers  = array_slice($data['headers'], 0, $cols);
-            $pdfRows  = array_map(static fn (array $r): array => array_slice($r, 0, $cols), $data['rows']);
+            $cols    = $data['pdf_cols'] ?? count($data['headers']);
+            $headers = array_map([ExportService::class, 'ascii'], array_slice($data['headers'], 0, $cols));
+            $pdfRows = array_map(
+                static fn (array $r): array => array_map([ExportService::class, 'ascii'], array_slice($r, 0, $cols)),
+                $data['rows']
+            );
 
-            PdfService::table($data['title'], $headers, $pdfRows)
-                ->stream($filename . '.pdf', true);
+            PdfService::table(ExportService::ascii($data['title']), $headers, $pdfRows)
+                ->stream(ExportService::ascii($filename) . '.pdf', true);
         }
 
         if ($format === 'xlsx') {

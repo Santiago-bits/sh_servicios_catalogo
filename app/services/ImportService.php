@@ -680,13 +680,13 @@ final class ImportService
         $example = $type === 'machine'
             ? [
                 'AE-100', 'Autoelevador Toyota 8FG25 2.500 kg', 'Toyota', '8FG25', 'Autoelevadores', 'SN-8FG25-001',
-                'usado', 'disponible', 'Depósito Central',
+                'usado', 'disponible', 'Deposito Central',
                 'USD', '16000', '25', '20000', '', 'si',
                 '2018', '6200', 'gas', '2500', '4700', '2100',
-                'Toyota 4Y 2.5L nafta/gas', '52', 'Automática (Powershift)', '3800', '3690', '1150',
-                '2200', 'Plomo-ácido', '48V', 'Triple / Full free', 'Neumática', '1070 x 122 x 40 mm', '6 meses',
+                'Toyota 4Y 2.5L nafta/gas', '52', 'Automatica (Powershift)', '3800', '3690', '1150',
+                '2200', 'Plomo-acido', '48V', 'Triple / Full free', 'Neumatica', '1070 x 122 x 40 mm', '6 meses',
                 'Autoelevador a gas 2.500 kg, torre triple, revisado.',
-                'Equipo revisado con garantía de 6 meses. Motor original, cubiertas nuevas.',
+                'Equipo revisado con garantia de 6 meses. Motor original, cubiertas nuevas.',
                 'no', 'no',
             ]
             : [
@@ -696,7 +696,7 @@ final class ImportService
                 'disponible', 'no', 'no',
                 'Toyota 8FG25|Toyota 8FD30',
                 'Filtro de aceite original Toyota para la serie 8.',
-                'Filtro de flujo total con válvula antirretorno.',
+                'Filtro de flujo total con valvula antirretorno.',
             ];
 
         // "sep=;" en la primera línea: Excel la usa para separar en columnas

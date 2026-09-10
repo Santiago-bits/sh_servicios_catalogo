@@ -139,7 +139,7 @@ final class ExportService
                 'Tipo de rueda'         => $r['tire_type'],
                 'Tamaño de uña'         => $r['fork_size'],
                 'Garantía'              => $r['warranty'],
-                'N° de serie'           => $r['serial_number'],
+                'Nro. de serie'         => $r['serial_number'],
                 'Ubicación'             => $r['location'],
                 'En oferta'             => self::yesNo($r['is_offer']),
                 'Precio visible'        => self::yesNo($r['price_visible']),
@@ -358,25 +358,50 @@ final class ExportService
     // Formatos de salida
     // ----------------------------------------------------------------
 
-    /** @param array{headers:array<int,string>,rows:array<int,array<int,mixed>>} $data */
+    /**
+     * Saca tildes y cualquier caracter fuera del ASCII imprimible. Así el
+     * archivo se abre igual en cualquier Excel/PC sin "letras raras",
+     * pase lo que pase con la codificación.
+     */
+    public static function ascii(mixed $value): string
+    {
+        $s = (string) $value;
+
+        $s = strtr($s, [
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n',
+            'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U', 'Ü' => 'U', 'Ñ' => 'N',
+            'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u',
+            'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u', 'ç' => 'c', 'Ç' => 'C',
+            'º' => '', 'ª' => '', '°' => '', '¿' => '', '¡' => '',
+            '–' => '-', '—' => '-', '‘' => "'", '’' => "'", '“' => '"', '”' => '"', '…' => '...',
+            '€' => 'EUR', '·' => '-', "\u{00A0}" => ' ',
+        ]);
+
+        // Cualquier byte que quede fuera de ASCII imprimible / tab / salto.
+        return (string) preg_replace('/[^\x09\x0A\x0D\x20-\x7E]/', '', $s);
+    }
+
+    /**
+     * @param array{headers:array<int,string>,rows:array<int,array<int,mixed>>} $data
+     */
     public static function toCsv(array $data, string $filename): never
     {
         if (!headers_sent()) {
             header('Content-Type: text/csv; charset=utf-8');
-            header('Content-Disposition: attachment; filename="' . $filename . '.csv"');
+            header('Content-Disposition: attachment; filename="' . self::ascii($filename) . '.csv"');
             header('Cache-Control: no-store');
         }
 
         $output = fopen('php://output', 'wb');
 
-        // BOM para que Excel reconozca UTF-8; "sep=;" para que separe en
-        // columnas (sin esto Excel mete todo en la columna A en muchas PC).
-        fwrite($output, "\xEF\xBB\xBF");
+        // "sep=;" para que Excel separe en columnas (sin esto mete todo en
+        // la columna A en muchas PC). El contenido va sin tildes, así que
+        // no hace falta BOM.
         fwrite($output, "sep=;\r\n");
 
-        fputcsv($output, $data['headers'], ';', '"', '\\');
+        fputcsv($output, array_map([self::class, 'ascii'], $data['headers']), ';', '"', '\\');
         foreach ($data['rows'] as $row) {
-            fputcsv($output, $row, ';', '"', '\\');
+            fputcsv($output, array_map([self::class, 'ascii'], $row), ';', '"', '\\');
         }
 
         fclose($output);
@@ -398,12 +423,18 @@ final class ExportService
             self::toCsv($data, $filename);
         }
 
-        $xlsx = new Xlsx($data['title']);
-        $xlsx->setHeaders($data['headers']);
-        $xlsx->addRows($data['rows']);
+        $xlsx = new Xlsx(self::ascii($data['title']));
+        $xlsx->setHeaders(array_map([self::class, 'ascii'], $data['headers']));
+        $xlsx->addRows(array_map(
+            static fn (array $r): array => array_map(
+                static fn (mixed $v): mixed => is_string($v) ? self::ascii($v) : $v,
+                $r
+            ),
+            $data['rows']
+        ));
 
         AuditService::log('export', 'data', null, null, 'Exportación de ' . $data['title'] . ' a Excel');
 
-        $xlsx->stream($filename . '.xlsx');
+        $xlsx->stream(self::ascii($filename) . '.xlsx');
     }
 }
