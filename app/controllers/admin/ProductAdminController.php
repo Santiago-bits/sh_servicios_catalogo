@@ -71,6 +71,12 @@ abstract class ProductAdminController extends AdminController
             'orden'         => Request::get('orden', 'nuevos'),
         ];
 
+        // El listado "Maquinaria" muestra sólo nuevas/reacondicionadas; las
+        // usadas quedan aparte en "Máquinas usadas" (?condicion=usado).
+        if ($this->type === 'machine' && empty($filters['condicion'])) {
+            $filters['condicion_excluir'] = 'usado';
+        }
+
         $result = (new Product())->catalog(
             $this->type,
             $filters,

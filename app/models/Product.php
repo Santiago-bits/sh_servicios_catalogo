@@ -235,6 +235,16 @@ class Product extends Model
             }
         }
 
+        // Excluir una condición (ej: el listado "Maquinaria" no muestra las usadas,
+        // que viven aparte en "Máquinas usadas").
+        if (!empty($filters['condicion_excluir'])) {
+            $valid = ['nuevo', 'usado', 'reacondicionado'];
+            if (in_array((string) $filters['condicion_excluir'], $valid, true)) {
+                $conditions[]             = 'm.condition_type <> :condicion_excl';
+                $params['condicion_excl'] = (string) $filters['condicion_excluir'];
+            }
+        }
+
         if (!empty($filters['ubicacion'])) {
             $conditions[]        = 'm.location LIKE :ubicacion';
             $params['ubicacion'] = '%' . (string) $filters['ubicacion'] . '%';
