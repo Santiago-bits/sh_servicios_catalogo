@@ -52,6 +52,16 @@ final class Database
             self::$pdo = new PDO($dsn, $config['username'], $config['password'], $config['options']);
             self::$pdo->exec("SET NAMES '{$charset}'");
             self::$pdo->exec("SET SESSION sql_mode = 'STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION'");
+
+            // La zona horaria de la sesión MySQL se alinea con la de PHP
+            // (APP_TIMEZONE). Así NOW() / CURRENT_TIMESTAMP y las columnas
+            // created_at / updated_at guardan la hora local aunque el servidor
+            // esté en UTC (es el caso del hosting). Se usa el desfasaje numérico
+            // (-03:00), que no necesita las tablas de zonas horarias de MySQL.
+            $tzOffset = (new \DateTime('now'))->format('P');
+            if (preg_match('/^[+-]\d{2}:\d{2}$/', $tzOffset) === 1) {
+                self::$pdo->exec("SET time_zone = '{$tzOffset}'");
+            }
         } catch (PDOException $e) {
             error_log('[DB] ' . $e->getMessage());
 
