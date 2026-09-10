@@ -37,7 +37,19 @@ $navLinks = [
             <div class="navmenu" id="mainMenu">
                 <ul class="navmenu__list">
                     <?php foreach ($navLinks as [$path, $label]): ?>
-                        <li><a class="<?= active($path, 'is-active') ?>" href="<?= e(url(ltrim($path, '/'))) ?>"><?= e($label) ?></a></li>
+                        <?php if ($path === '/maquinaria'): ?>
+                            <li class="has-sub">
+                                <a class="<?= active('/maquinaria', 'is-active') ?>" href="<?= e(url('maquinaria')) ?>">
+                                    <?= e($label) ?> <i class="bi bi-chevron-down has-sub__caret" aria-hidden="true"></i>
+                                </a>
+                                <ul class="subnav">
+                                    <li><a href="<?= e(url('maquinaria?condicion=nuevo')) ?>">Nuevas</a></li>
+                                    <li><a href="<?= e(url('maquinaria?condicion=usado')) ?>">Usadas</a></li>
+                                </ul>
+                            </li>
+                        <?php else: ?>
+                            <li><a class="<?= active($path, 'is-active') ?>" href="<?= e(url(ltrim($path, '/'))) ?>"><?= e($label) ?></a></li>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 </ul>
                 <a href="<?= url('cotizador') ?>" class="btn btn-accent btn-sm navmenu__cta">

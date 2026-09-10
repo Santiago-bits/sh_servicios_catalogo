@@ -339,6 +339,30 @@ img { max-width: 100%; height: auto; }
 
 .navmenu__cta { display: none; }   /* sólo dentro del menú móvil */
 
+/* Submenú: Maquinaria -> Nuevas / Usadas */
+.navmenu__list .has-sub { position: relative; }
+.has-sub__caret { font-size: .68em; margin-left: 2px; transition: transform var(--t); }
+.navmenu__list .has-sub:hover .has-sub__caret,
+.navmenu__list .has-sub:focus-within .has-sub__caret { transform: rotate(180deg); }
+.subnav {
+    position: absolute; top: 100%; left: 0; min-width: 172px;
+    list-style: none; margin: 0; padding: 6px; z-index: 1100;
+    background: #1A1A1A; border: 1px solid #2B2B2B; border-radius: 10px;
+    box-shadow: 0 16px 34px rgba(0, 0, 0, .42);
+    opacity: 0; visibility: hidden; transform: translateY(6px);
+    transition: opacity var(--t), transform var(--t), visibility var(--t);
+}
+.navmenu__list .has-sub:hover .subnav,
+.navmenu__list .has-sub:focus-within .subnav {
+    opacity: 1; visibility: visible; transform: translateY(0);
+}
+.subnav a {
+    padding: 9px 12px; border-radius: 7px;
+    text-transform: none; letter-spacing: 0; font-size: .82rem;
+}
+.subnav a::after { display: none; }
+.subnav a:hover { background: #262626; color: var(--white); }
+
 .badge-count {
     display: inline-grid; place-items: center; min-width: 20px; height: 20px;
     padding: 0 6px; border-radius: 20px; background: var(--yellow);
@@ -1357,6 +1381,14 @@ mark { background: rgba(245,196,0,.42); color: inherit; padding: 0 2px; border-r
     .navmenu__list { flex-direction: column; gap: 0; }
     .navmenu__list a { padding: 15px 6px; border-bottom: 1px solid #1E1E1E; }
     .navmenu__list a::after { display: none; }
+
+    /* En el panel lateral el submenú va siempre visible, indentado */
+    .navmenu__list .subnav {
+        position: static; opacity: 1; visibility: visible; transform: none;
+        background: transparent; border: 0; box-shadow: none; padding: 0 0 6px 16px;
+    }
+    .navmenu__list .subnav a { padding: 12px 6px; font-size: .9rem; color: #B7B7B7; }
+    .has-sub__caret { display: none; }
     .navmenu__cta { display: flex; justify-content: center; width: 100%; }
 
     .brand-cell { flex-basis: calc(33.333% - 1px); }   /* ~3 por fila en tablet */
