@@ -13,9 +13,9 @@ $icons = [
 ];
 
 $descriptions = [
-    'maquinaria'   => 'Todas las máquinas del catálogo con sus datos y precios.',
-    'repuestos'    => 'Todos los repuestos con códigos, compatibilidad y precios.',
-    'precios'      => 'Lista de precios de todo el catálogo (costo, ganancia y precio final).',
+    'maquinaria'   => 'Todas las máquinas con la ficha técnica completa (motor, potencia, medidas, batería, etc.), precios, oferta y estado. Mismas columnas que la plantilla de importación.',
+    'repuestos'    => 'Todos los repuestos con códigos, origen, unidad, peso, compatibilidad, precios y estado.',
+    'precios'      => 'Lista de precios de todo el catálogo (costo, ganancia, precio final, oferta y estado).',
     'consultas'    => 'Consultas recibidas desde el sitio, con datos de contacto y estado.',
     'cotizaciones' => 'Cotizaciones generadas, con cliente, total y estado.',
     'auditoria'    => 'Registro de quién hizo cada cambio en el panel.',
@@ -26,7 +26,8 @@ $descriptions = [
         <p class="mb-0 text-muted-2">
             <i class="bi bi-info-circle text-accent"></i>
             Cada botón descarga un archivo con los datos de ese momento: <strong>Excel</strong> y
-            <strong>CSV</strong> para trabajarlo en una planilla, <strong>PDF</strong> para imprimir o mandar.
+            <strong>CSV</strong> traen <strong>todas las columnas</strong> para trabajarlo en una planilla;
+            el <strong>PDF</strong> muestra sólo las columnas principales, para imprimir o mandar.
             <?php if (!$canSeeCost): ?>
                 <br><strong>Tu rol no incluye costos ni ganancias</strong>, así que esas columnas no se exportan.
             <?php endif; ?>

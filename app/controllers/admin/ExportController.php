@@ -52,7 +52,13 @@ class ExportController extends AdminController
         AuditService::log('export', 'data', null, null, 'Exportación de ' . $dataset . ' (' . $format . ')');
 
         if ($format === 'pdf') {
-            PdfService::table($data['title'], $data['headers'], $data['rows'])
+            // El PDF sólo muestra las primeras columnas (las clave): con 40+
+            // columnas quedaría ilegible. Para el detalle completo, Excel/CSV.
+            $cols     = $data['pdf_cols'] ?? count($data['headers']);
+            $headers  = array_slice($data['headers'], 0, $cols);
+            $pdfRows  = array_map(static fn (array $r): array => array_slice($r, 0, $cols), $data['rows']);
+
+            PdfService::table($data['title'], $headers, $pdfRows)
                 ->stream($filename . '.pdf', true);
         }
 
