@@ -37,7 +37,7 @@ class SettingController extends AdminController
      * quedan fijos en la base (defaults sensatos) y no se tocan al
      * guardar. Para volver a mostrar uno, sacalo de esta lista.
      */
-    private const HIDDEN_GROUPS = ['catalogo', 'cotizaciones', 'sistema', 'seo'];
+    private const HIDDEN_GROUPS = ['catalogo', 'cotizaciones', 'sistema'];
 
     /** Ajustes sueltos que se ocultan aunque su grupo se muestre. */
     private const HIDDEN_KEYS = [

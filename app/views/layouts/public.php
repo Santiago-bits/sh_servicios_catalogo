@@ -52,8 +52,16 @@ $robotsMeta  = $robots ?? 'index, follow';
     <link rel="stylesheet" href="<?= asset('vendor/bootstrap-icons/font/bootstrap-icons.min.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/public.css') ?>">
 
-    <?php if (!empty($settings['google_analytics'])): ?>
-        <!-- Analytics configurado desde el panel -->
+    <?php $gaId = preg_replace('/[^A-Za-z0-9\-]/', '', (string) ($settings['google_analytics'] ?? '')); ?>
+    <?php if ($gaId !== ''): ?>
+        <!-- Google Analytics (GA4) — ID configurado en Panel · Configuración · SEO -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=<?= $gaId ?>"></script>
+        <script nonce="<?= csp_nonce() ?>">
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){ dataLayer.push(arguments); }
+            gtag('js', new Date());
+            gtag('config', '<?= $gaId ?>');
+        </script>
     <?php endif; ?>
 </head>
 <body class="<?= e($bodyClass ?? '') ?>">

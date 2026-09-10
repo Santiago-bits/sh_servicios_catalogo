@@ -50,10 +50,10 @@ header(
     "img-src 'self' data: blob: https:; " .
     "media-src 'self' https:; " .
     "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://www.google.com https://maps.google.com; " .
-    "script-src 'self' 'nonce-" . CSP_NONCE . "'; " .
+    "script-src 'self' 'nonce-" . CSP_NONCE . "' https://www.googletagmanager.com; " .
     "style-src 'self' 'unsafe-inline'; " .
     "font-src 'self' data:; " .
-    "connect-src 'self'; " .
+    "connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com; " .
     "form-action 'self'; " .
     "frame-ancestors 'self'; " .
     "base-uri 'self'; " .
