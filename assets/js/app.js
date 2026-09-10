@@ -641,8 +641,12 @@
             });
             const orden = $('select[name="orden"]');
             if (orden && orden.value) { params.set('orden', orden.value); }
-            const vista = new URL(window.location.href).searchParams.get('vista');
-            if (vista) { params.set('vista', vista); }
+            // Se conservan de la URL los filtros que no son campos del formulario
+            // (vista de grilla/lista y el corte por condición: "Máquinas usadas").
+            const urlParams = new URL(window.location.href).searchParams;
+            ['vista', 'condicion', 'estado'].forEach(k => {
+                if (!params.has(k) && urlParams.get(k)) { params.set(k, urlParams.get(k)); }
+            });
 
             results.style.opacity = '.4';
             results.style.pointerEvents = 'none';

@@ -9,9 +9,13 @@ use App\Services\SettingService;
 $companyName = SettingService::companyName();
 $logo        = (string) setting('company_logo', '');
 
+// "Máquinas usadas" es el listado de maquinaria filtrado por condición.
+$usadasActive = is_current('/maquinaria') && ($_GET['condicion'] ?? '') === 'usado';
+
 $navLinks = [
     ['/', 'Inicio'],
     ['/maquinaria', 'Maquinaria'],
+    ['/maquinaria?condicion=usado', 'Máquinas usadas'],
     ['/repuestos', 'Repuestos'],
     ['/servicios', 'Servicios'],
     ['/contacto', 'Contacto'],
@@ -37,7 +41,16 @@ $navLinks = [
             <div class="navmenu" id="mainMenu">
                 <ul class="navmenu__list">
                     <?php foreach ($navLinks as [$path, $label]): ?>
-                        <li><a class="<?= active($path, 'is-active') ?>" href="<?= e(url(ltrim($path, '/'))) ?>"><?= e($label) ?></a></li>
+                        <?php
+                        if ($path === '/maquinaria') {
+                            $isActive = is_current('/maquinaria') && !$usadasActive;
+                        } elseif ($path === '/maquinaria?condicion=usado') {
+                            $isActive = $usadasActive;
+                        } else {
+                            $isActive = is_current($path);
+                        }
+                        ?>
+                        <li><a class="<?= $isActive ? 'is-active' : '' ?>" href="<?= e(url(ltrim($path, '/'))) ?>"><?= e($label) ?></a></li>
                     <?php endforeach; ?>
                 </ul>
                 <a href="<?= url('cotizador') ?>" class="btn btn-accent btn-sm navmenu__cta">
