@@ -13,9 +13,9 @@ $icons = [
 ];
 
 $descriptions = [
-    'maquinaria'   => 'Todas las máquinas con la ficha técnica completa (motor, potencia, medidas, batería, etc.), precios, oferta y estado. Mismas columnas que la plantilla de importación.',
-    'repuestos'    => 'Todos los repuestos con códigos, origen, unidad, peso, compatibilidad, precios y estado.',
-    'precios'      => 'Lista de precios de todo el catálogo (costo, ganancia, precio final, oferta y estado).',
+    'maquinaria'   => 'Todas las máquinas con la ficha técnica completa, precios, oferta y estado. Mismas columnas que la plantilla de importación.',
+    'repuestos'    => 'Todos los repuestos con códigos, origen, peso, compatibilidad, precios y estado.',
+    'precios'      => 'Lista de precios de todo el catálogo (costo, ganancia, precio final y oferta).',
     'consultas'    => 'Consultas recibidas desde el sitio, con datos de contacto y estado.',
     'cotizaciones' => 'Cotizaciones generadas, con cliente, total y estado.',
     'auditoria'    => 'Registro de quién hizo cada cambio en el panel.',
@@ -53,8 +53,8 @@ $descriptions = [
 <div class="row g-3">
     <?php foreach ($datasets as $key => $label): ?>
         <div class="col-md-6 col-xl-4">
-            <div class="card-admin h-100">
-                <div class="card-admin__body d-flex flex-column">
+            <div class="card-admin h-100 d-flex flex-column">
+                <div class="card-admin__body d-flex flex-column flex-grow-1">
                     <div class="d-flex align-items-center gap-3 mb-2">
                         <span class="admin-user__avatar" style="width:46px;height:46px;font-size:1.2rem">
                             <i class="bi <?= e($icons[$key] ?? 'bi-table') ?>"></i>
