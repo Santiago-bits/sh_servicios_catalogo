@@ -44,7 +44,6 @@ $robotsMeta  = $robots ?? 'index, follow';
 
     <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
 
-    <link rel="icon" type="image/svg+xml" href="<?= asset('img/favicon.svg') ?>">
     <link rel="icon" type="image/png" sizes="96x96" href="<?= asset('img/favicon-sh.png') ?>">
     <link rel="shortcut icon" href="<?= asset('img/favicon-sh.png') ?>">
     <link rel="apple-touch-icon" href="<?= asset('img/favicon-sh.png') ?>">

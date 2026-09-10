@@ -15,7 +15,6 @@ use App\Services\SettingService;
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($pageTitle ?? 'Panel · ' . SettingService::companyName()) ?></title>
     <meta name="robots" content="noindex, nofollow">
-    <link rel="icon" type="image/svg+xml" href="<?= asset('img/favicon.svg') ?>">
     <link rel="icon" type="image/png" sizes="96x96" href="<?= asset('img/favicon-sh.png') ?>">
     <link rel="shortcut icon" href="<?= asset('img/favicon-sh.png') ?>">
     <link rel="stylesheet" href="<?= asset('vendor/bootstrap/css/bootstrap.min.css') ?>">

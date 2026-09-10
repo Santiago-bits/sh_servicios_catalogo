@@ -36,6 +36,7 @@
     --yellow-dark:   #D9AE00;
     --yellow-soft:   #FFF5CC;
     --black:         #111111;
+    --black-logo:    #0A0A0A;   /* negro del logo — hero y pie del sitio */
     --dark:          #252525;
     --dark-2:        #1A1A1A;
     --gray:          #6B6B6B;
@@ -373,7 +374,7 @@ img { max-width: 100%; height: auto; }
    6. Hero
    --------------------------------------------------------------------- */
 .hero {
-    position: relative; background: var(--black); color: var(--white);
+    position: relative; background: var(--black-logo); color: var(--white);
     overflow: hidden; padding: clamp(56px, 8vw, 104px) 0 clamp(70px, 9vw, 120px);
     background-size: cover; background-position: center; background-repeat: no-repeat;
 }
@@ -631,7 +632,7 @@ img { max-width: 100%; height: auto; }
    9. Catálogo: filtros y encabezado
    --------------------------------------------------------------------- */
 .page-hero {
-    background: var(--black); color: var(--white);
+    background: var(--black-logo); color: var(--white);
     padding: 42px 0 46px; position: relative; overflow: hidden;
 }
 .page-hero::after {
@@ -1210,7 +1211,7 @@ img { max-width: 100%; height: auto; }
 /* ---------------------------------------------------------------------
    14. Pie de página
    --------------------------------------------------------------------- */
-.site-footer { background: var(--black); color: #A8A8A8; margin-top: 60px; }
+.site-footer { background: var(--black-logo); color: #A8A8A8; margin-top: 60px; }
 .site-footer__stripe {
     height: 6px;
     background: repeating-linear-gradient(135deg, var(--yellow) 0 18px, var(--black) 18px 36px);
