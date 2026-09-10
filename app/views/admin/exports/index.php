@@ -22,6 +22,21 @@ $descriptions = [
 ];
 ?>
 <div class="card-admin">
+    <div class="card-admin__head">
+        <h2><i class="bi bi-file-earmark-pdf"></i> Catálogo en PDF</h2>
+        <a href="<?= admin_url('catalogo-pdf') ?>" class="btn btn-accent btn-sm">
+            <i class="bi bi-magic"></i> Generar catálogo
+        </a>
+    </div>
+    <div class="card-admin__body">
+        <p class="mb-0 text-muted-2">
+            Armá un PDF con la selección de productos que quieras (por categoría, marca o sólo destacados),
+            con o sin precios, listo para mandar por email o imprimir.
+        </p>
+    </div>
+</div>
+
+<div class="card-admin">
     <div class="card-admin__body">
         <p class="mb-0 text-muted-2">
             <i class="bi bi-info-circle text-accent"></i>
@@ -48,7 +63,7 @@ $descriptions = [
                     </div>
                     <p class="text-muted-2 small flex-grow-1"><?= e($descriptions[$key] ?? '') ?></p>
 
-                    <div class="d-flex gap-2 mt-2">
+                    <div class="d-flex gap-2 mt-auto">
                         <a href="<?= admin_url('exportar/' . $key . '/xlsx') ?>" class="btn btn-accent btn-sm flex-grow-1">
                             <i class="bi bi-file-earmark-excel"></i> Excel
                         </a>
@@ -63,19 +78,4 @@ $descriptions = [
             </div>
         </div>
     <?php endforeach; ?>
-</div>
-
-<div class="card-admin">
-    <div class="card-admin__head">
-        <h2><i class="bi bi-file-earmark-pdf"></i> Catálogo en PDF</h2>
-        <a href="<?= admin_url('catalogo-pdf') ?>" class="btn btn-accent btn-sm">
-            <i class="bi bi-magic"></i> Generar catálogo
-        </a>
-    </div>
-    <div class="card-admin__body">
-        <p class="mb-0 text-muted-2">
-            Armá un PDF con la selección de productos que quieras (por categoría, marca o sólo destacados),
-            con o sin precios, listo para mandar por email o imprimir.
-        </p>
-    </div>
 </div>
