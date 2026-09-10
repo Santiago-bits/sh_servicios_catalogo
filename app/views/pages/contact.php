@@ -66,30 +66,6 @@ use App\Services\WhatsAppService;
                         </div>
                     <?php endif; ?>
 
-                    <!-- REPUESTOS -->
-                    <?php if (setting('contact_whatsapp_parts') || setting('contact_email_parts')): ?>
-                        <p style="<?= $grpLabel ?>">Repuestos</p>
-                        <?php if (setting('contact_whatsapp_parts')): ?>
-                            <div class="contact-info-item">
-                                <span style="<?= $iconWa ?>"><?= bs_icon('whatsapp') ?></span>
-                                <div>
-                                    <strong>Teléfono de repuestos</strong>
-                                    <a href="<?= e(WhatsAppService::link('Hola, tengo una consulta por repuestos.', WhatsAppService::partsNumber())) ?>"
-                                       target="_blank" rel="noopener">+<?= e(setting('contact_whatsapp_parts')) ?></a>
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                        <?php if (setting('contact_email_parts')): ?>
-                            <div class="contact-info-item">
-                                <span style="<?= $iconDark ?>"><?= bs_icon('envelope-fill') ?></span>
-                                <div>
-                                    <strong>Email de repuestos</strong>
-                                    <a href="mailto:<?= e(setting('contact_email_parts')) ?>"><?= e(setting('contact_email_parts')) ?></a>
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                    <?php endif; ?>
-
                     <!-- GENERAL -->
                     <?php if (setting('contact_address') || setting('contact_hours')): ?>
                         <p style="<?= $grpLabel ?>">Dónde y cuándo</p>

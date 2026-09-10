@@ -94,12 +94,6 @@ $footerParts    = (new Category())->featuredWithProducts('spare_part', 6);
                             <a href="mailto:<?= e(setting('contact_email')) ?>"><?= e(setting('contact_email')) ?></a>
                         </li>
                     <?php endif; ?>
-                    <?php if (setting('contact_email_parts')): ?>
-                        <li>
-                            <i class="bi bi-nut-fill"></i>
-                            <a href="mailto:<?= e(setting('contact_email_parts')) ?>"><?= e(setting('contact_email_parts')) ?></a>
-                        </li>
-                    <?php endif; ?>
                     <?php if (setting('contact_hours')): ?>
                         <li><i class="bi bi-clock-fill"></i> <span><?= nl2br(e(setting('contact_hours'))) ?></span></li>
                     <?php endif; ?>
