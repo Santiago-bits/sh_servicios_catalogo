@@ -215,7 +215,7 @@ $activeFilters = array_filter($filters, static fn ($v, $k) => !in_array($k, ['or
 
                             <hr class="my-2">
 
-                            <?php foreach (['nuevo' => 'Nuevo', 'usado' => 'Usado', 'reacondicionado' => 'Reacondicionado'] as $value => $label): ?>
+                            <?php foreach (['nuevo' => 'Nuevo', 'usado' => 'Usado'] as $value => $label): ?>
                                 <label class="filter-check">
                                     <input type="radio" name="condicion" value="<?= $value ?>"
                                         <?= ($filters['condicion'] ?? '') === $value ? 'checked' : '' ?>>
