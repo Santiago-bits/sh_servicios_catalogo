@@ -74,6 +74,39 @@ final class ImageService
         return ['uploaded' => $uploaded, 'errors' => $errors];
     }
 
+    /**
+     * Copia todas las fotos de un producto a otro: archivo físico nuevo
+     * (imagen + miniatura) y fila nueva en product_images. Se usa al
+     * "Duplicar" una máquina/repuesto, para que la copia no comparta
+     * archivos con el original.
+     */
+    public static function duplicate(int $fromProductId, int $toProductId): void
+    {
+        $images = Database::select(
+            'SELECT * FROM product_images WHERE product_id = :id ORDER BY sort_order ASC, id ASC',
+            ['id' => $fromProductId]
+        );
+
+        foreach ($images as $image) {
+            $newPath = Uploader::copy((string) $image['path']);
+            if ($newPath === null) {
+                continue; // el archivo original ya no está en disco
+            }
+
+            $newThumb = $image['thumb_path'] !== null ? Uploader::copy((string) $image['thumb_path']) : null;
+
+            Database::insert('product_images', [
+                'product_id' => $toProductId,
+                'path'       => $newPath,
+                'thumb_path' => $newThumb,
+                'alt'        => $image['alt'],
+                'zone'       => $image['zone'],
+                'is_main'    => $image['is_main'],
+                'sort_order' => $image['sort_order'],
+            ]);
+        }
+    }
+
     public static function setMain(int $productId, int $imageId): void
     {
         Database::execute('UPDATE product_images SET is_main = 0 WHERE product_id = :id', ['id' => $productId]);

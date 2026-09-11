@@ -378,7 +378,18 @@ final class ExportService
         ]);
 
         // Cualquier byte que quede fuera de ASCII imprimible / tab / salto.
-        return (string) preg_replace('/[^\x09\x0A\x0D\x20-\x7E]/', '', $s);
+        $s = (string) preg_replace('/[^\x09\x0A\x0D\x20-\x7E]/', '', $s);
+
+        // Excel/LibreOffice interpretan una celda que arranca con = + - @
+        // como una fórmula al abrir el archivo. Los datos de "Consultas" y
+        // "Cotizaciones" los escribe cualquier visitante del sitio: sin esto,
+        // alguien podría meter una fórmula (ej. para robar datos) que se
+        // ejecute sola en la PC de un empleado al abrir la exportación.
+        if ($s !== '' && in_array($s[0], ['=', '+', '-', '@'], true)) {
+            $s = "'" . $s;
+        }
+
+        return $s;
     }
 
     /**

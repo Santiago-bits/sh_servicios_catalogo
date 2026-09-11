@@ -348,6 +348,40 @@ final class Uploader
         };
     }
 
+    /**
+     * Copia un archivo ya subido (dentro de /uploads) a un nombre nuevo
+     * generado por el servidor, en la misma carpeta. Se usa para "Duplicar"
+     * un producto: cada copia necesita su propio archivo en disco, así no
+     * comparten imagen/video con el original (si se borra uno, el otro
+     * queda intacto).
+     */
+    public static function copy(?string $relativePath): ?string
+    {
+        if ($relativePath === null || $relativePath === '' || !str_starts_with($relativePath, 'uploads/')) {
+            return null;
+        }
+
+        $full = PUBLIC_PATH . '/' . $relativePath;
+        $real = realpath($full);
+        $base = realpath(UPLOAD_PATH);
+
+        if ($real === false || $base === false || !str_starts_with($real, $base) || !is_file($real)) {
+            return null;
+        }
+
+        $extension = strtolower(pathinfo($real, PATHINFO_EXTENSION));
+        $newName   = self::uniqueName($extension !== '' ? $extension : 'bin');
+        $newFull   = dirname($real) . '/' . $newName;
+
+        if (!@copy($real, $newFull)) {
+            return null;
+        }
+
+        @chmod($newFull, 0644);
+
+        return dirname($relativePath) . '/' . $newName;
+    }
+
     public static function delete(?string $relativePath): void
     {
         if ($relativePath === null || $relativePath === '' || !str_starts_with($relativePath, 'uploads/')) {

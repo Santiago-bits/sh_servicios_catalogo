@@ -180,38 +180,58 @@ $activeFaults = array_values(array_filter([
                         </td>
 
                         <td class="actions">
-                            <a href="<?= e(machine_url($product)) ?>" target="_blank" class="btn-icon" title="Ver en el sitio">
-                                <i class="bi bi-box-arrow-up-right"></i>
-                            </a>
-                            <?php if (can('machines.edit')): ?>
-                                <a href="<?= admin_url('maquinaria/' . (int) $product['id'] . '/editar') ?>" class="btn-icon" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <form method="post" action="<?= admin_url('maquinaria/' . (int) $product['id'] . '/condicion') ?>"
-                                      class="d-inline"
-                                      data-confirm="¿Pasar «<?= e($product['name']) ?>» a <?= $condKey === 'usado' ? 'nueva' : 'usada' ?>?">
-                                    <?= csrf_field() ?>
-                                    <button type="submit" class="btn-icon" title="<?= $condKey === 'usado' ? 'Pasar a nueva' : 'Pasar a usada' ?>">
-                                        <i class="bi bi-arrow-repeat"></i>
-                                    </button>
-                                </form>
-                            <?php endif; ?>
-                            <?php /* Panel simplificado: historial de precios desactivado.
-                            <?php if (can('prices.history')): ?>
-                                <a href="<?= admin_url('precios/' . (int) $product['id'] . '/historial') ?>" class="btn-icon" title="Historial de precios">
-                                    <i class="bi bi-clock-history"></i>
-                                </a>
-                            <?php endif; ?>
-                            */ ?>
-                            <?php if (can('machines.delete')): ?>
-                                <form method="post" action="<?= admin_url('maquinaria/' . (int) $product['id'] . '/eliminar') ?>"
-                                      class="d-inline" data-confirm="¿Eliminar «<?= e($product['name']) ?>»? Esta acción no se puede deshacer.">
-                                    <?= csrf_field() ?>
-                                    <button type="submit" class="btn-icon btn-icon--danger" title="Eliminar">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
-                            <?php endif; ?>
+                            <div class="dropdown">
+                                <button type="button" class="btn-icon" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" title="Acciones">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="<?= e(machine_url($product)) ?>" target="_blank">
+                                            <i class="bi bi-box-arrow-up-right"></i> Ver en el sitio
+                                        </a>
+                                    </li>
+                                    <?php if (can('machines.edit')): ?>
+                                        <li>
+                                            <a class="dropdown-item" href="<?= admin_url('maquinaria/' . (int) $product['id'] . '/editar') ?>">
+                                                <i class="bi bi-pencil"></i> Editar
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <form method="post" action="<?= admin_url('maquinaria/' . (int) $product['id'] . '/condicion') ?>"
+                                                  data-confirm="¿Pasar «<?= e($product['name']) ?>» a <?= $condKey === 'usado' ? 'nueva' : 'usada' ?>?">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="dropdown-item">
+                                                    <i class="bi bi-arrow-repeat"></i>
+                                                    Pasar a <?= $condKey === 'usado' ? 'nueva' : 'usada' ?>
+                                                </button>
+                                            </form>
+                                        </li>
+                                    <?php endif; ?>
+                                    <?php if (can('machines.create')): ?>
+                                        <li>
+                                            <form method="post" action="<?= admin_url('maquinaria/' . (int) $product['id'] . '/duplicar') ?>"
+                                                  data-confirm="¿Crear una copia idéntica de «<?= e($product['name']) ?>»? Se abrirá para editarla.">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="dropdown-item">
+                                                    <i class="bi bi-files"></i> Duplicar
+                                                </button>
+                                            </form>
+                                        </li>
+                                    <?php endif; ?>
+                                    <?php if (can('machines.delete')): ?>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form method="post" action="<?= admin_url('maquinaria/' . (int) $product['id'] . '/eliminar') ?>"
+                                                  data-confirm="¿Eliminar «<?= e($product['name']) ?>»? Esta acción no se puede deshacer.">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="dropdown-item text-danger">
+                                                    <i class="bi bi-trash"></i> Eliminar
+                                                </button>
+                                            </form>
+                                        </li>
+                                    <?php endif; ?>
+                                </ul>
+                            </div>
                         </td>
                     </tr>
                 <?php endforeach; ?>

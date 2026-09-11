@@ -635,6 +635,40 @@ abstract class ProductAdminController extends AdminController
         }
     }
 
+    /**
+     * Copia las fotos y los videos de un producto a otro (archivo físico
+     * propio + fila nueva), para el botón "Duplicar". Los videos de
+     * YouTube/Vimeo son sólo un link externo: se copia la fila nomás,
+     * sin archivo.
+     */
+    protected function duplicateMedia(int $fromId, int $toId): void
+    {
+        ImageService::duplicate($fromId, $toId);
+
+        foreach (Database::select(
+            'SELECT * FROM videos WHERE product_id = :id ORDER BY sort_order ASC, id ASC',
+            ['id' => $fromId]
+        ) as $video) {
+            $ref = (string) $video['video_ref'];
+
+            if ($video['provider'] === 'file') {
+                $newRef = Uploader::copy($ref);
+                if ($newRef === null) {
+                    continue; // el archivo original ya no está en disco
+                }
+                $ref = $newRef;
+            }
+
+            Database::insert('videos', [
+                'product_id' => $toId,
+                'title'      => $video['title'],
+                'provider'   => $video['provider'],
+                'video_ref'  => $ref,
+                'sort_order' => $video['sort_order'],
+            ]);
+        }
+    }
+
     protected function ensureExists(int $id): void
     {
         $product = (new Product())->find($id);

@@ -96,6 +96,7 @@ $router->group('/admin', static function (Router $router): void {
     $router->post('/maquinaria/{id:\d+}', 'Admin\MachineController@update', ['permission:machines.edit']);
     $router->post('/maquinaria/{id:\d+}/eliminar', 'Admin\MachineController@destroy', ['permission:machines.delete']);
     $router->post('/maquinaria/{id:\d+}/condicion', 'Admin\MachineController@toggleCondition', ['permission:machines.edit']);
+    $router->post('/maquinaria/{id:\d+}/duplicar', 'Admin\MachineController@duplicate', ['permission:machines.create']);
     $router->post('/maquinaria/{id:\d+}/imagenes', 'Admin\MachineController@uploadImages', ['permission:machines.edit']);
     $router->post('/maquinaria/{id:\d+}/imagenes/{imageId:\d+}/principal', 'Admin\MachineController@setMainImage', ['permission:machines.edit']);
     $router->post('/maquinaria/{id:\d+}/imagenes/{imageId:\d+}/eliminar', 'Admin\MachineController@deleteImage', ['permission:machines.edit']);
@@ -111,6 +112,7 @@ $router->group('/admin', static function (Router $router): void {
     $router->get('/repuestos/{id:\d+}/editar', 'Admin\PartController@edit', ['permission:parts.edit']);
     $router->post('/repuestos/{id:\d+}', 'Admin\PartController@update', ['permission:parts.edit']);
     $router->post('/repuestos/{id:\d+}/eliminar', 'Admin\PartController@destroy', ['permission:parts.delete']);
+    $router->post('/repuestos/{id:\d+}/duplicar', 'Admin\PartController@duplicate', ['permission:parts.create']);
     $router->post('/repuestos/{id:\d+}/imagenes', 'Admin\PartController@uploadImages', ['permission:parts.edit']);
     $router->post('/repuestos/{id:\d+}/imagenes/{imageId:\d+}/eliminar', 'Admin\PartController@deleteImage', ['permission:parts.edit']);
     $router->post('/repuestos/{id:\d+}/compatibilidad', 'Admin\PartController@addCompatibility', ['permission:parts.edit']);

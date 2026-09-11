@@ -13,7 +13,9 @@ namespace App\Controllers\Admin;
 
 use App\Models\Machine;
 use App\Models\Product;
+use App\Models\Tag;
 use App\Services\AuditService;
+use Core\Auth;
 use Core\Database;
 
 class MachineController extends ProductAdminController
@@ -160,6 +162,80 @@ class MachineController extends ProductAdminController
 
         $this->success('«' . $product['name'] . '» ahora figura como ' . ($new === 'usado' ? 'usada' : 'nueva') . '.');
         $this->back();
+    }
+
+    /**
+     * Crea una copia idéntica de la máquina (misma ficha técnica, precio,
+     * etiquetas, repuestos compatibles y características) y manda directo
+     * a editarla. Las fotos y documentos NO se copian (son archivos
+     * físicos propios de cada unidad) y la copia arranca sin publicar
+     * hasta que se termine de ajustar lo que la distingue del original.
+     */
+    public function duplicate(string $id): void
+    {
+        $original = (new Product())->findFull((int) $id);
+        if ($original === null || $original['type'] !== 'machine') {
+            $this->abort(404, 'Máquina inexistente.');
+        }
+
+        $productModel = new Product();
+        $originalId   = (int) $original['id'];
+
+        $newId = Database::transaction(function () use ($productModel, $original, $originalId): int {
+            $code = $productModel->nextCode('machine');
+
+            $payload = array_merge($original, [
+                'code'              => $code,
+                'slug'              => $productModel->uniqueSlug($original['name'] . '-' . $code),
+                'price_updated_at'  => date('Y-m-d H:i:s'),
+                'views'             => 0,
+                'og_image'          => null,
+                'featured'          => 0,
+                'active'            => 0,
+                // La copia es una unidad distinta: no hereda si la original
+                // ya estaba vendida/reservada, ni el SEO con el código viejo.
+                'availability'      => 'disponible',
+                'meta_title'        => null,
+                'meta_description'  => null,
+                'created_by'        => Auth::id(),
+                'updated_by'        => null,
+            ]);
+
+            $newId = $productModel->create($payload);
+
+            (new Machine())->save($newId, $original);
+
+            // Repuestos compatibles (y los recomendados entre ellos)
+            Database::execute(
+                'INSERT IGNORE INTO machine_spare_parts (machine_id, spare_part_id, recommended)
+                 SELECT :new, spare_part_id, recommended FROM machine_spare_parts WHERE machine_id = :orig',
+                ['new' => $newId, 'orig' => $originalId]
+            );
+
+            // Etiquetas
+            Database::execute(
+                'INSERT IGNORE INTO product_tags (product_id, tag_id) SELECT :new, tag_id FROM product_tags WHERE product_id = :orig',
+                ['new' => $newId, 'orig' => $originalId]
+            );
+
+            // Características técnicas (ficha)
+            Database::execute(
+                'INSERT INTO feature_values (product_id, feature_id, value_text, value_number)
+                 SELECT :new, feature_id, value_text, value_number FROM feature_values WHERE product_id = :orig',
+                ['new' => $newId, 'orig' => $originalId]
+            );
+
+            AuditService::log('create', $this->permission, 'product', $newId, 'Duplicado de ' . $this->labelSingular . ': ' . $original['code'] . ' → ' . $code);
+
+            return $newId;
+        });
+
+        // Fotos y videos: se copian los archivos físicos (fuera de la
+        // transacción, igual que las imágenes al crear un producto nuevo).
+        $this->duplicateMedia($originalId, $newId);
+
+        $this->success('Se creó la copia «' . $original['name'] . '». Ajustá lo que la distingue del original.');
+        $this->redirect('admin/' . $this->routeBase . '/' . $newId . '/editar');
     }
 
     // ----------------------------------------------------------------

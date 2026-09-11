@@ -14,6 +14,7 @@ use App\Models\Brand;
 use App\Models\Product;
 use App\Models\SparePart;
 use App\Services\AuditService;
+use Core\Auth;
 use Core\Database;
 use Core\Request;
 
@@ -205,6 +206,99 @@ class PartController extends ProductAdminController
 
         $this->success('Compatibilidad eliminada.');
         $this->back();
+    }
+
+    /**
+     * Crea una copia idéntica del repuesto (misma ficha técnica, precio,
+     * etiquetas, códigos, compatibilidad y máquinas compatibles) y manda
+     * directo a editarla. Las fotos y documentos NO se copian (son
+     * archivos físicos) y la copia arranca sin publicar hasta que se
+     * termine de ajustar lo que la distingue del original.
+     */
+    public function duplicate(string $id): void
+    {
+        $original = (new Product())->findFull((int) $id);
+        if ($original === null || $original['type'] !== 'spare_part') {
+            $this->abort(404, 'Repuesto inexistente.');
+        }
+
+        $productModel = new Product();
+        $originalId   = (int) $original['id'];
+
+        $newId = Database::transaction(function () use ($productModel, $original, $originalId): int {
+            $code = $productModel->nextCode('spare_part');
+
+            $payload = array_merge($original, [
+                'code'              => $code,
+                'slug'              => $productModel->uniqueSlug($original['name'] . '-' . $code),
+                'price_updated_at'  => date('Y-m-d H:i:s'),
+                'views'             => 0,
+                'og_image'          => null,
+                'featured'          => 0,
+                'active'            => 0,
+                // La copia es una unidad distinta: no hereda si la original
+                // ya estaba vendida/reservada, ni el SEO con el código viejo.
+                'availability'      => 'disponible',
+                'meta_title'        => null,
+                'meta_description'  => null,
+                'created_by'        => Auth::id(),
+                'updated_by'        => null,
+            ]);
+
+            $newId = $productModel->create($payload);
+
+            // Ficha técnica propia del repuesto (se lee completa de la
+            // tabla porque findFull() no trae weight_kg).
+            $sourcePart = Database::selectOne('SELECT * FROM spare_parts WHERE product_id = :id', ['id' => $originalId]);
+            if ($sourcePart !== null) {
+                (new SparePart())->save($newId, $sourcePart);
+            }
+
+            // Máquinas del catálogo marcadas como compatibles
+            Database::execute(
+                'INSERT IGNORE INTO machine_spare_parts (machine_id, spare_part_id)
+                 SELECT machine_id, :new FROM machine_spare_parts WHERE spare_part_id = :orig',
+                ['new' => $newId, 'orig' => $originalId]
+            );
+
+            // Códigos OEM / alternativos / cruzados
+            Database::execute(
+                'INSERT INTO spare_part_codes (product_id, code_type, code, brand_id, note)
+                 SELECT :new, code_type, code, brand_id, note FROM spare_part_codes WHERE product_id = :orig',
+                ['new' => $newId, 'orig' => $originalId]
+            );
+
+            // Compatibilidad declarada a mano (marca + modelo)
+            Database::execute(
+                'INSERT INTO spare_part_compatibility (spare_part_id, brand_id, model, year_from, year_to, note)
+                 SELECT :new, brand_id, model, year_from, year_to, note FROM spare_part_compatibility WHERE spare_part_id = :orig',
+                ['new' => $newId, 'orig' => $originalId]
+            );
+
+            // Etiquetas
+            Database::execute(
+                'INSERT IGNORE INTO product_tags (product_id, tag_id) SELECT :new, tag_id FROM product_tags WHERE product_id = :orig',
+                ['new' => $newId, 'orig' => $originalId]
+            );
+
+            // Características técnicas (ficha)
+            Database::execute(
+                'INSERT INTO feature_values (product_id, feature_id, value_text, value_number)
+                 SELECT :new, feature_id, value_text, value_number FROM feature_values WHERE product_id = :orig',
+                ['new' => $newId, 'orig' => $originalId]
+            );
+
+            AuditService::log('create', $this->permission, 'product', $newId, 'Duplicado de ' . $this->labelSingular . ': ' . $original['code'] . ' → ' . $code);
+
+            return $newId;
+        });
+
+        // Fotos y videos: se copian los archivos físicos (fuera de la
+        // transacción, igual que las imágenes al crear un producto nuevo).
+        $this->duplicateMedia($originalId, $newId);
+
+        $this->success('Se creó la copia «' . $original['name'] . '». Ajustá lo que la distingue del original.');
+        $this->redirect('admin/' . $this->routeBase . '/' . $newId . '/editar');
     }
 
     // ----------------------------------------------------------------
