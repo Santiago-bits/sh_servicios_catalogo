@@ -134,26 +134,27 @@ class MachineController extends ProductAdminController
      * sin tener que abrir el formulario completo. Si estaba "reacondicionado"
      * pasa a "usado" (nunca vuelve a nuevo con un toggle).
      */
-    public function toggleCondition(int $id): void
+    public function toggleCondition(string $id): void
     {
-        $product = (new Product())->find($id);
+        $productId = (int) $id;
+        $product   = (new Product())->find($productId);
         if ($product === null || $product['type'] !== 'machine') {
             $this->abort(404, 'Máquina inexistente.');
         }
 
         $current = (string) Database::scalar(
             'SELECT condition_type FROM machines WHERE product_id = :id',
-            ['id' => $id]
+            ['id' => $productId]
         );
         $new = $current === 'usado' ? 'nuevo' : 'usado';
 
-        Database::execute('UPDATE machines SET condition_type = :c WHERE product_id = :id', ['c' => $new, 'id' => $id]);
+        Database::execute('UPDATE machines SET condition_type = :c WHERE product_id = :id', ['c' => $new, 'id' => $productId]);
 
         AuditService::log(
             'update',
             $this->permission,
             'product',
-            $id,
+            $productId,
             'Condición cambiada a ' . ($new === 'usado' ? 'usada' : 'nueva') . ': ' . $product['code']
         );
 
