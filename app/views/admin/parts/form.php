@@ -139,7 +139,22 @@ $ab = $isEdit ? availability_badge((string) $product['availability']) : null;
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="col-12">
+                        </div>
+                    </div>
+
+                    <div class="pform-card">
+                        <h2 class="pform-card__title">Oferta y visibilidad del precio</h2>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-switch-row">
+                                    <div><strong>Oferta activa</strong><small>Muestra el precio tachado</small></div>
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" name="is_offer" value="1"
+                                               <?= $isEdit && (int) $product['is_offer'] === 1 ? 'checked' : '' ?>>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
                                 <div class="form-switch-row">
                                     <div><strong>Mostrar precio al público</strong><small>Si está apagado dice “Consultar”</small></div>
                                     <div class="form-check form-switch m-0">
@@ -148,6 +163,11 @@ $ab = $isEdit ? availability_badge((string) $product['availability']) : null;
                                                <?= !$isEdit || (int) $product['price_visible'] === 1 ? 'checked' : '' ?>>
                                     </div>
                                 </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="offer_price">Precio de oferta</label>
+                                <input type="text" class="form-control" id="offer_price" name="offer_price"
+                                       value="<?= e($isEdit && $product['offer_price'] !== null ? number_format((float) $product['offer_price'], 2, '.', '') : '') ?>">
                             </div>
                         </div>
                     </div>
