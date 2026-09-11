@@ -109,7 +109,6 @@ $footerParts    = (new Category())->featuredWithProducts('spare_part', 6);
             <p>&copy; <?= date('Y') ?> <?= e($companyName) ?>. Todos los derechos reservados.</p>
             <nav class="site-footer__links" aria-label="Enlaces secundarios">
                 <a href="<?= url('servicios') ?>">Servicios</a>
-                <a href="<?= url('recomendador') ?>">Asistente</a>
                 <a href="<?= url('comparar') ?>">Comparador</a>
             </nav>
             <p class="site-footer__credit">

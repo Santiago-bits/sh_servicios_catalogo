@@ -327,7 +327,6 @@ $activeFilters = array_filter($filters, static fn ($v, $k) => !in_array($k, ['or
                 <p>Conseguimos máquinas a pedido. Contanos qué necesitás y te lo buscamos.</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
-                <a href="<?= url('recomendador') ?>" class="btn btn-dark-2"><i class="bi bi-magic"></i> Usar el asistente</a>
                 <a href="<?= url('contacto') ?>" class="btn btn-outline-accent"><i class="bi bi-send"></i> Escribinos</a>
             </div>
         </div>

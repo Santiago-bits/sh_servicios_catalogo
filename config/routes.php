@@ -42,8 +42,6 @@ $router->post('/contacto', 'InquiryController@store');
 $router->get('/buscar', 'SearchController@index');
 $router->get('/comparar', 'CompareController@index');
 // Favoritos: función retirada (se quitó el botón "guardar en favoritos").
-$router->get('/recomendador', 'RecommenderController@index');
-$router->post('/recomendador', 'RecommenderController@result');
 
 // --- Cotizador público ----------------------------------------------
 $router->get('/cotizador', 'QuoteController@index');

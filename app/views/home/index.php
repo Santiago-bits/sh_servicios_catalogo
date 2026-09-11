@@ -405,10 +405,6 @@ $heroBg    = $heroImage !== '' ? upload_url($heroImage) : asset('img/hero-forkli
                             </div>
                         <?php endif; ?>
                     <?php endif; ?>
-
-                    <a href="<?= url('recomendador') ?>" class="btn btn-dark-2 w-100 mt-3">
-                        <i class="bi bi-magic"></i> ¿Qué máquina necesitás?
-                    </a>
                 </div>
             </div>
         </div>

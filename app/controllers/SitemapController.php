@@ -27,7 +27,6 @@ class SitemapController extends Controller
             'repuestos'     => ['0.9', 'daily'],
             'servicios'     => ['0.7', 'monthly'],
             'contacto'      => ['0.6', 'monthly'],
-            'recomendador'  => ['0.5', 'monthly'],
         ] as $path => [$priority, $frequency]) {
             $urls[] = ['loc' => $base . ($path === '' ? '/' : '/' . $path), 'priority' => $priority, 'changefreq' => $frequency];
         }
