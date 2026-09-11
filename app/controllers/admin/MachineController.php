@@ -13,6 +13,7 @@ namespace App\Controllers\Admin;
 
 use App\Models\Machine;
 use App\Models\Product;
+use App\Services\AuditService;
 use Core\Database;
 
 class MachineController extends ProductAdminController
@@ -126,6 +127,38 @@ class MachineController extends ProductAdminController
                 'reacondicionado' => 'Reacondicionado',
             ],
         ];
+    }
+
+    /**
+     * Pasa una máquina de nueva a usada (o al revés) con un solo click,
+     * sin tener que abrir el formulario completo. Si estaba "reacondicionado"
+     * pasa a "usado" (nunca vuelve a nuevo con un toggle).
+     */
+    public function toggleCondition(int $id): void
+    {
+        $product = (new Product())->find($id);
+        if ($product === null || $product['type'] !== 'machine') {
+            $this->abort(404, 'Máquina inexistente.');
+        }
+
+        $current = (string) Database::scalar(
+            'SELECT condition_type FROM machines WHERE product_id = :id',
+            ['id' => $id]
+        );
+        $new = $current === 'usado' ? 'nuevo' : 'usado';
+
+        Database::execute('UPDATE machines SET condition_type = :c WHERE product_id = :id', ['c' => $new, 'id' => $id]);
+
+        AuditService::log(
+            'update',
+            $this->permission,
+            'product',
+            $id,
+            'Condición cambiada a ' . ($new === 'usado' ? 'usada' : 'nueva') . ': ' . $product['code']
+        );
+
+        $this->success('«' . $product['name'] . '» ahora figura como ' . ($new === 'usado' ? 'usada' : 'nueva') . '.');
+        $this->back();
     }
 
     // ----------------------------------------------------------------

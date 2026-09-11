@@ -97,6 +97,7 @@ $router->group('/admin', static function (Router $router): void {
     $router->get('/maquinaria/{id:\d+}/editar', 'Admin\MachineController@edit', ['permission:machines.edit']);
     $router->post('/maquinaria/{id:\d+}', 'Admin\MachineController@update', ['permission:machines.edit']);
     $router->post('/maquinaria/{id:\d+}/eliminar', 'Admin\MachineController@destroy', ['permission:machines.delete']);
+    $router->post('/maquinaria/{id:\d+}/condicion', 'Admin\MachineController@toggleCondition', ['permission:machines.edit']);
     $router->post('/maquinaria/{id:\d+}/imagenes', 'Admin\MachineController@uploadImages', ['permission:machines.edit']);
     $router->post('/maquinaria/{id:\d+}/imagenes/{imageId:\d+}/principal', 'Admin\MachineController@setMainImage', ['permission:machines.edit']);
     $router->post('/maquinaria/{id:\d+}/imagenes/{imageId:\d+}/eliminar', 'Admin\MachineController@deleteImage', ['permission:machines.edit']);

@@ -122,6 +122,7 @@ $activeFaults = array_values(array_filter([
                         <th>Capacidad</th>
                         <th class="num">Precio</th>
                         <th>Estado</th>
+                        <th>Condición</th>
                         <th>Publicada</th>
                         <th class="actions">Acciones</th>
                     </tr>
@@ -163,6 +164,13 @@ $activeFaults = array_values(array_filter([
                             <?= e($availability['label']) ?>
                         </span></td>
 
+                        <?php
+                        $condLabels = ['nuevo' => 'Nueva', 'usado' => 'Usada', 'reacondicionado' => 'Reacondicionada'];
+                        $condKey    = (string) ($product['condition_type'] ?? 'nuevo');
+                        $condClass  = $condKey === 'usado' ? 'warn' : ($condKey === 'reacondicionado' ? 'neutral' : 'ok');
+                        ?>
+                        <td><span class="chip chip--<?= $condClass ?>"><?= e($condLabels[$condKey] ?? 'Nueva') ?></span></td>
+
                         <td>
                             <?php if ((int) $product['active'] === 1): ?>
                                 <span class="chip chip--ok">Sí</span>
@@ -179,6 +187,14 @@ $activeFaults = array_values(array_filter([
                                 <a href="<?= admin_url('maquinaria/' . (int) $product['id'] . '/editar') ?>" class="btn-icon" title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                <form method="post" action="<?= admin_url('maquinaria/' . (int) $product['id'] . '/condicion') ?>"
+                                      class="d-inline"
+                                      data-confirm="¿Pasar «<?= e($product['name']) ?>» a <?= $condKey === 'usado' ? 'nueva' : 'usada' ?>?">
+                                    <?= csrf_field() ?>
+                                    <button type="submit" class="btn-icon" title="<?= $condKey === 'usado' ? 'Pasar a nueva' : 'Pasar a usada' ?>">
+                                        <i class="bi bi-arrow-repeat"></i>
+                                    </button>
+                                </form>
                             <?php endif; ?>
                             <?php /* Panel simplificado: historial de precios desactivado.
                             <?php if (can('prices.history')): ?>
