@@ -444,7 +444,7 @@ img { max-width: 100%; height: auto; }
 }
 .trustbar__item {
     background: var(--yellow); padding: 20px 18px;
-    display: flex; align-items: center; gap: 13px; color: var(--black);
+    display: flex; align-items: center; justify-content: center; gap: 13px; color: var(--black);
 }
 .trustbar__item i { font-size: 1.7rem; }
 .trustbar__item strong { display: block; font-size: .95rem; }
@@ -575,21 +575,30 @@ img { max-width: 100%; height: auto; }
 
 .pcard__foot {
     margin-top: auto; padding-top: 12px; border-top: 1px dashed var(--gray-light);
-    display: flex; align-items: flex-end; justify-content: space-between;
-    gap: 10px; flex-wrap: wrap;
+    display: flex; flex-direction: column; gap: 10px;
 }
-.pcard__price { line-height: 1.15; flex: 1 1 auto; min-width: 0; }
+.pcard__price { line-height: 1.15; text-align: center; }
 .pcard__price strong { font-size: 1.22rem; color: var(--black); display: block; }
 .pcard__price small { font-size: .72rem; color: var(--gray); }
 .pcard__price del { font-size: .8rem; color: var(--gray); }
 
-.pcard__cta { display: flex; gap: 6px; flex: 0 0 auto; margin-left: auto; }
-.pcard__cta .btn { white-space: nowrap; }
+.pcard__cta { display: flex; gap: 8px; }
+.pcard__cta .btn { flex: 1 1 0; white-space: nowrap; }
 
 /* Vista lista */
 .product-grid--list .pcard { flex-direction: row; }
 .product-grid--list .pcard__media { width: 220px; flex-shrink: 0; aspect-ratio: 1; }
 .product-grid--list .pcard__body { flex-direction: column; }
+@media (min-width: 641px) {
+    /* En fila hay mucho ancho: el precio va a la izquierda (no centrado)
+       y los botones al lado, con su tamaño natural (no estirados). */
+    .product-grid--list .pcard__foot {
+        flex-direction: row; align-items: center; justify-content: space-between;
+    }
+    .product-grid--list .pcard__price { text-align: left; }
+    .product-grid--list .pcard__cta { flex: 0 0 auto; }
+    .product-grid--list .pcard__cta .btn { flex: 0 0 auto; }
+}
 @media (max-width: 640px) {
     .product-grid--list .pcard { flex-direction: column; }
     .product-grid--list .pcard__media { width: 100%; aspect-ratio: 4/3; }
@@ -860,7 +869,7 @@ img { max-width: 100%; height: auto; }
     background: #16a34a; color: #fff; font-size: .72rem; font-weight: 800;
     letter-spacing: .02em; line-height: 1.5; white-space: nowrap;
 }
-.pcard__was { display: inline-flex; align-items: center; gap: 6px; }
+.pcard__was { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 3px; }
 .pcard__was .price-off { font-size: .62rem; padding: 1px 6px; }
 
 .product-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 18px 0 6px; }

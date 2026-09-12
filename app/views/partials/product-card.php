@@ -106,9 +106,11 @@ foreach (array_slice($tags, 0, 2) as $tag) {
             <?php endif; ?>
         </div>
 
-        <div class="mt-1">
-            <span class="status status--<?= e($availability['class']) ?>"><?= e($availability['label']) ?></span>
-        </div>
+        <?php if (($product['availability'] ?? 'disponible') !== 'disponible'): ?>
+            <div class="mt-1">
+                <span class="status status--<?= e($availability['class']) ?>"><?= e($availability['label']) ?></span>
+            </div>
+        <?php endif; ?>
 
         <div class="pcard__foot">
             <div class="pcard__price">
