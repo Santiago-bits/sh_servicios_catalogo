@@ -114,16 +114,41 @@ $activeFaults = array_values(array_filter([
         </div>
     </div>
 
-    <?php $sortCodeAsc = ($filters['orden'] ?? 'codigo_desc') === 'codigo'; ?>
+    <?php
+    $currentOrder = (string) ($filters['orden'] ?? 'codigo_desc');
+    $sortGroups   = [
+        'Código' => ['codigo_desc' => 'Mayor a menor', 'codigo' => 'Menor a mayor'],
+        'Nombre' => ['az' => 'A-Z', 'za' => 'Z-A'],
+        'Precio' => ['precio_asc' => 'Menor a mayor', 'precio_desc' => 'Mayor a menor'],
+        'Otros'  => ['vistos' => 'Más vistas primero'],
+    ];
+    ?>
     <div class="card-admin__body card-admin__body--flush">
         <div class="table-responsive-admin">
             <table class="table-admin">
                 <thead>
                     <tr>
                         <th>
-                            <a class="th-sort" href="<?= e(query_url(['orden' => $sortCodeAsc ? 'codigo_desc' : 'codigo'])) ?>" title="Ordenar por código">
-                                Máquina <i class="bi bi-sort-<?= $sortCodeAsc ? 'up' : 'down' ?>-alt"></i>
-                            </a>
+                            <div class="dropdown">
+                                <button type="button" class="th-sort" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" title="Ordenar">
+                                    Máquina <i class="bi bi-filter"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <?php foreach ($sortGroups as $group => $options): ?>
+                                        <li><h6 class="dropdown-header"><?= e($group) ?></h6></li>
+                                        <?php foreach ($options as $key => $label): ?>
+                                            <li>
+                                                <a class="dropdown-item<?= $currentOrder === $key ? ' active' : '' ?>" href="<?= e(query_url(['orden' => $key])) ?>">
+                                                    <?= e($label) ?>
+                                                </a>
+                                            </li>
+                                        <?php endforeach; ?>
+                                        <?php if ($group !== array_key_last($sortGroups)): ?>
+                                            <li><hr class="dropdown-divider"></li>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
                         </th>
                         <th>Marca / Modelo</th>
                         <th>Año</th>

@@ -243,9 +243,33 @@ details.card-admin[open] > summary .card-admin__chevron { transform: rotate(180d
 .th-sort {
     display: inline-flex; align-items: center; gap: 4px;
     color: inherit; text-decoration: none;
+    background: none; border: 0; padding: 0; margin: 0;
+    font: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer;
 }
 .th-sort:hover { color: var(--yellow-dark); }
 .th-sort i { font-size: .85rem; }
+
+/* El menu de orden vive dentro de un <th>: sin esto hereda las
+   mayusculas/letter-spacing del encabezado de la tabla. */
+.table-admin .dropdown-menu {
+    text-transform: none; letter-spacing: normal; font-weight: 400;
+    font-size: .84rem; padding: 6px; min-width: 210px;
+    border: 1px solid #E7E9ED; border-radius: var(--radius);
+    box-shadow: 0 12px 28px rgba(20,20,20,.14);
+}
+.table-admin .dropdown-header {
+    font-size: .66rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--yellow-dark); padding: 6px 10px 2px;
+}
+.table-admin .dropdown-item {
+    border-radius: 6px; padding: 7px 10px; color: var(--dark); font-weight: 600;
+}
+.table-admin .dropdown-item:hover,
+.table-admin .dropdown-item:focus { background: var(--gray-bg); color: var(--dark); }
+.table-admin .dropdown-item.active {
+    background: var(--yellow); color: var(--black);
+}
+.table-admin .dropdown-divider { margin: 6px 4px; border-color: #EFF1F4; }
 
 .table-admin tbody td { padding: 11px 10px; border-bottom: 1px solid #EFF1F4; vertical-align: middle; }
 .table-admin tbody tr { transition: background var(--t-fast); }

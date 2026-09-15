@@ -42,6 +42,18 @@
         </div>
 
         <div>
+            <label class="form-label" for="f-estado">Estado</label>
+            <select class="form-select" id="f-estado" name="estado">
+                <option value="">Todos</option>
+                <?php foreach (['disponible', 'reservada', 'vendida', 'mantenimiento', 'consultar'] as $status): ?>
+                    <option value="<?= $status ?>" <?= ($filters['estado'] ?? '') === $status ? 'selected' : '' ?>>
+                        <?= e(availability_badge($status)['label']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div>
             <label class="form-label" for="f-activo">Publicación</label>
             <select class="form-select" id="f-activo" name="activo">
                 <option value="">Todas</option>
@@ -103,25 +115,53 @@ $activeFaults = array_values(array_filter([
         </div>
     </div>
 
-    <?php $sortCodeAsc = ($filters['orden'] ?? 'codigo_desc') === 'codigo'; ?>
+    <?php
+    $currentOrder = (string) ($filters['orden'] ?? 'codigo_desc');
+    $sortGroups   = [
+        'Código' => ['codigo_desc' => 'Mayor a menor', 'codigo' => 'Menor a mayor'],
+        'Nombre' => ['az' => 'A-Z', 'za' => 'Z-A'],
+        'Precio' => ['precio_asc' => 'Menor a mayor', 'precio_desc' => 'Mayor a menor'],
+        'Otros'  => ['vistos' => 'Más vistos primero'],
+    ];
+    ?>
     <div class="card-admin__body card-admin__body--flush">
         <div class="table-responsive-admin">
             <table class="table-admin">
                 <thead>
                     <tr>
-                        <th>Repuesto</th>
                         <th>
-                            <a class="th-sort" href="<?= e(query_url(['orden' => $sortCodeAsc ? 'codigo_desc' : 'codigo'])) ?>" title="Ordenar por código">
-                                Códigos <i class="bi bi-sort-<?= $sortCodeAsc ? 'up' : 'down' ?>-alt"></i>
-                            </a>
+                            <div class="dropdown">
+                                <button type="button" class="th-sort" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" title="Ordenar">
+                                    Repuesto <i class="bi bi-filter"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <?php foreach ($sortGroups as $group => $options): ?>
+                                        <li><h6 class="dropdown-header"><?= e($group) ?></h6></li>
+                                        <?php foreach ($options as $key => $label): ?>
+                                            <li>
+                                                <a class="dropdown-item<?= $currentOrder === $key ? ' active' : '' ?>" href="<?= e(query_url(['orden' => $key])) ?>">
+                                                    <?= e($label) ?>
+                                                </a>
+                                            </li>
+                                        <?php endforeach; ?>
+                                        <?php if ($group !== array_key_last($sortGroups)): ?>
+                                            <li><hr class="dropdown-divider"></li>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
                         </th>
+                        <th>Marca</th>
                         <th>Categoría</th>
                         <th class="num">Precio</th>
+                        <th>Estado</th>
+                        <th>Publicada</th>
                         <th class="actions">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php foreach ($products as $product): ?>
+                    <?php $availability = availability_badge((string) $product['availability']); ?>
                     <tr>
                         <td>
                             <div class="table-product">
@@ -132,20 +172,15 @@ $activeFaults = array_values(array_filter([
                                 <?php endif; ?>
                                 <span>
                                     <span class="table-product__name"><?= e(str_limit((string) $product['name'], 44)) ?></span>
-                                    <span class="table-product__meta">
-                                        <?= e($product['brand_name'] ?? 'Sin marca') ?>
-                                        <?php if ((int) $product['active'] !== 1): ?>
-                                            <span class="chip chip--neutral ms-1">Oculto</span>
-                                        <?php endif; ?>
-                                    </span>
+                                    <span class="table-product__meta text-mono"><?= e($product['code']) ?></span>
                                 </span>
                             </div>
                         </td>
 
-                        <td class="text-mono" style="font-size:.78rem">
-                            <strong><?= e($product['code']) ?></strong>
+                        <td>
+                            <?= e($product['brand_name'] ?? '—') ?>
                             <?php if (!empty($product['oem_code'])): ?>
-                                <span class="d-block text-muted-2">OEM <?= e($product['oem_code']) ?></span>
+                                <small class="d-block text-muted-2">OEM <?= e($product['oem_code']) ?></small>
                             <?php endif; ?>
                         </td>
 
@@ -155,6 +190,18 @@ $activeFaults = array_values(array_filter([
                             <strong><?= e(money((float) $product['final_price'], (string) $product['currency'])) ?></strong>
                             <?php if ($canSeeCost && (float) ($product['profit_percent'] ?? 0) > 0): ?>
                                 <small class="d-block text-muted-2">+<?= e(percent((float) $product['profit_percent'], 0)) ?></small>
+                            <?php endif; ?>
+                        </td>
+
+                        <td><span class="chip chip--<?= $availability['class'] === 'ok' ? 'ok' : ($availability['class'] === 'off' ? 'danger' : 'warn') ?>">
+                            <?= e($availability['label']) ?>
+                        </span></td>
+
+                        <td>
+                            <?php if ((int) $product['active'] === 1): ?>
+                                <span class="chip chip--ok">Sí</span>
+                            <?php else: ?>
+                                <span class="chip chip--neutral">No</span>
                             <?php endif; ?>
                         </td>
 
@@ -207,7 +254,7 @@ $activeFaults = array_values(array_filter([
 
                 <?php if (empty($products)): ?>
                     <tr>
-                        <td colspan="5" class="text-center py-5 text-muted-2">
+                        <td colspan="7" class="text-center py-5 text-muted-2">
                             <i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:8px"></i>
                             No hay repuestos que coincidan con los filtros.
                         </td>
