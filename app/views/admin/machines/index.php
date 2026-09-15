@@ -17,6 +17,9 @@ use App\Services\PriceService;
         <?php if (!empty($filters['condicion'])): ?>
             <input type="hidden" name="condicion" value="<?= e($filters['condicion']) ?>">
         <?php endif; ?>
+        <?php if (!empty($filters['orden'])): ?>
+            <input type="hidden" name="orden" value="<?= e($filters['orden']) ?>">
+        <?php endif; ?>
         <div>
             <label class="form-label" for="f-q">Buscar</label>
             <input type="search" class="form-control" id="f-q" name="q" placeholder="Nombre, código, modelo"
@@ -111,12 +114,17 @@ $activeFaults = array_values(array_filter([
         </div>
     </div>
 
+    <?php $sortCodeAsc = ($filters['orden'] ?? 'codigo_desc') === 'codigo'; ?>
     <div class="card-admin__body card-admin__body--flush">
         <div class="table-responsive-admin">
             <table class="table-admin">
                 <thead>
                     <tr>
-                        <th>Máquina</th>
+                        <th>
+                            <a class="th-sort" href="<?= e(query_url(['orden' => $sortCodeAsc ? 'codigo_desc' : 'codigo'])) ?>" title="Ordenar por código">
+                                Máquina <i class="bi bi-sort-<?= $sortCodeAsc ? 'up' : 'down' ?>-alt"></i>
+                            </a>
+                        </th>
                         <th>Marca / Modelo</th>
                         <th>Año</th>
                         <th>Capacidad</th>

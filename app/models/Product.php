@@ -74,6 +74,7 @@ class Product extends Model
         'az'          => 'p.name ASC',
         'za'          => 'p.name DESC',
         'codigo'      => 'p.code ASC',
+        'codigo_desc' => 'p.code DESC',
     ];
 
     // =================================================================

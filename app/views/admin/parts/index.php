@@ -13,6 +13,9 @@
                 <input type="hidden" name="<?= $flag ?>" value="1">
             <?php endif; ?>
         <?php endforeach; ?>
+        <?php if (!empty($filters['orden'])): ?>
+            <input type="hidden" name="orden" value="<?= e($filters['orden']) ?>">
+        <?php endif; ?>
         <div>
             <label class="form-label" for="f-q">Buscar</label>
             <input type="search" class="form-control" id="f-q" name="q" placeholder="Nombre, código, OEM"
@@ -100,13 +103,18 @@ $activeFaults = array_values(array_filter([
         </div>
     </div>
 
+    <?php $sortCodeAsc = ($filters['orden'] ?? 'codigo_desc') === 'codigo'; ?>
     <div class="card-admin__body card-admin__body--flush">
         <div class="table-responsive-admin">
             <table class="table-admin">
                 <thead>
                     <tr>
                         <th>Repuesto</th>
-                        <th>Códigos</th>
+                        <th>
+                            <a class="th-sort" href="<?= e(query_url(['orden' => $sortCodeAsc ? 'codigo_desc' : 'codigo'])) ?>" title="Ordenar por código">
+                                Códigos <i class="bi bi-sort-<?= $sortCodeAsc ? 'up' : 'down' ?>-alt"></i>
+                            </a>
+                        </th>
                         <th>Categoría</th>
                         <th class="num">Precio</th>
                         <th class="actions">Acciones</th>

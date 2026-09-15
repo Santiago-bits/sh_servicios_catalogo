@@ -68,7 +68,7 @@ abstract class ProductAdminController extends AdminController
             'sin_precio'    => Request::get('sin_precio'),
             'sin_imagen'    => Request::get('sin_imagen'),
             'sin_categoria' => Request::get('sin_categoria'),
-            'orden'         => Request::get('orden', 'nuevos'),
+            'orden'         => Request::get('orden', 'codigo_desc'),
         ];
 
         // El listado "Maquinaria" muestra sólo nuevas/reacondicionadas; las
