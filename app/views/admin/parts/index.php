@@ -121,7 +121,6 @@ $activeFaults = array_values(array_filter([
         'Código' => ['codigo_desc' => 'Mayor a menor', 'codigo' => 'Menor a mayor'],
         'Nombre' => ['az' => 'A-Z', 'za' => 'Z-A'],
         'Precio' => ['precio_asc' => 'Menor a mayor', 'precio_desc' => 'Mayor a menor'],
-        'Otros'  => ['vistos' => 'Más vistos primero'],
     ];
     ?>
     <div class="card-admin__body card-admin__body--flush">
