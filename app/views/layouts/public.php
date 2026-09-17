@@ -15,6 +15,16 @@ $companyName = SettingService::companyName();
 $title       = $pageTitle ?? $companyName;
 $description = $metaDescription ?? (string) setting('seo_description', '');
 $robotsMeta  = $robots ?? 'index, follow';
+
+// Imagen para Open Graph / Twitter Card. Si la página no trae una propia
+// (ej. un producto sin fotos, o el Inicio), se usa la foto de portada o
+// el logo como respaldo, así la vista previa en WhatsApp/redes nunca
+// queda vacía ni rota.
+$ogImageSrc = $ogImage ?? '';
+if ($ogImageSrc === '') {
+    $ogImageFallback = (string) setting('hero_image', '') ?: (string) setting('company_logo', '');
+    $ogImageSrc = $ogImageFallback !== '' ? upload_url($ogImageFallback) : asset('img/favicon-sh.png');
+}
 ?>
 <!doctype html>
 <html lang="es" data-base="<?= e(BASE_URL) ?>">
@@ -37,10 +47,13 @@ $robotsMeta  = $robots ?? 'index, follow';
     <meta property="og:title" content="<?= e($title) ?>">
     <meta property="og:description" content="<?= e($description) ?>">
     <meta property="og:url" content="<?= e($canonical ?? url()) ?>">
-    <?php if (!empty($ogImage)): ?>
-        <meta property="og:image" content="<?= e($ogImage) ?>">
-        <meta name="twitter:card" content="summary_large_image">
-    <?php endif; ?>
+    <meta property="og:image" content="<?= e($ogImageSrc) ?>">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= e($title) ?>">
+    <meta name="twitter:description" content="<?= e($description) ?>">
+    <meta name="twitter:image" content="<?= e($ogImageSrc) ?>">
 
     <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
 
