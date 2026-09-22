@@ -165,7 +165,7 @@ class ServiceController extends AdminController
             'title'             => $data['title'],
             'icon'              => $data['icon'] ?? null,
             'short_description' => $data['short_description'] ?? null,
-            'description'       => clean_html((string) ($data['description'] ?? '')) ?: null,
+            'description'       => html_to_text((string) ($data['description'] ?? '')) ?: null,
             'featured'          => Request::flag('featured'),
             'sort_order'        => (int) ($data['sort_order'] ?? 0),
             'active'            => Request::flag('active'),

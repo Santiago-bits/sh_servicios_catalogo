@@ -30,7 +30,7 @@ $bullets = ServiceModel::bullets($service['bullets']);
                         <h2><i class="bi <?= e($service['icon'] ?: 'bi-tools') ?>"></i> <?= e($service['title']) ?></h2>
                     </div>
                     <div class="panel__body service-body">
-                        <?= clean_html((string) $service['description']) ?: '<p>' . e($service['short_description']) . '</p>' ?>
+                        <?= clean_html(text_to_html((string) $service['description'])) ?: '<p>' . e($service['short_description']) . '</p>' ?>
 
                         <?php if ($bullets !== []): ?>
                             <div class="row g-2 mt-3">
