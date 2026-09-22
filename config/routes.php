@@ -136,6 +136,12 @@ $router->group('/admin', static function (Router $router): void {
     // La ficha técnica de la máquina usa sólo los campos fijos del formulario:
     // la lista de "características" personalizadas y su ABM se retiraron.
 
+    // Marcas que se muestran en la web (independientes de los productos)
+    $router->get('/marcas-web', 'Admin\ShowcaseBrandController@index', ['permission:brands.manage']);
+    $router->post('/marcas-web', 'Admin\ShowcaseBrandController@store', ['permission:brands.manage']);
+    $router->post('/marcas-web/{id:\d+}', 'Admin\ShowcaseBrandController@update', ['permission:brands.manage']);
+    $router->post('/marcas-web/{id:\d+}/eliminar', 'Admin\ShowcaseBrandController@destroy', ['permission:brands.manage']);
+
     $router->get('/etiquetas', 'Admin\TagController@index', ['permission:tags.manage']);
     $router->post('/etiquetas', 'Admin\TagController@store', ['permission:tags.manage']);
     $router->post('/etiquetas/{id:\d+}', 'Admin\TagController@update', ['permission:tags.manage']);
@@ -145,6 +151,7 @@ $router->group('/admin', static function (Router $router): void {
     $router->post('/servicios', 'Admin\ServiceController@store', ['permission:services.manage']);
     $router->post('/servicios/{id:\d+}', 'Admin\ServiceController@update', ['permission:services.manage']);
     $router->post('/servicios/{id:\d+}/eliminar', 'Admin\ServiceController@destroy', ['permission:services.manage']);
+    $router->post('/servicios/{id:\d+}/imagenes/{imageId:\d+}/eliminar', 'Admin\ServiceController@deleteImage', ['permission:services.manage']);
 
     // =============================================================
     //  SECCIONES OCULTAS EN EL PANEL SIMPLIFICADO

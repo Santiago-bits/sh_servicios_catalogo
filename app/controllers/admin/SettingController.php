@@ -116,7 +116,7 @@ class SettingController extends AdminController
                 $this->error('El valor de "' . $setting['label'] . '" debe ser numérico.');
                 continue;
             }
-            if ($key === 'contact_whatsapp') {
+            if ($key === 'contact_whatsapp' || $key === 'contact_whatsapp_parts') {
                 $value = preg_replace('/\D+/', '', $value) ?? '';
             }
             if ($setting['type'] === 'url' && $value !== '' && !preg_match('#^https?://#i', $value)) {

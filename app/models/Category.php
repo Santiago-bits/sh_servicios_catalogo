@@ -44,10 +44,20 @@ class Category extends Model
                LEFT JOIN products p ON p.category_id = c.id AND p.active = 1 AND p.deleted_at IS NULL
               WHERE c.type = :type AND c.active = 1
               GROUP BY c.id
+             HAVING products_count > 0
               ORDER BY c.featured DESC, products_count DESC, c.sort_order ASC
               LIMIT ' . max(1, $limit),
             ['type' => $type]
         );
+    }
+
+    /** Categorías activas que tienen al menos un producto publicado. @return array<int,array<string,mixed>> */
+    public function withProducts(string $type): array
+    {
+        return array_values(array_filter(
+            $this->ofType($type),
+            static fn (array $c): bool => (int) $c['products_count'] > 0
+        ));
     }
 
     /** @return array<string,mixed>|null */

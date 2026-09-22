@@ -19,8 +19,8 @@ $hasOffer    = (int) ($product['is_offer'] ?? 0) === 1 && (float) ($product['off
 $tags        = $product['tags'] ?? [];
 $listView    = ($viewMode ?? 'grid') === 'lista';
 
-// Etiquetas de la tarjeta (se muestran sobre la imagen en escritorio y,
-// en teléfono, dentro del cuerpo en lugar de las características).
+// Etiquetas de la tarjeta: van en la fila del código (a la derecha),
+// nunca sobre la foto.
 $cardTags = [];
 if ((int) ($product['featured'] ?? 0) === 1) {
     $cardTags[] = ['color' => 'accent', 'icon' => 'bi-star-fill', 'label' => 'Destacado'];
@@ -45,10 +45,6 @@ foreach (array_slice($tags, 0, 2) as $tag) {
                 <i class="bi <?= $isMachine ? 'bi-truck-front' : 'bi-nut' ?>"></i>
             </span>
         <?php endif; ?>
-
-        <?php if ($cardTags !== []): ?>
-            <span class="pcard__badges"><?php $view->partial('tag-list', ['tags' => $cardTags]); ?></span>
-        <?php endif; ?>
     </a>
 
     <div class="pcard__actions">
@@ -70,16 +66,15 @@ foreach (array_slice($tags, 0, 2) as $tag) {
                 <strong><?= e($product['brand_name']) ?></strong>
             <?php endif; ?>
             <span class="text-mono"><?= e($product['code']) ?></span>
+            <?php if ($cardTags !== []): ?>
+                <span class="pcard__tags"><?php $view->partial('tag-list', ['tags' => $cardTags]); ?></span>
+            <?php endif; ?>
         </div>
 
         <h3 class="pcard__title"><a href="<?= e($url) ?>"><?= e($product['name']) ?></a></h3>
 
         <?php if ($listView && !empty($product['short_description'])): ?>
             <p class="text-muted-2 small mb-1"><?= e(str_limit((string) $product['short_description'], 150)) ?></p>
-        <?php endif; ?>
-
-        <?php if ($cardTags !== []): ?>
-            <div class="pcard__tags"><?php $view->partial('tag-list', ['tags' => $cardTags]); ?></div>
         <?php endif; ?>
 
         <div class="pcard__specs">

@@ -16,7 +16,7 @@ class Service extends Model
 
     protected array $fillable = [
         'title', 'slug', 'icon', 'image', 'short_description', 'description',
-        'bullets', 'featured', 'sort_order', 'active',
+        'bullets', 'featured', 'show_clients', 'sort_order', 'active',
     ];
 
     protected array $sortable = ['id', 'title', 'sort_order'];
@@ -35,6 +35,48 @@ class Service extends Model
     public function findBySlug(string $slug): ?array
     {
         return Database::selectOne('SELECT * FROM services WHERE slug = :slug AND active = 1 LIMIT 1', ['slug' => $slug]);
+    }
+
+    /** Galería de fotos del servicio. @return array<int,array<string,mixed>> */
+    public function images(int $serviceId): array
+    {
+        try {
+            return Database::select(
+                'SELECT * FROM service_images WHERE service_id = :id ORDER BY sort_order ASC, id ASC',
+                ['id' => $serviceId]
+            );
+        } catch (\Throwable $e) {
+            return []; // migración todavía no aplicada
+        }
+    }
+
+    public function addImage(int $serviceId, string $path, ?string $thumb): int
+    {
+        $next = (int) Database::scalar(
+            'SELECT COALESCE(MAX(sort_order), 0) + 1 FROM service_images WHERE service_id = :id',
+            ['id' => $serviceId]
+        );
+
+        return Database::insert('service_images', [
+            'service_id' => $serviceId,
+            'path'       => $path,
+            'thumb'      => $thumb,
+            'sort_order' => $next,
+        ]);
+    }
+
+    /** @return array<string,mixed>|null */
+    public function findImage(int $serviceId, int $imageId): ?array
+    {
+        return Database::selectOne(
+            'SELECT * FROM service_images WHERE id = :img AND service_id = :id LIMIT 1',
+            ['img' => $imageId, 'id' => $serviceId]
+        );
+    }
+
+    public function deleteImage(int $imageId): void
+    {
+        Database::delete('service_images', 'id = :id', ['id' => $imageId]);
     }
 
     /** @return array<int,string> */

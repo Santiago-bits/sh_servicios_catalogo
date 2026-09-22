@@ -35,6 +35,25 @@ class PartController extends Controller
 
     public function index(?string $category = null): void
     {
+        // Sin categoría ni filtros: se muestran las categorías (sólo las
+        // que tienen productos) en lugar de todos los productos juntos.
+        if ($category === null && $this->withoutQuery()) {
+            $categories = (new Category())->withProducts('spare_part');
+            if ($categories !== []) {
+                $this->view('catalog/categories', [
+                    'pageTitle'       => 'Repuestos · ' . SettingService::companyName(),
+                    'metaDescription' => 'Buscá repuestos por código interno, código OEM o modelo de máquina.',
+                    'bodyClass'       => 'page-catalog page-categories',
+                    'title'           => 'Repuestos',
+                    'lead'            => 'Elegí una categoría para ver los repuestos, o buscalos por código, código OEM o modelo de tu máquina.',
+                    'base'            => 'repuestos',
+                    'type'            => 'spare_part',
+                    'categories'      => $categories,
+                ]);
+                return;
+            }
+        }
+
         $filters = $this->filters($category);
         $page    = max(1, Request::int('pagina', 1));
 
@@ -78,7 +97,7 @@ class PartController extends Controller
             'products'        => $result['data'],
             'filters'         => $filters,
             'currentCategory' => $currentCategory,
-            'categories'      => $categoryModel->ofType('spare_part'),
+            'categories'      => $categoryModel->withProducts('spare_part'),
             'brands'          => $product->availableBrands('spare_part'),
             'priceRange'      => $product->priceRange('spare_part'),
             'sorts'           => self::SORTS,
@@ -156,5 +175,16 @@ class PartController extends Controller
             'ofertas'    => Request::get('ofertas'),
             'orden'      => Request::get('orden', 'destacados'),
         ];
+    }
+
+    /** ¿La URL llegó sin ningún parámetro con valor? (?todos=1 fuerza el listado) */
+    private function withoutQuery(): bool
+    {
+        foreach ($_GET as $value) {
+            if ($value !== '' && $value !== []) {
+                return false;
+            }
+        }
+        return true;
     }
 }

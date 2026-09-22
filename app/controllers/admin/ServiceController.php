@@ -16,11 +16,20 @@ class ServiceController extends AdminController
 {
     public function index(): void
     {
+        $model    = new Service();
+        $services = $model->all('sort_order', 'ASC');
+
+        $images = [];
+        foreach ($services as $service) {
+            $images[(int) $service['id']] = $model->images((int) $service['id']);
+        }
+
         $this->view('admin/services/index', [
             'pageTitle'  => 'Servicios · Panel',
             'adminTitle' => 'Servicios',
             'robots'     => 'noindex, nofollow',
-            'services'   => (new Service())->all('sort_order', 'ASC'),
+            'services'   => $services,
+            'images'     => $images,
         ]);
     }
 
@@ -33,6 +42,8 @@ class ServiceController extends AdminController
             'slug'  => $model->uniqueSlug((string) $data['title']),
             'image' => $this->uploadImage(),
         ]));
+
+        $this->uploadGallery($model, $id);
 
         AuditService::log('create', 'catalog', 'service', $id, 'Servicio creado: ' . $data['title']);
 
@@ -62,6 +73,7 @@ class ServiceController extends AdminController
         }
 
         $model->updateById((int) $id, $data);
+        $this->uploadGallery($model, (int) $id);
 
         AuditService::log('update', 'catalog', 'service', (int) $id, 'Servicio editado: ' . $data['title']);
 
@@ -79,12 +91,63 @@ class ServiceController extends AdminController
         }
 
         Uploader::delete($service['image'] !== null ? (string) $service['image'] : null);
+        foreach ($model->images((int) $id) as $img) {
+            Uploader::delete((string) $img['path']);
+            Uploader::delete($img['thumb'] !== null ? (string) $img['thumb'] : null);
+        }
         $model->deleteById((int) $id);
 
         AuditService::log('delete', 'catalog', 'service', (int) $id, 'Servicio eliminado: ' . $service['title']);
 
         $this->success('Servicio eliminado.');
         $this->back();
+    }
+
+    public function deleteImage(string $id, string $imageId): void
+    {
+        $model = new Service();
+        $image = $model->findImage((int) $id, (int) $imageId);
+
+        if ($image === null) {
+            $this->abort(404, 'La foto no existe.');
+        }
+
+        Uploader::delete((string) $image['path']);
+        Uploader::delete($image['thumb'] !== null ? (string) $image['thumb'] : null);
+        $model->deleteImage((int) $imageId);
+
+        $this->success('Foto eliminada.');
+        $this->back();
+    }
+
+    /** Sube las fotos del input gallery[] a la galería del servicio. */
+    private function uploadGallery(Service $model, int $serviceId): void
+    {
+        $files = Request::files('gallery');
+        if ($files === []) {
+            return;
+        }
+
+        $ok = 0;
+        foreach ($files as $file) {
+            $result = Uploader::image($file, 'services', 1600, true);
+            if (!$result['ok']) {
+                $this->error(($file['name'] ?? 'Foto') . ': ' . $result['message']);
+                continue;
+            }
+            try {
+                $model->addImage($serviceId, $result['path'], $result['thumb'] ?? null);
+                $ok++;
+            } catch (\Throwable $e) {
+                Uploader::delete($result['path']);
+                $this->error('No se pudo guardar la galería. ¿Corriste la migración database/migracion_2026_09_22.sql?');
+                return;
+            }
+        }
+
+        if ($ok > 0) {
+            $this->success($ok . ' foto(s) agregada(s) a la galería.');
+        }
     }
 
     /** @return array<string,mixed> */
@@ -104,6 +167,7 @@ class ServiceController extends AdminController
             'short_description' => $data['short_description'] ?? null,
             'description'       => clean_html((string) ($data['description'] ?? '')) ?: null,
             'featured'          => Request::flag('featured'),
+            'show_clients'      => Request::flag('show_clients'),
             'sort_order'        => (int) ($data['sort_order'] ?? 0),
             'active'            => Request::flag('active'),
         ];

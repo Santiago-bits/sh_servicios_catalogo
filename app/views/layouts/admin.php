@@ -30,6 +30,7 @@ $nav  = [
     ['label' => 'Repuestos',      'icon' => 'bi-nut-fill',          'path' => 'repuestos',       'perm' => 'parts.view'],
     ['label' => 'Categorías',     'icon' => 'bi-diagram-3-fill',    'path' => 'categorias',      'perm' => 'categories.manage'],
     ['label' => 'Marcas',         'icon' => 'bi-award-fill',        'path' => 'marcas',          'perm' => 'brands.manage'],
+    ['label' => 'Marcas en la web','icon' => 'bi-grid-3x3-gap-fill','path' => 'marcas-web',      'perm' => 'brands.manage'],
     ['label' => 'Etiquetas',      'icon' => 'bi-tags-fill',         'path' => 'etiquetas',       'perm' => 'tags.manage'],
     ['label' => 'Servicios',      'icon' => 'bi-tools',             'path' => 'servicios',       'perm' => 'services.manage'],
 
@@ -95,7 +96,9 @@ $nav  = [
                         }
                     } else {
                         // "Maquinaria" cede el resaltado a "Máquinas usadas" cuando hay ?condicion
-                        $isActive = str_starts_with($current, $target)
+                        // (coincide la ruta exacta o una subruta: "marcas" no se
+                        //  prende en "marcas-web")
+                        $isActive = ($current === $target || str_starts_with($current, $target . '/'))
                             && !($pathOnly === 'maquinaria' && isset($_GET['condicion']));
                     }
                     ?>

@@ -35,6 +35,25 @@ class MachineController extends Controller
 
     public function index(?string $category = null): void
     {
+        // Sin categoría ni filtros: se muestran las categorías (sólo las
+        // que tienen productos) en lugar de todos los productos juntos.
+        if ($category === null && $this->withoutQuery()) {
+            $categories = (new Category())->withProducts('machine');
+            if ($categories !== []) {
+                $this->view('catalog/categories', [
+                    'pageTitle'       => 'Maquinaria · ' . SettingService::companyName(),
+                    'metaDescription' => 'Autoelevadores, apiladores, zorras eléctricas, plataformas y maquinaria industrial nueva y usada.',
+                    'bodyClass'       => 'page-catalog page-categories',
+                    'title'           => 'Maquinaria',
+                    'lead'            => 'Elegí una categoría para ver los equipos. Hay máquinas nuevas y usadas: adentro de cada categoría podés filtrarlas.',
+                    'base'            => 'maquinaria',
+                    'type'            => 'machine',
+                    'categories'      => $categories,
+                ]);
+                return;
+            }
+        }
+
         $filters = $this->filters($category);
         $page    = max(1, Request::int('pagina', 1));
         $perPage = SettingService::perPage();
@@ -67,7 +86,7 @@ class MachineController extends Controller
             'products'        => $result['data'],
             'filters'         => $filters,
             'currentCategory' => $currentCategory,
-            'categories'      => $categoryModel->ofType('machine'),
+            'categories'      => $categoryModel->withProducts('machine'),
             'brands'          => $product->availableBrands('machine'),
             'priceRange'      => $product->priceRange('machine'),
             'yearRange'       => $machineModel->yearRange(),
@@ -155,5 +174,16 @@ class MachineController extends Controller
             'ofertas'       => Request::get('ofertas'),
             'orden'         => Request::get('orden', 'destacados'),
         ];
+    }
+
+    /** ¿La URL llegó sin ningún parámetro con valor? (?todos=1 fuerza el listado) */
+    private function withoutQuery(): bool
+    {
+        foreach ($_GET as $value) {
+            if ($value !== '' && $value !== []) {
+                return false;
+            }
+        }
+        return true;
     }
 }

@@ -100,8 +100,14 @@ use App\Models\Service as ServiceModel;
                         <input type="file" class="form-control" id="s-image" name="image" accept="image/*">
                     </div>
                     <div class="col-12">
+                        <label class="form-label" for="s-gallery">Galería de fotos</label>
+                        <input type="file" class="form-control" id="s-gallery" name="gallery[]" accept="image/*" multiple>
+                        <p class="form-hint">Podés elegir varias a la vez.</p>
+                    </div>
+                    <div class="col-12">
                         <label class="filter-check"><input type="checkbox" name="featured" value="1"> Destacado</label>
                         <label class="filter-check"><input type="checkbox" name="active" value="1" checked> Activo</label>
+                        <label class="filter-check"><input type="checkbox" name="show_clients" value="1"> Mostrar logos de clientes (en lugar de la galería)</label>
                     </div>
                     <div class="col-12">
                         <button type="submit" class="btn btn-accent w-100"><i class="bi bi-plus-lg"></i> Crear servicio</button>
@@ -145,12 +151,33 @@ use App\Models\Service as ServiceModel;
                                 <textarea class="form-control" name="description" rows="5" maxlength="20000"><?= e($service['description'] ?? '') ?></textarea>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Reemplazar imagen</label>
+                                <label class="form-label">Imagen principal (reemplazar)</label>
                                 <input type="file" class="form-control" name="image" accept="image/*">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Galería de fotos</label>
+                                <?php $svcImages = $images[(int) $service['id']] ?? []; ?>
+                                <?php if ($svcImages !== []): ?>
+                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                        <?php foreach ($svcImages as $img): ?>
+                                            <div class="position-relative">
+                                                <img src="<?= e(upload_url($img['thumb'] ?: $img['path'])) ?>" alt=""
+                                                     style="width:84px;height:64px;object-fit:cover;border-radius:6px;border:1px solid #E2E4E8">
+                                                <button type="submit" form="svcImgDel<?= (int) $img['id'] ?>" class="btn-icon btn-icon--danger"
+                                                        style="position:absolute;top:-8px;right:-8px;width:24px;height:24px;font-size:.7rem;background:#fff"
+                                                        title="Eliminar foto"><i class="bi bi-x-lg"></i></button>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                                <input type="file" class="form-control" name="gallery[]" accept="image/*" multiple>
+                                <p class="form-hint">Agregá una o varias fotos. Las que ya están se conservan.</p>
                             </div>
                             <div class="col-12">
                                 <label class="filter-check"><input type="checkbox" name="featured" value="1" <?= (int) $service['featured'] === 1 ? 'checked' : '' ?>> Destacado</label>
                                 <label class="filter-check"><input type="checkbox" name="active" value="1" <?= (int) $service['active'] === 1 ? 'checked' : '' ?>> Activo</label>
+                                <label class="filter-check"><input type="checkbox" name="show_clients" value="1" <?= (int) ($service['show_clients'] ?? 0) === 1 ? 'checked' : '' ?>> Mostrar logos de clientes (en lugar de la galería)</label>
+                                <p class="form-hint">Los logos se cargan en Marcas en la web → Clientes.</p>
                             </div>
                         </div>
                     </div>
@@ -163,3 +190,11 @@ use App\Models\Service as ServiceModel;
         </div>
     </div>
 <?php endforeach; ?>
+
+<?php foreach ($images as $serviceId => $svcImages): foreach ($svcImages as $img): ?>
+    <form method="post" id="svcImgDel<?= (int) $img['id'] ?>" class="d-none"
+          action="<?= admin_url('servicios/' . (int) $serviceId . '/imagenes/' . (int) $img['id'] . '/eliminar') ?>"
+          data-confirm="¿Eliminar esta foto de la galería?">
+        <?= csrf_field() ?>
+    </form>
+<?php endforeach; endforeach; ?>
