@@ -136,12 +136,6 @@ $router->group('/admin', static function (Router $router): void {
     // La ficha técnica de la máquina usa sólo los campos fijos del formulario:
     // la lista de "características" personalizadas y su ABM se retiraron.
 
-    // Marcas que se muestran en la web (independientes de los productos)
-    $router->get('/marcas-web', 'Admin\ShowcaseBrandController@index', ['permission:brands.manage']);
-    $router->post('/marcas-web', 'Admin\ShowcaseBrandController@store', ['permission:brands.manage']);
-    $router->post('/marcas-web/{id:\d+}', 'Admin\ShowcaseBrandController@update', ['permission:brands.manage']);
-    $router->post('/marcas-web/{id:\d+}/eliminar', 'Admin\ShowcaseBrandController@destroy', ['permission:brands.manage']);
-
     $router->get('/etiquetas', 'Admin\TagController@index', ['permission:tags.manage']);
     $router->post('/etiquetas', 'Admin\TagController@store', ['permission:tags.manage']);
     $router->post('/etiquetas/{id:\d+}', 'Admin\TagController@update', ['permission:tags.manage']);

@@ -107,7 +107,6 @@ use App\Models\Service as ServiceModel;
                     <div class="col-12">
                         <label class="filter-check"><input type="checkbox" name="featured" value="1"> Destacado</label>
                         <label class="filter-check"><input type="checkbox" name="active" value="1" checked> Activo</label>
-                        <label class="filter-check"><input type="checkbox" name="show_clients" value="1"> Mostrar logos de clientes (en lugar de la galería)</label>
                     </div>
                     <div class="col-12">
                         <button type="submit" class="btn btn-accent w-100"><i class="bi bi-plus-lg"></i> Crear servicio</button>
@@ -176,8 +175,6 @@ use App\Models\Service as ServiceModel;
                             <div class="col-12">
                                 <label class="filter-check"><input type="checkbox" name="featured" value="1" <?= (int) $service['featured'] === 1 ? 'checked' : '' ?>> Destacado</label>
                                 <label class="filter-check"><input type="checkbox" name="active" value="1" <?= (int) $service['active'] === 1 ? 'checked' : '' ?>> Activo</label>
-                                <label class="filter-check"><input type="checkbox" name="show_clients" value="1" <?= (int) ($service['show_clients'] ?? 0) === 1 ? 'checked' : '' ?>> Mostrar logos de clientes (en lugar de la galería)</label>
-                                <p class="form-hint">Los logos se cargan en Marcas en la web → Clientes.</p>
                             </div>
                         </div>
                     </div>

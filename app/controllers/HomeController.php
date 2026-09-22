@@ -7,10 +7,10 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Service;
-use App\Models\ShowcaseBrand;
 use App\Services\SettingService;
 use Core\Controller;
 
@@ -34,8 +34,7 @@ class HomeController extends Controller
             'latestMachines'   => $product->latest('machine', 4),
 
             'services'         => (new Service())->activeList(6),
-            // Marcas de la home: se editan en Panel → Marcas en la web.
-            'brandGroups'      => (new ShowcaseBrand())->homeGroups(),
+            'brands'           => (new Brand())->forHomepage(),
         ]);
     }
 }

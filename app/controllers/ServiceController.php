@@ -8,7 +8,6 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Models\Service;
-use App\Models\ShowcaseBrand;
 use App\Services\SettingService;
 use Core\Controller;
 
@@ -39,9 +38,6 @@ class ServiceController extends Controller
             'bodyClass'       => 'page-service',
             'service'         => $service,
             'images'          => $serviceModel->images((int) $service['id']),
-            'clients'         => (int) ($service['show_clients'] ?? 0) === 1
-                ? (new ShowcaseBrand())->activeBySection('clientes')
-                : [],
             'others'          => array_values(array_filter(
                 $serviceModel->activeList(),
                 static fn (array $s): bool => (int) $s['id'] !== (int) $service['id']

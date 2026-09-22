@@ -47,25 +47,6 @@ $bullets = ServiceModel::bullets($service['bullets']);
                     </div>
                 </div>
 
-                <?php if ($clients !== []): ?>
-                    <div class="panel">
-                        <div class="panel__head"><h2><i class="bi bi-building"></i> Algunas empresas que confían en este servicio</h2></div>
-                        <div class="panel__body">
-                            <div class="brand-strip brand-strip--sm">
-                                <?php foreach ($clients as $client): ?>
-                                    <div class="brand-cell" title="<?= e($client['name']) ?>">
-                                        <?php if (!empty($client['logo'])): ?>
-                                            <img src="<?= e(upload_url($client['logo'])) ?>" alt="<?= e($client['name']) ?>" loading="lazy">
-                                        <?php else: ?>
-                                            <span><?= e($client['name']) ?></span>
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    </div>
-                <?php endif; ?>
-
                 <?php
                 // Galería: la imagen principal (si hay) + las fotos cargadas.
                 $gallery = [];
@@ -76,7 +57,7 @@ $bullets = ServiceModel::bullets($service['bullets']);
                     $gallery[] = ['path' => $img['path'], 'thumb' => $img['thumb'] ?: $img['path']];
                 }
                 ?>
-                <?php if ($gallery !== [] && $clients === []): ?>
+                <?php if ($gallery !== []): ?>
                     <div class="panel">
                         <div class="panel__head"><h2><i class="bi bi-images"></i> Galería</h2></div>
                         <div class="panel__body">

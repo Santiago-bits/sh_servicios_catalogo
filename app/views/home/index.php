@@ -9,7 +9,7 @@
  * @var array<int,array<string,mixed>> $featuredMachines
  * @var array<int,array<string,mixed>> $featuredParts
  * @var array<int,array<string,mixed>> $services
- * @var array<int,array{label:string,items:array}> $brandGroups
+ * @var array<int,array<string,mixed>> $brands
  */
 
 use App\Models\Service as ServiceModel;
@@ -236,10 +236,9 @@ $heroBg    = $heroImage !== '' ? upload_url($heroImage) : asset('img/hero-forkli
 </section>
 
 <!-- =================================================================
-     MARCAS (se editan en Panel → Marcas en la web; no dependen de los
-     productos cargados)
+     MARCAS (se editan en Panel → Marcas)
      ================================================================= -->
-<?php if (!empty($brandGroups)): ?>
+<?php if (!empty($brands)): ?>
 <section class="section">
     <div class="container">
         <div class="section-head">
@@ -249,20 +248,17 @@ $heroBg    = $heroImage !== '' ? upload_url($heroImage) : asset('img/hero-forkli
             </div>
         </div>
 
-        <?php foreach ($brandGroups as $group): ?>
-            <h3 class="brand-group-title"><?= e($group['label']) ?></h3>
-            <div class="brand-strip mb-4">
-                <?php foreach ($group['items'] as $brand): ?>
-                    <div class="brand-cell" title="<?= e($brand['name']) ?>">
-                        <?php if (!empty($brand['logo'])): ?>
-                            <img src="<?= e(upload_url($brand['logo'])) ?>" alt="<?= e($brand['name']) ?>" loading="lazy">
-                        <?php else: ?>
-                            <span><?= e($brand['name']) ?></span>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endforeach; ?>
+        <div class="brand-strip mb-4">
+            <?php foreach ($brands as $brand): ?>
+                <div class="brand-cell" title="<?= e($brand['name']) ?>">
+                    <?php if (!empty($brand['logo'])): ?>
+                        <img src="<?= e(upload_url($brand['logo'])) ?>" alt="<?= e($brand['name']) ?>" loading="lazy">
+                    <?php else: ?>
+                        <span><?= e($brand['name']) ?></span>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
     </div>
 </section>
 <?php endif; ?>
