@@ -220,7 +220,7 @@
     <div class="container">
         <div class="cta-band">
             <div>
-                <h2>Buscamos el repuesto que necesites</h2>
+                <h2>Solicitá el repuesto que necesites</h2>
                 <p>Mandanos el número de parte, el modelo de la máquina o una foto de la pieza.</p>
             </div>
             <div class="d-flex flex-wrap gap-2">

@@ -10,7 +10,7 @@ use App\Services\WhatsAppService;
     <div class="container page-hero__inner">
         <nav class="breadcrumbs"><a href="<?= url() ?>">Inicio</a><span>Contacto</span></nav>
         <h1>Contacto</h1>
-        <p>Escribinos por el canal que te resulte más cómodo. Respondemos dentro del horario de atención.</p>
+        <p>Escribinos por el canal que te resulte más cómodo.</p>
     </div>
 </section>
 

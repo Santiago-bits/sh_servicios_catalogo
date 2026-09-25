@@ -115,9 +115,15 @@ class BrandController extends AdminController
             'name' => 'required|string|min:2|max:120',
         ], ['name' => 'nombre']);
 
+        $homeGroup = (string) Request::input('home_group', 'equipos');
+        if (!array_key_exists($homeGroup, Brand::HOME_GROUPS)) {
+            $homeGroup = 'equipos';
+        }
+
         return [
-            'name'   => $data['name'],
-            'active' => Request::flag('active', true),
+            'name'       => $data['name'],
+            'active'     => Request::flag('active', true),
+            'home_group' => $homeGroup,
         ];
     }
 

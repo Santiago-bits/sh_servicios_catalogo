@@ -66,6 +66,5 @@ $errors    = $errors ?? [];
         <button type="submit" class="btn btn-accent">
             <i class="bi bi-send-fill"></i> Enviar consulta
         </button>
-        <span class="text-muted-2 small">Te respondemos dentro del horario de atención.</span>
     </div>
 </form>

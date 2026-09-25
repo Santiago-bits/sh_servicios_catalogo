@@ -9,7 +9,7 @@
  * @var array<int,array<string,mixed>> $featuredMachines
  * @var array<int,array<string,mixed>> $featuredParts
  * @var array<int,array<string,mixed>> $services
- * @var array<int,array<string,mixed>> $brands
+ * @var array<int,array{key:string,label:string,items:array}> $brandGroups
  */
 
 use App\Models\Service as ServiceModel;
@@ -35,7 +35,7 @@ $heroBg    = $heroImage !== '' ? upload_url($heroImage) : asset('img/hero-forkli
     <div class="container hero__inner">
         <div class="row align-items-center g-5">
             <div class="col-lg-6">
-                <span class="hero__badge"><i class="bi bi-shield-check"></i> Venta · Alquiler · Servicio · Repuestos</span>
+                <span class="hero__badge"><i class="bi bi-shield-check"></i> Ventas · Alquiler · Servicios · Repuestos</span>
 
                 <h1 class="hero__title">
                     <?php if ($heroTitle !== ''): ?>
@@ -90,7 +90,7 @@ $heroBg    = $heroImage !== '' ? upload_url($heroImage) : asset('img/hero-forkli
             <div>
                 <span class="eyebrow">Selección</span>
                 <h2 class="section-title">Máquinas destacadas</h2>
-                <p class="section-lead">Equipos listos para entregar, con garantía escrita y servicio inicial.</p>
+                <p class="section-lead">Equipos listos para entregar, con servicio inicial.</p>
             </div>
             <a href="<?= url('maquinaria?orden=destacados') ?>" class="btn btn-outline-accent">
                 Ver más <i class="bi bi-arrow-right"></i>
@@ -105,6 +105,42 @@ $heroBg    = $heroImage !== '' ? upload_url($heroImage) : asset('img/hero-forkli
     </div>
 </section>
 <?php endif; ?>
+
+<!-- =================================================================
+     CTA: NO ENCONTRÁS EL EQUIPO
+     ================================================================= -->
+<section class="pb-5">
+    <div class="container">
+        <div class="cta-band">
+            <div>
+                <h2>¿No encontrás el equipo que buscás?</h2>
+                <p>Conseguimos máquinas a pedido. Contanos qué necesitás y te lo buscamos.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="<?= url('contacto') ?>" class="btn btn-outline-accent"><i class="bi bi-send"></i> Escribinos</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =================================================================
+     CTA: BATERÍAS DE LITIO
+     ================================================================= -->
+<section class="pb-5">
+    <div class="container">
+        <div class="cta-band">
+            <div>
+                <h2>Cambiá tu batería de ácido plomo por litio</h2>
+                <p>Invertí en tecnología. Mayor disponibilidad, mínimo mantenimiento y una batería diseñada para acompañar tu operación durante más tiempo.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="<?= e(WhatsAppService::link('Hola, quiero mi batería de litio.')) ?>" target="_blank" rel="noopener" class="btn btn-outline-accent">
+                    <i class="bi bi-whatsapp"></i> Quiero mi batería de litio
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
 
 <!-- =================================================================
      REPUESTOS DESTACADOS
@@ -238,7 +274,7 @@ $heroBg    = $heroImage !== '' ? upload_url($heroImage) : asset('img/hero-forkli
 <!-- =================================================================
      MARCAS (se editan en Panel → Marcas)
      ================================================================= -->
-<?php if (!empty($brands)): ?>
+<?php if (!empty($brandGroups)): ?>
 <section class="section">
     <div class="container">
         <div class="section-head">
@@ -248,17 +284,20 @@ $heroBg    = $heroImage !== '' ? upload_url($heroImage) : asset('img/hero-forkli
             </div>
         </div>
 
-        <div class="brand-strip mb-4">
-            <?php foreach ($brands as $brand): ?>
-                <div class="brand-cell" title="<?= e($brand['name']) ?>">
-                    <?php if (!empty($brand['logo'])): ?>
-                        <img src="<?= e(upload_url($brand['logo'])) ?>" alt="<?= e($brand['name']) ?>" loading="lazy">
-                    <?php else: ?>
-                        <span><?= e($brand['name']) ?></span>
-                    <?php endif; ?>
-                </div>
-            <?php endforeach; ?>
-        </div>
+        <?php foreach ($brandGroups as $group): ?>
+            <h3 class="brand-group-title"><?= e($group['label']) ?></h3>
+            <div class="brand-strip mb-4">
+                <?php foreach ($group['items'] as $brand): ?>
+                    <div class="brand-cell" title="<?= e($brand['name']) ?>">
+                        <?php if (!empty($brand['logo'])): ?>
+                            <img src="<?= e(upload_url($brand['logo'])) ?>" alt="<?= e($brand['name']) ?>" loading="lazy">
+                        <?php else: ?>
+                            <span><?= e($brand['name']) ?></span>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endforeach; ?>
     </div>
 </section>
 <?php endif; ?>
@@ -277,11 +316,10 @@ $heroBg    = $heroImage !== '' ? upload_url($heroImage) : asset('img/hero-forkli
 
         <div class="row g-3">
             <?php foreach ([
-                ['bi-clock-history', 'Menos tiempo parado', 'Repuestos en stock y unidades móviles para atender en tu planta.'],
-                ['bi-clipboard-check', 'Equipos verificados', 'Cada máquina pasa por revisión de motor, hidráulica, frenos y mástil.'],
-                ['bi-diagram-3-fill', 'Compatibilidad garantizada', 'Cargamos la compatibilidad de cada repuesto por marca y modelo.'],
-                ['bi-people-fill', 'Asesoramiento previo', 'Analizamos cargas, alturas y pasillos antes de recomendarte un equipo.'],
-                ['bi-shield-lock-fill', 'Respaldo posventa', 'Garantía escrita, servicio programado y capacitación de operadores.'],
+                ['bi-clock-history', 'Menos tiempo parado', 'Repuestos en stock y talleres móviles.'],
+                ['bi-clipboard-check', 'Equipos verificados', 'Cada máquina pasa por una revisión integral.'],
+                ['bi-people-fill', 'Asesoramiento previo', 'Te asesoramos para que elijas lo que más se adapte a tu necesidad.'],
+                ['bi-shield-lock-fill', 'Respaldo posventa', 'Garantía, servicio programado y operadores capacitados.'],
             ] as [$icon, $title, $text]): ?>
                 <div class="col-md-6 col-lg-4">
                     <div class="benefit reveal">

@@ -34,7 +34,7 @@ class HomeController extends Controller
             'latestMachines'   => $product->latest('machine', 4),
 
             'services'         => (new Service())->activeList(6),
-            'brands'           => (new Brand())->forHomepage(),
+            'brandGroups'      => (new Brand())->forHomepageGrouped(),
         ]);
     }
 }

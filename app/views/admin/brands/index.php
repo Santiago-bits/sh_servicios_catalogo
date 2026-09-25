@@ -5,6 +5,8 @@
  *
  * @var array<int,array<string,mixed>> $brands
  */
+
+use App\Models\Brand;
 ?>
 <div class="row g-3">
     <div class="col-lg-8">
@@ -19,6 +21,7 @@
                         <thead>
                             <tr>
                                 <th>Marca</th>
+                                <th>Tipo</th>
                                 <th class="num">Máquinas</th>
                                 <th class="num">Repuestos</th>
                                 <th class="actions">Acciones</th>
@@ -40,6 +43,7 @@
                                         <?php endif; ?>
                                     </div>
                                 </td>
+                                <td><?= e(Brand::HOME_GROUPS[$brand['home_group']] ?? Brand::HOME_GROUPS['equipos']) ?></td>
                                 <td class="num"><?= (int) $brand['machines_count'] ?></td>
                                 <td class="num"><?= (int) $brand['parts_count'] ?></td>
                                 <td class="actions">
@@ -71,6 +75,15 @@
                     <div class="col-12">
                         <label class="form-label" for="b-name">Nombre *</label>
                         <input type="text" class="form-control" id="b-name" name="name" required maxlength="120">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="b-group">Tipo</label>
+                        <select class="form-select" id="b-group" name="home_group">
+                            <?php foreach (Brand::HOME_GROUPS as $key => $label): ?>
+                                <option value="<?= e($key) ?>"><?= e($label) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <p class="form-hint">Define en qué grupo aparece dentro de "Con las que trabajamos" en el Inicio.</p>
                     </div>
                     <div class="col-12">
                         <label class="form-label" for="b-logo">Logo</label>
@@ -108,6 +121,14 @@
                             <div class="col-12">
                                 <label class="form-label">Nombre *</label>
                                 <input type="text" class="form-control" name="name" required maxlength="120" value="<?= e($brand['name']) ?>">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Tipo</label>
+                                <select class="form-select" name="home_group">
+                                    <?php foreach (Brand::HOME_GROUPS as $key => $label): ?>
+                                        <option value="<?= e($key) ?>" <?= ($brand['home_group'] ?? 'equipos') === $key ? 'selected' : '' ?>><?= e($label) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Logo</label>

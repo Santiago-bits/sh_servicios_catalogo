@@ -16,10 +16,16 @@ class Brand extends Model
 
     protected array $fillable = [
         'name', 'slug', 'logo', 'description', 'website', 'country',
-        'featured', 'sort_order', 'active',
+        'featured', 'sort_order', 'active', 'home_group',
     ];
 
     protected array $sortable = ['id', 'name', 'sort_order', 'created_at'];
+
+    /** Grupos en los que se puede mostrar una marca en el Inicio. */
+    public const HOME_GROUPS = [
+        'equipos'    => 'Equipos y repuestos',
+        'neumaticos' => 'Neumáticos',
+    ];
 
     /** @return array<int,array<string,mixed>> */
     public function active(): array
@@ -67,5 +73,32 @@ class Brand extends Model
             $sql .= ' LIMIT ' . $limit;
         }
         return Database::select($sql);
+    }
+
+    /**
+     * Marcas de la home agrupadas (Equipos y repuestos / Neumáticos).
+     * Sólo se devuelven los grupos que tienen al menos una marca activa.
+     *
+     * @return array<int,array{key:string,label:string,items:array<int,array<string,mixed>>}>
+     */
+    public function forHomepageGrouped(): array
+    {
+        $rows = Database::select(
+            "SELECT * FROM brands WHERE active = 1 ORDER BY sort_order ASC, id ASC"
+        );
+
+        $groups = [];
+        foreach ($rows as $row) {
+            $key = array_key_exists($row['home_group'], self::HOME_GROUPS) ? $row['home_group'] : 'equipos';
+            $groups[$key][] = $row;
+        }
+
+        $out = [];
+        foreach (self::HOME_GROUPS as $key => $label) {
+            if (!empty($groups[$key])) {
+                $out[] = ['key' => $key, 'label' => $label, 'items' => $groups[$key]];
+            }
+        }
+        return $out;
     }
 }
