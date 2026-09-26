@@ -1167,6 +1167,8 @@ img { max-width: 100%; height: auto; }
     background: repeating-linear-gradient(135deg, rgba(0,0,0,.045) 0 22px, transparent 22px 44px);
 }
 .cta-band > * { position: relative; z-index: 1; }
+.cta-band > div:first-child { flex: 1 1 380px; min-width: 0; }
+.cta-band > .d-flex { flex: 0 0 auto; }
 .cta-band h2 { font-size: clamp(1.35rem, 3vw, 1.9rem); margin: 0 0 6px; text-transform: uppercase; }
 .cta-band p { margin: 0; color: rgba(0,0,0,.72); }
 
