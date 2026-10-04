@@ -14,12 +14,12 @@ use Core\Auth;
             </div>
             <div class="card-admin__body card-admin__body--flush">
                 <div class="table-responsive-admin">
-                    <table class="table-admin">
+                    <table class="table-admin" id="usersTable">
                         <thead>
                             <tr>
                                 <th>Usuario</th>
                                 <th>Rol</th>
-                                <th>Último acceso</th>
+                                <th class="d-none d-md-table-cell">Último acceso</th>
                                 <th>Estado</th>
                                 <th class="actions">Acciones</th>
                             </tr>
@@ -35,7 +35,7 @@ use Core\Auth;
                                         </span>
                                         <span>
                                             <span class="table-product__name">
-                                                <?= e($user['name']) ?>
+                                                <span class="table-product__name-text"><?= e($user['name']) ?></span>
                                                 <?php if ((int) $user['id'] === (int) Auth::id()): ?>
                                                     <span class="chip chip--accent ms-1">Vos</span>
                                                 <?php endif; ?>
@@ -52,7 +52,7 @@ use Core\Auth;
                                         <small class="d-block text-muted-2"><?= e($user['position']) ?></small>
                                     <?php endif; ?>
                                 </td>
-                                <td>
+                                <td class="d-none d-md-table-cell">
                                     <?= e(date_es($user['last_login_at'] ?? null, true)) ?>
                                     <?php if (!empty($user['last_login_ip'])): ?>
                                         <small class="d-block text-muted-2 text-mono"><?= e($user['last_login_ip']) ?></small>
@@ -68,25 +68,39 @@ use Core\Auth;
                                 </td>
                                 <td class="actions">
                                     <?php if ($canManage): ?>
-                                        <button type="button" class="btn-icon" data-bs-toggle="modal" data-bs-target="#userModal<?= (int) $user['id'] ?>">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <?php if ((int) $user['id'] !== (int) Auth::id()): ?>
-                                            <form method="post" action="<?= admin_url('usuarios/' . (int) $user['id'] . '/eliminar') ?>"
-                                                  class="d-inline" data-confirm="¿Desactivar la cuenta de <?= e($user['name']) ?>? Se puede reactivar después.">
-                                                <?= csrf_field() ?>
-                                                <button type="submit" class="btn-icon" title="Desactivar (se puede reactivar)">
-                                                    <i class="bi bi-person-x"></i>
-                                                </button>
-                                            </form>
-                                            <form method="post" action="<?= admin_url('usuarios/' . (int) $user['id'] . '/borrar') ?>"
-                                                  class="d-inline" data-confirm="¿Eliminar DEFINITIVAMENTE la cuenta de <?= e($user['name']) ?>? No se puede deshacer.">
-                                                <?= csrf_field() ?>
-                                                <button type="submit" class="btn-icon btn-icon--danger" title="Eliminar definitivamente (no se puede deshacer)">
-                                                    <i class="bi bi-trash3-fill"></i>
-                                                </button>
-                                            </form>
-                                        <?php endif; ?>
+                                        <div class="dropdown">
+                                            <button type="button" class="btn-icon" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" title="Acciones">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li>
+                                                    <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#userModal<?= (int) $user['id'] ?>">
+                                                        <i class="bi bi-pencil"></i> Editar
+                                                    </button>
+                                                </li>
+                                                <?php if ((int) $user['id'] !== (int) Auth::id()): ?>
+                                                    <li>
+                                                        <form method="post" action="<?= admin_url('usuarios/' . (int) $user['id'] . '/eliminar') ?>"
+                                                              data-confirm="¿Desactivar la cuenta de <?= e($user['name']) ?>? Se puede reactivar después.">
+                                                            <?= csrf_field() ?>
+                                                            <button type="submit" class="dropdown-item">
+                                                                <i class="bi bi-person-x"></i> Desactivar
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <form method="post" action="<?= admin_url('usuarios/' . (int) $user['id'] . '/borrar') ?>"
+                                                              data-confirm="¿Eliminar DEFINITIVAMENTE la cuenta de <?= e($user['name']) ?>? No se puede deshacer.">
+                                                            <?= csrf_field() ?>
+                                                            <button type="submit" class="dropdown-item text-danger">
+                                                                <i class="bi bi-trash3-fill"></i> Eliminar
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                <?php endif; ?>
+                                            </ul>
+                                        </div>
                                     <?php else: ?>
                                         <span class="text-muted-2 small">Sin permisos</span>
                                     <?php endif; ?>

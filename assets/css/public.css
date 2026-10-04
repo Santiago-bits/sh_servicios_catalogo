@@ -1592,6 +1592,11 @@ mark { background: rgba(245,196,0,.42); color: inherit; padding: 0 2px; border-r
     text-transform: uppercase; letter-spacing: .16em;
 }
 .auth-card__body { padding: 28px 30px 24px; }
+.auth-divider {
+    display: flex; align-items: center; gap: 10px; margin: 4px 0 18px;
+    color: var(--gray); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em;
+}
+.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: #E5E5E5; }
 .auth-card__foot {
     padding: 16px 30px 22px; text-align: center; font-size: .82rem;
     color: var(--gray); border-top: 1px solid #ECECEC;

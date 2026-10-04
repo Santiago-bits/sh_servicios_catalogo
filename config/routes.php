@@ -75,6 +75,7 @@ $router->group('/api', static function (Router $router): void {
 // --- Autenticación ---------------------------------------------------
 $router->get('/admin/login', 'Admin\AuthController@showLogin', ['guest']);
 $router->post('/admin/login', 'Admin\AuthController@login', ['guest']);
+$router->post('/admin/login/google', 'Admin\AuthController@loginWithGoogle', ['guest']);
 $router->post('/admin/logout', 'Admin\AuthController@logout', ['auth']);
 $router->get('/admin/perfil', 'Admin\AuthController@profile', ['auth']);
 $router->post('/admin/perfil', 'Admin\AuthController@updateProfile', ['auth']);

@@ -94,6 +94,57 @@ final class Auth
     }
 
     /**
+     * Inicia sesión a partir de un email ya verificado por Google (el
+     * token lo valida App\Services\GoogleAuthService antes de llegar
+     * acá). No hay contraseña de por medio: sólo entra si ese email ya
+     * es un usuario activo del panel — así nadie se puede "dar de alta"
+     * solo por tener una cuenta de Google.
+     *
+     * @return array{ok:bool,message:string}
+     */
+    public static function attemptGoogle(string $email): array
+    {
+        $user = Database::selectOne(
+            'SELECT u.*, r.slug AS role_slug, r.name AS role_name
+               FROM users u
+               INNER JOIN roles r ON r.id = u.role_id
+              WHERE LOWER(u.email) = LOWER(:email)
+              LIMIT 1',
+            ['email' => $email]
+        );
+
+        if ($user === null) {
+            return [
+                'ok'      => false,
+                'message' => "No hay ningún usuario con el email {$email}. Pedile al administrador que lo cargue.",
+            ];
+        }
+
+        if ((int) $user['active'] !== 1) {
+            return ['ok' => false, 'message' => 'La cuenta está desactivada. Contactá al administrador.'];
+        }
+
+        Database::update('users', [
+            'failed_logins' => 0,
+            'locked_until'  => null,
+            'last_login_at' => date('Y-m-d H:i:s'),
+            'last_login_ip' => Request::ip(),
+        ], 'id = :id', ['id' => (int) $user['id']]);
+
+        Session::regenerate();
+        Csrf::rotate();
+        Session::set(self::SESSION_KEY, (int) $user['id']);
+        Session::set('_auth_fingerprint', self::fingerprint());
+
+        self::$user        = null;
+        self::$permissions = null;
+
+        AuditService::log('login', 'auth', null, null, 'Inicio de sesión con Google', [], (int) $user['id']);
+
+        return ['ok' => true, 'message' => '¡Bienvenido/a, ' . $user['name'] . '!'];
+    }
+
+    /**
      * Cada tanda de intentos fallidos (por defecto 5) bloquea la cuenta un
      * rato, y el bloqueo se va alargando si se sigue insistiendo:
      * 1ª tanda → 5 min, 2ª → 15 min, 3ª → 1 h, 4ª y siguientes → 6 h.

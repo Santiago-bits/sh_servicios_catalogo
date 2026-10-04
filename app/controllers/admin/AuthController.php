@@ -11,6 +11,7 @@ namespace App\Controllers\Admin;
 
 use App\Models\User;
 use App\Services\AuditService;
+use App\Services\GoogleAuthService;
 use App\Services\SettingService;
 use Core\Auth;
 use Core\Controller;
@@ -28,6 +29,7 @@ class AuthController extends Controller
             'pageTitle' => 'Acceso al panel · ' . SettingService::companyName(),
             'bodyClass' => 'page-login',
             'robots'    => 'noindex, nofollow',
+            'googleClientId' => GoogleAuthService::isConfigured() ? GoogleAuthService::clientId() : null,
         ]);
     }
 
@@ -69,6 +71,42 @@ class AuthController extends Controller
         }
 
         $this->redirect('admin');
+    }
+
+    /** Login con el botón "Iniciar sesión con Google" (AJAX, responde JSON). */
+    public function loginWithGoogle(): void
+    {
+        if (!GoogleAuthService::isConfigured()) {
+            $this->json(['ok' => false, 'message' => 'El inicio de sesión con Google no está disponible.'], 400);
+        }
+
+        $throttleKey = 'login:' . Request::ip();
+        if (RateLimiter::tooMany($throttleKey, 15, 600)) {
+            $this->json(['ok' => false, 'message' => 'Demasiados intentos desde esta conexión. Esperá unos minutos.'], 429);
+        }
+
+        $idToken = (string) Request::post('credential', '');
+        $account = $idToken !== '' ? GoogleAuthService::verifyIdToken($idToken) : null;
+
+        if ($account === null) {
+            RateLimiter::hit($throttleKey, 600);
+            $this->json(['ok' => false, 'message' => 'No se pudo verificar la cuenta de Google. Probá de nuevo.'], 401);
+        }
+
+        $result = Auth::attemptGoogle($account['email']);
+
+        if (!$result['ok']) {
+            RateLimiter::hit($throttleKey, 600);
+            $this->json(['ok' => false, 'message' => $result['message']], 401);
+        }
+
+        RateLimiter::clear($throttleKey);
+
+        $intended = Session::get('_intended_url');
+        Session::forget('_intended_url');
+        $redirect = (is_string($intended) && str_starts_with($intended, BASE_URL)) ? $intended : admin_url();
+
+        $this->json(['ok' => true, 'message' => $result['message'], 'redirect' => $redirect]);
     }
 
     public function logout(): void

@@ -163,6 +163,15 @@ details.card-admin[open] > summary .card-admin__chevron { transform: rotate(180d
     .admin-filters .form-select { min-width: 0; width: 100%; }
     .admin-filters .ms-auto { margin-left: 0 !important; }
     .admin-content { padding: 12px; }
+
+    /* Tabla de usuarios: el nombre/email no empuja el ancho a lo loco */
+    #usersTable .table-product__name-text,
+    #usersTable .table-product__meta {
+        max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        display: inline-block; vertical-align: bottom;
+    }
+    #usersTable td, #usersTable th { padding-left: 6px; padding-right: 6px; }
+    #usersTable .admin-user__avatar { width: 30px !important; height: 30px !important; font-size: .78rem; }
 }
 
 .admin-body--bare { background: var(--gray-bg); }

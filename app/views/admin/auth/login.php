@@ -52,6 +52,40 @@ use App\Services\SettingService;
                 <i class="bi bi-box-arrow-in-right"></i> Ingresar
             </button>
         </form>
+
+        <?php if (!empty($googleClientId)): ?>
+            <div class="auth-divider"><span>o continuá con</span></div>
+
+            <div id="g_id_onload"
+                 data-client_id="<?= e($googleClientId) ?>"
+                 data-callback="shGoogleCredentialResponse"
+                 data-auto_prompt="false"></div>
+            <div class="g_id_signin d-flex justify-content-center" data-type="standard" data-shape="rectangular"
+                 data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="center" data-width="300"></div>
+
+            <script nonce="<?= csp_nonce() ?>">
+                function shGoogleCredentialResponse(response) {
+                    fetch(window.SHS.baseUrl + '/admin/login/google', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRF-Token': window.SHS.csrf
+                        },
+                        body: 'credential=' + encodeURIComponent(response.credential)
+                    })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            if (data.ok) {
+                                window.location.href = data.redirect || (window.SHS.baseUrl + '/admin');
+                            } else {
+                                alert(data.message || 'No se pudo iniciar sesión con Google.');
+                            }
+                        })
+                        .catch(function () { alert('Error de conexión. Probá de nuevo.'); });
+                }
+            </script>
+            <script src="https://accounts.google.com/gsi/client" async defer></script>
+        <?php endif; ?>
     </div>
 
     <div class="auth-card__foot">
