@@ -1627,7 +1627,7 @@ mark { background: rgba(245,196,0,.42); color: inherit; padding: 0 2px; border-r
 /* Marcas de la home agrupadas */
 .brand-group-title {
     font-size: .8rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--gray); margin: 0 0 12px;
+    color: var(--gray); margin: 0 0 12px; text-align: center;
 }
 .brand-strip--sm .brand-cell { min-height: 96px; flex-basis: calc(33.333% - 1px); }
 .brand-strip--sm .brand-cell span { font-size: clamp(.95rem, 2vw, 1.25rem); }
