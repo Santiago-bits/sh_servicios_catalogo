@@ -1417,7 +1417,16 @@ mark { background: rgba(245,196,0,.42); color: inherit; padding: 0 2px; border-r
         padding: 24px;
         flex-direction: column; align-items: center; text-align: center;
     }
+    /* En fila, flex-basis:380px es el ancho de la columna de texto; en
+       columna (mobile) ese mismo valor se vuelve alto mínimo y deja un
+       hueco enorme antes del botón. Se resetea para que ocupe solo lo
+       que necesita el texto. */
+    .cta-band > div:first-child { flex: 0 0 auto; width: 100%; }
     .cta-band > .d-flex { justify-content: center; }
+
+    /* La cápsula "Ventas · Alquiler · Servicios · Repuestos" del hero
+       no entra bien en pantallas chicas; se oculta ahí. */
+    .hero__badge { display: none; }
 
     /* En teléfono la tarjeta no muestra las características de abajo. */
     .pcard__specs { display: none; }

@@ -483,7 +483,7 @@ final class PdfService
         $pdf->addPage();
 
         $productModel = new Product();
-        $cardHeight   = 42.0;
+        $cardHeight   = 50.0;
 
         foreach ($products as $product) {
             $pdf->ensureSpace($cardHeight + 4);
@@ -531,7 +531,7 @@ final class PdfService
                 }
             }
 
-            // Ficha técnica resumida
+            // Ficha técnica resumida (todo lo que el producto tenga cargado)
             $specs = [];
             if (!empty($product['capacity_kg'])) {
                 $specs[] = 'Capacidad: ' . kg_to_human((float) $product['capacity_kg']);
@@ -545,11 +545,40 @@ final class PdfService
             if (!empty($product['hours'])) {
                 $specs[] = number_es((float) $product['hours']) . ' hs';
             }
+            if (!empty($product['power_hp'])) {
+                $specs[] = 'Potencia: ' . number_es((float) $product['power_hp']) . ' HP';
+            }
+            if (!empty($product['transmission'])) {
+                $specs[] = 'Transmisión: ' . (string) $product['transmission'];
+            }
+            if (!empty($product['weight_kg'])) {
+                $specs[] = 'Peso: ' . kg_to_human((float) $product['weight_kg']);
+            }
+            if (!empty($product['mast_type'])) {
+                $specs[] = 'Mástil: ' . (string) $product['mast_type'];
+            }
+            if (!empty($product['tire_type'])) {
+                $specs[] = 'Neumáticos: ' . (string) $product['tire_type'];
+            }
+            if (!empty($product['warranty'])) {
+                $specs[] = 'Garantía: ' . (string) $product['warranty'];
+            }
+            if (!empty($product['origin'])) {
+                $specs[] = 'Origen: ' . ucfirst((string) $product['origin']);
+            }
+            if (!empty($product['unit']) && $product['unit'] !== 'unidad') {
+                $specs[] = 'Unidad: ' . (string) $product['unit'];
+            }
 
             if ($specs !== []) {
                 $pdf->setFont('B', 7.5);
                 $pdf->setTextColor(self::DARK);
-                $pdf->text($textX, $y + 30, $pdf->truncate(implode('   |   ', $specs), $textWidth));
+                $specsLines = array_slice($pdf->wrap(implode('   |   ', $specs), $textWidth), 0, 2);
+                $lineY = $y + 30;
+                foreach ($specsLines as $line) {
+                    $pdf->text($textX, $lineY, $line);
+                    $lineY += 4.5;
+                }
             }
 
             // Precio
