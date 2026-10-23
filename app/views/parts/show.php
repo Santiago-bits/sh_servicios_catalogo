@@ -179,7 +179,7 @@ $codeTypes = [
                             </div>
                         <?php endif; ?>
                         <div class="price-box__value"><?= e(money($mainUsd, 'USD', $usdDec)) ?></div>
-                        <p class="price-box__note">Dólares: Precio + IVA. Sujeto a modificación sin previo aviso.</p>
+                        <p class="price-box__note">Dólares: Precio final. Sujeto a modificación sin previo aviso.</p>
                         <?php if (setting('show_dual_currency', '0') === '1'): ?>
                             <div class="price-box__alt">
                                 <span class="price-box__alt-label">Precio final en pesos (aprox.)</span>
