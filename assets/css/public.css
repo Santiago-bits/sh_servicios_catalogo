@@ -1477,10 +1477,13 @@ mark { background: rgba(245,196,0,.42); color: inherit; padding: 0 2px; border-r
 
     .cat-card { align-items: center; text-align: center; }
 
-    /* Una sola columna en el celular: si no, el 3er ítem queda solo con
-       una celda amarilla vacía al lado. */
-    .trustbar__inner { grid-template-columns: 1fr; }
-    .trustbar__item { flex-direction: column; text-align: center; gap: 6px; }
+    /* En el celular, 3 columnas chicas en vez de bloques gigantes
+       apilados (con 3 ítems entran parejos, sin celda vacía). */
+    .trustbar__inner { grid-template-columns: repeat(3, 1fr); }
+    .trustbar__item { flex-direction: column; text-align: center; gap: 4px; padding: 14px 6px; }
+    .trustbar__item i { font-size: 1.15rem; }
+    .trustbar__item strong { font-size: .72rem; }
+    .trustbar__item span { font-size: .62rem; line-height: 1.25; }
 
     .service-card { text-align: center; }
     .service-card__icon { margin-left: auto; margin-right: auto; }
