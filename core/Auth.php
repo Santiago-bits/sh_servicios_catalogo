@@ -47,8 +47,11 @@ final class Auth
             return ['ok' => false, 'message' => $genericError];
         }
 
+        // Mismo mensaje que con credenciales incorrectas: así el formulario
+        // no confirma que ese email pertenece a una cuenta (desactivada).
         if ((int) $user['active'] !== 1) {
-            return ['ok' => false, 'message' => 'La cuenta está desactivada. Contactá al administrador.'];
+            password_verify($password, (string) $user['password']);
+            return ['ok' => false, 'message' => $genericError];
         }
 
         if (!empty($user['locked_until']) && strtotime((string) $user['locked_until']) > time()) {

@@ -46,6 +46,8 @@ class UserController extends AdminController
             'position' => 'puesto',
         ]);
 
+        $this->guardAdminAccounts(null, (int) $data['role_id']);
+
         if (!preg_match('/[A-Za-z]/', (string) $data['password']) || !preg_match('/\d/', (string) $data['password'])) {
             $this->error('La contraseña debe combinar letras y números.');
             $this->back();
@@ -91,6 +93,15 @@ class UserController extends AdminController
             'email'   => 'email',
             'role_id' => 'rol',
         ]);
+
+        $this->guardAdminAccounts($user, (int) $data['role_id']);
+
+        // Nadie que no sea administrador puede cambiarse su propio rol: si
+        // no, quien tiene "users.manage" se pasaría a un rol con más permisos.
+        if (!Auth::isAdmin() && (int) $id === (int) Auth::id() && (int) $data['role_id'] !== (int) $user['role_id']) {
+            $this->error('No podés cambiar tu propio rol. Pedíselo a un administrador.');
+            $this->back();
+        }
 
         if ($model->emailExists((string) $data['email'], (int) $id)) {
             $this->error('Ese email ya está en uso por otra cuenta.');
@@ -158,6 +169,8 @@ class UserController extends AdminController
             $this->back();
         }
 
+        $this->guardAdminAccounts($user);
+
         if ($model->isLastAdmin((int) $id)) {
             $this->error('No podés eliminar al único administrador activo.');
             $this->back();
@@ -195,6 +208,8 @@ class UserController extends AdminController
             $this->back();
         }
 
+        $this->guardAdminAccounts($user);
+
         if ($model->isLastAdmin((int) $id)) {
             $this->error('No podés eliminar al único administrador activo.');
             $this->back();
@@ -205,6 +220,42 @@ class UserController extends AdminController
         $model->deleteById((int) $id);
 
         $this->success('Usuario eliminado definitivamente.');
+        $this->back();
+    }
+
+    /**
+     * Sólo un administrador puede crear, editar, desactivar o borrar una
+     * cuenta de administrador, o darle ese rol a alguien. Sin este control,
+     * un usuario con el permiso "users.manage" podía cambiarle la contraseña
+     * al administrador (y entrar con su cuenta) o ponerse él mismo el rol
+     * de administrador.
+     *
+     * @param array<string,mixed>|null $target usuario existente (null al crear)
+     */
+    private function guardAdminAccounts(?array $target, ?int $newRoleId = null): void
+    {
+        if (Auth::isAdmin()) {
+            return;
+        }
+
+        $adminRoleId = (int) \Core\Database::scalar("SELECT id FROM roles WHERE slug = 'admin' LIMIT 1");
+
+        $touchesAdmin = ($target !== null && (int) $target['role_id'] === $adminRoleId)
+            || ($newRoleId !== null && $newRoleId === $adminRoleId);
+
+        if (!$touchesAdmin) {
+            return;
+        }
+
+        AuditService::log(
+            'access_denied',
+            'security',
+            'user',
+            $target !== null ? (int) $target['id'] : null,
+            'Intento de gestionar una cuenta o el rol de administrador sin ser administrador'
+        );
+
+        $this->error('Sólo un administrador puede gestionar cuentas de administrador.');
         $this->back();
     }
 }

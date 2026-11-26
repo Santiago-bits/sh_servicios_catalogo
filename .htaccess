@@ -31,7 +31,7 @@
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
     # --- 1. El código fuente NUNCA se sirve por HTTP ----------------------
-    RewriteRule ^(config|core|app|database|storage|lib)(/.*)?$   - [F,L]
+    RewriteRule ^(config|core|app|database|storage|lib|content)(/.*)?$ - [F,L]
     RewriteRule ^(\.env|\.env\..*|coneccion.*\.php|server\.php)$  - [F,L]
     RewriteRule (^|/)\.(git|env)                                  - [F,L]
 

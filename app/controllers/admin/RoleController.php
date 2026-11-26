@@ -84,6 +84,13 @@ class RoleController extends AdminController
             $this->abort(404, 'El rol no existe.');
         }
 
+        // Quien no es administrador no puede tocar los permisos de su propio
+        // rol (si no, con "roles.manage" se daría a sí mismo cualquier permiso).
+        if (!\Core\Auth::isAdmin() && (int) $id === (int) (\Core\Auth::user()['role_id'] ?? 0)) {
+            $this->error('No podés modificar los permisos de tu propio rol. Pedíselo a un administrador.');
+            $this->back();
+        }
+
         $data = $this->validate(Request::all(), [
             'name'        => 'required|string|min:3|max:60',
             'description' => 'max:255',

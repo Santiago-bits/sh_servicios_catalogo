@@ -64,7 +64,7 @@ final class Csrf
             Session::flash('danger', 'El token de seguridad expiró. Volvé a enviar el formulario.');
             // Sólo se admite volver a una URL de este mismo sitio (anti open redirect).
             $referer = $_SERVER['HTTP_REFERER'] ?? '';
-            if (!is_string($referer) || !str_starts_with($referer, BASE_URL)) {
+            if (!Request::isInternalUrl($referer)) {
                 $referer = BASE_URL;
             }
             header('Location: ' . $referer);

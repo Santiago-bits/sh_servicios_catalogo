@@ -75,6 +75,20 @@ Core\Env::load(BASE_PATH . '/.env');
 // ---------------------------------------------------------------------
 $debug = Core\Env::bool('APP_DEBUG', false);
 
+// El detalle de errores (mensaje, archivo, traza) expone rutas internas del
+// servidor y del hosting. Aunque APP_DEBUG quede en 1 por error en el .env
+// del servidor, sólo se muestra en desarrollo: con APP_ENV distinto de
+// "production" Y cuando quien navega es la misma máquina (XAMPP / php -S).
+// Se mira REMOTE_ADDR (lo pone el servidor) y no el header Host, que lo
+// manda el cliente y se puede falsear.
+if ($debug && PHP_SAPI !== 'cli') {
+    $remoteAddr = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+    $isLoopback = $remoteAddr === '::1' || str_starts_with($remoteAddr, '127.');
+    if (!$isLoopback || Core\Env::get('APP_ENV', 'production') === 'production') {
+        $debug = false;
+    }
+}
+
 error_reporting(E_ALL);
 ini_set('display_errors', $debug ? '1' : '0');
 ini_set('log_errors', '1');

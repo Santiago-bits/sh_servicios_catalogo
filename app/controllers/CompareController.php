@@ -24,8 +24,7 @@ class CompareController extends Controller
         $max = max(2, min(4, SettingService::int('compare_max', 3)));
 
         // Los IDs pueden llegar como ?ids=9,10  o  ?ids[]=9&ids[]=10
-        $raw = Request::get('ids', '');
-        $ids = is_array($raw) ? $raw : explode(',', (string) $raw);
+        $ids = explode(',', implode(',', Request::array('ids')));
         $ids = array_slice(
             array_values(array_unique(array_filter(array_map('intval', $ids)))),
             0,

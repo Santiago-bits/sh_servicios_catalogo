@@ -62,7 +62,7 @@ abstract class Controller
     {
         $referer = $_SERVER['HTTP_REFERER'] ?? BASE_URL;
         // Sólo se admite volver a URLs de este mismo sitio (anti open redirect)
-        if (!str_starts_with($referer, BASE_URL)) {
+        if (!Request::isInternalUrl($referer)) {
             $referer = BASE_URL;
         }
         header('Location: ' . $referer, true, 302);

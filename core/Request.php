@@ -101,19 +101,32 @@ final class Request
         return $cached = '';                   // caso 2
     }
 
+    // get()/post()/input() devuelven un solo valor: si llega un array
+    // (?q[]=x) se usa el valor por defecto. Así un parámetro manipulado no
+    // termina en un TypeError / warning con rutas internas. Para listas
+    // está Request::array().
+
     public static function get(string $key, mixed $default = null): mixed
     {
-        return self::clean($_GET[$key] ?? $default);
+        return self::scalar($_GET[$key] ?? null, $default);
     }
 
     public static function post(string $key, mixed $default = null): mixed
     {
-        return self::clean($_POST[$key] ?? $default);
+        return self::scalar($_POST[$key] ?? null, $default);
     }
 
     public static function input(string $key, mixed $default = null): mixed
     {
-        return self::clean($_POST[$key] ?? $_GET[$key] ?? $default);
+        return self::scalar($_POST[$key] ?? $_GET[$key] ?? null, $default);
+    }
+
+    private static function scalar(mixed $value, mixed $default): mixed
+    {
+        if ($value === null || is_array($value)) {
+            return $default;
+        }
+        return self::clean($value);
     }
 
     public static function int(string $key, int $default = 0): int
@@ -247,6 +260,44 @@ final class Request
         }
 
         return filter_var($remote, FILTER_VALIDATE_IP) ? $remote : '0.0.0.0';
+    }
+
+    /**
+     * ¿La URL apunta a este mismo sitio? Se usa antes de redirigir a una
+     * URL que vino del navegador (Referer, URL "intended").
+     *
+     * No alcanza con str_starts_with($url, BASE_URL): con BASE_URL
+     * "https://sitio.com" también pasan "https://sitio.com.evil.com/" y
+     * "https://sitio.com@evil.com/", que llevan a otro dominio (open
+     * redirect). Acá se compara esquema, host y puerto por separado.
+     */
+    public static function isInternalUrl(mixed $url): bool
+    {
+        if (!is_string($url) || $url === '' || preg_match('/[\\\\\x00-\x1F\x7F]/', $url)) {
+            return false;
+        }
+
+        $target = parse_url($url);
+        $base   = parse_url(BASE_URL);
+        if (!is_array($target) || !is_array($base) || !isset($target['scheme'], $target['host'], $base['scheme'], $base['host'])) {
+            return false;
+        }
+        if (isset($target['user']) || isset($target['pass'])) {
+            return false;
+        }
+
+        $port = static fn (array $u): int => (int) ($u['port'] ?? (strtolower((string) $u['scheme']) === 'https' ? 443 : 80));
+
+        if (strtolower($target['scheme']) !== strtolower($base['scheme'])
+            || strtolower($target['host']) !== strtolower($base['host'])
+            || $port($target) !== $port($base)) {
+            return false;
+        }
+
+        $basePath = rtrim((string) ($base['path'] ?? ''), '/');
+        $path     = (string) ($target['path'] ?? '/');
+
+        return $basePath === '' || $path === $basePath || str_starts_with($path, $basePath . '/');
     }
 
     public static function userAgent(): string

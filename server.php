@@ -20,7 +20,7 @@ $root = realpath(__DIR__);
 
 // Código fuente y archivos sensibles: nunca se sirven por HTTP.
 if (
-    preg_match('#^/(config|core|app|database|storage|lib)(/|$)#i', $uri)
+    preg_match('#^/(config|core|app|database|storage|lib|content)(/|$)#i', $uri)
     || preg_match('#(^|/)(\.env|\.git|coneccion.*\.php|server\.php)($|/)#i', $uri)
 ) {
     http_response_code(403);

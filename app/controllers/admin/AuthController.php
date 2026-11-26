@@ -66,7 +66,7 @@ class AuthController extends Controller
         $intended = Session::get('_intended_url');
         Session::forget('_intended_url');
 
-        if (is_string($intended) && str_starts_with($intended, BASE_URL)) {
+        if (Request::isInternalUrl($intended)) {
             $this->redirect($intended);
         }
 
@@ -104,7 +104,7 @@ class AuthController extends Controller
 
         $intended = Session::get('_intended_url');
         Session::forget('_intended_url');
-        $redirect = (is_string($intended) && str_starts_with($intended, BASE_URL)) ? $intended : admin_url();
+        $redirect = Request::isInternalUrl($intended) ? $intended : admin_url();
 
         $this->json(['ok' => true, 'message' => $result['message'], 'redirect' => $redirect]);
     }

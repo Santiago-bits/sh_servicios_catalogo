@@ -377,6 +377,10 @@ final class EmailService
 
     private static function encodeHeader(string $text): string
     {
+        // Un salto de línea en el asunto/nombre permitiría inyectar
+        // cabeceras (Bcc:, etc.). Se reemplaza por un espacio.
+        $text = trim((string) preg_replace('/[\r\n]+/', ' ', $text));
+
         return preg_match('/[\x80-\xFF]/', $text)
             ? '=?UTF-8?B?' . base64_encode($text) . '?='
             : $text;

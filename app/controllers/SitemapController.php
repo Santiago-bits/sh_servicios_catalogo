@@ -40,7 +40,7 @@ class SitemapController extends Controller
             $prefix = $category['type'] === 'machine' ? 'maquinaria' : 'repuestos';
             $urls[] = [
                 'loc'        => $base . '/' . $prefix . '/' . $category['slug'],
-                'lastmod'    => date('Y-m-d', strtotime((string) $category['updated_at'])),
+                'lastmod'    => date('Y-m-d', strtotime((string) $category['updated_at']) ?: time()),
                 'priority'   => '0.8',
                 'changefreq' => 'weekly',
             ];
@@ -50,7 +50,7 @@ class SitemapController extends Controller
         foreach (Database::select('SELECT slug, updated_at FROM services WHERE active = 1') as $service) {
             $urls[] = [
                 'loc'        => $base . '/servicios/' . $service['slug'],
-                'lastmod'    => date('Y-m-d', strtotime((string) $service['updated_at'])),
+                'lastmod'    => date('Y-m-d', strtotime((string) $service['updated_at']) ?: time()),
                 'priority'   => '0.6',
                 'changefreq' => 'monthly',
             ];
@@ -70,7 +70,7 @@ class SitemapController extends Controller
 
             $urls[] = [
                 'loc'        => $base . '/' . $prefix . '/' . $category . '/' . $product['slug'],
-                'lastmod'    => date('Y-m-d', strtotime((string) $product['updated_at'])),
+                'lastmod'    => date('Y-m-d', strtotime((string) $product['updated_at']) ?: time()),
                 'priority'   => '0.7',
                 'changefreq' => 'weekly',
             ];
